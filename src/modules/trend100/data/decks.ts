@@ -181,11 +181,13 @@ export function getAllDeckIds(): TrendDeckId[] {
 }
 
 /**
+ * Set of valid deck IDs for fast lookup
+ */
+const DECK_ID_SET = new Set<TrendDeckId>(DECKS.map((d) => d.id));
+
+/**
  * Type guard to check if a value is a valid TrendDeckId
  */
 export function isDeckId(x: unknown): x is TrendDeckId {
-  if (typeof x !== 'string') {
-    return false;
-  }
-  return getAllDeckIds().includes(x as TrendDeckId);
+  return typeof x === 'string' && DECK_ID_SET.has(x as TrendDeckId);
 }

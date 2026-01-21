@@ -5,10 +5,10 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
-### 2026-01-21 — (Architecture) Multi-deck architecture with deck selector
-**Choice:** Implement Trend100 as a command center with multiple curated Decks (universes). Each deck has its own universe, snapshot, health summary, and persisted history. Leadership 100 is one deck preset.  
-**Why:** Separate health scores per deck avoid blending "All Assets" with equities leadership. Enables focused analysis by asset class/theme.  
-**Alternatives considered:** Single blended universe (loses signal clarity), dynamic universe builder (too complex for V1).
+### 2026-01-21 — (Architecture) Multi-deck architecture with URL selector and per-deck persistence
+**Choice:** Implement Trend100 as a command center with multiple curated Decks (universes). Use URL search param `?deck=<DECK_ID>` for selection (Leadership default hides param for clean URLs). Persist health history per deck in `public/health-history.<DECK_ID>.json` files.  
+**Why:** Separate regimes by universe; keep shareable links; avoid database for now. File-based persistence is simple, version-controlled, and sufficient for daily updates.  
+**Alternatives considered:** One giant universe (loses signal clarity), routes per deck (more complex routing), database (Supabase) now (overkill for V1, can add later).
 
 ---
 

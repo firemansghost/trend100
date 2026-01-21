@@ -1,5 +1,36 @@
 # TASK LOG — Trend100
 
+### 2026-01-21 — Multi-deck architecture completed and deployed
+**Completed:**
+- Deck registry created with 6 decks (Leadership 100, US Sectors, US Factors, Global Equities, Fixed Income, Macro)
+- Deck selector dropdown added to TopBar with URL search param support (`?deck=<DECK_ID>`)
+- Per-deck health history persistence implemented (`public/health-history.<DECK_ID>.json`)
+- Updated `getLatestSnapshot(deckId)` and `getHealthHistory(deckId)` to be deck-aware
+- Updated `update-health-history` script to update all decks in one run
+- Updated GitHub Actions workflow cron to 12:15 UTC (early morning Chicago intent)
+- Fixed Vercel build error (removed useSearchParams, use useRouter directly)
+- All per-deck history files created and committed
+
+**Changed:**
+- src/modules/trend100/data/validateUniverse.ts: Removed 100-ticker requirement (supports variable deck sizes)
+- src/modules/trend100/data/decks.ts: New deck registry with all 6 deck definitions
+- src/modules/trend100/data/getLatestSnapshot.ts: Now accepts deckId parameter
+- src/modules/trend100/data/getHealthHistory.ts: Now accepts deckId, loads per-deck files
+- src/modules/trend100/data/mockSnapshot.ts: Seeds with deckId + date for daily variation
+- scripts/update-health-history.ts: Loops through all decks, creates per-deck files
+- .github/workflows/update-health-history.yml: Updated cron to 12:15 UTC, commits all per-deck files
+- src/app/page.tsx: Reads `?deck=` search param, validates and passes to dashboard
+- src/modules/trend100/ui/TopBar.tsx: Added deck selector with URL navigation (useRouter)
+- src/modules/trend100/ui/Trend100Dashboard.tsx: Accepts and displays deck info
+
+**Discovered:**
+- Deck overlap is allowed (same ticker can appear in multiple decks)
+- File-based persistence works well for daily updates without database overhead
+- URL search param approach keeps single page while enabling shareable deck links
+- Mock data seeding with deckId + date enables deck-specific variation while staying deterministic
+
+---
+
 ### 2026-01-21 — Multi-deck architecture implemented
 **Completed:**
 - Added deck types and registry (6 decks: Leadership, US Sectors, US Factors, Global Equities, Fixed Income, Macro)

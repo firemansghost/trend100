@@ -179,3 +179,13 @@ export function getDeck(deckId: TrendDeckId): TrendDeck {
 export function getAllDeckIds(): TrendDeckId[] {
   return DECKS.map((d) => d.id);
 }
+
+/**
+ * Type guard to check if a value is a valid TrendDeckId
+ */
+export function isDeckId(x: unknown): x is TrendDeckId {
+  if (typeof x !== 'string') {
+    return false;
+  }
+  return getAllDeckIds().includes(x as TrendDeckId);
+}

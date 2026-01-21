@@ -1,24 +1,20 @@
-import { getLatestSnapshot, getHealthHistory, getDeck, type TrendDeckId } from '@/modules/trend100/data';
+// Force dynamic rendering to ensure searchParams are reactive
+export const dynamic = 'force-dynamic';
+
+import { getLatestSnapshot, getHealthHistory, getDeck, isDeckId } from '@/modules/trend100/data';
 import { Trend100Dashboard } from '@/modules/trend100/ui';
 
 interface HomeProps {
-  searchParams: { deck?: string };
+  searchParams?: { deck?: string };
 }
 
 export default function Home({ searchParams }: HomeProps) {
-  // Validate deckId from search params, fallback to LEADERSHIP
-  const deckParam = searchParams.deck?.toUpperCase();
-  const validDeckIds: TrendDeckId[] = [
-    'LEADERSHIP',
-    'US_SECTORS',
-    'US_FACTORS',
-    'GLOBAL_EQUITIES',
-    'FIXED_INCOME',
-    'MACRO',
-  ];
-  const deckId: TrendDeckId = validDeckIds.includes(deckParam as TrendDeckId)
-    ? (deckParam as TrendDeckId)
-    : 'LEADERSHIP';
+  // Parse deckParam safely
+  const deckParam =
+    typeof searchParams?.deck === 'string' ? searchParams.deck.toUpperCase() : undefined;
+
+  // Validate against allowed deck IDs
+  const deckId = isDeckId(deckParam) ? deckParam : 'LEADERSHIP';
 
   const deck = getDeck(deckId);
   const snapshot = getLatestSnapshot(deckId);
@@ -31,10 +27,12 @@ export default function Home({ searchParams }: HomeProps) {
 
   return (
     <Trend100Dashboard
+      key={deckId}
       snapshot={snapshot}
       history={history}
       deckId={deckId}
       deckLabel={deck.label}
+      deckDescription={deck.description}
       isDemoMode={isDemoMode}
     />
   );

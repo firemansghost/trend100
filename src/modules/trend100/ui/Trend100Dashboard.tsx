@@ -27,6 +27,7 @@ interface Trend100DashboardProps {
   history: TrendHealthHistoryPoint[];
   deckId: TrendDeckId;
   deckLabel: string;
+  deckDescription?: string;
   isDemoMode?: boolean;
 }
 
@@ -35,6 +36,7 @@ export function Trend100Dashboard({
   history,
   deckId,
   deckLabel,
+  deckDescription,
   isDemoMode = false,
 }: Trend100DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -109,7 +111,12 @@ export function Trend100Dashboard({
               <h2 className="text-lg font-semibold text-zinc-200">
                 Market Health Over Time
               </h2>
-              <p className="text-xs text-zinc-500 mt-1">{deckLabel}</p>
+              <div className="mt-1">
+                <span className="text-xs font-medium text-zinc-300">{deckLabel}</span>
+                {deckDescription && (
+                  <span className="text-xs text-zinc-500 ml-2">— {deckDescription}</span>
+                )}
+              </div>
             </div>
             <div className="flex gap-2">
               {(['3M', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
@@ -132,9 +139,10 @@ export function Trend100Dashboard({
 
         {/* Heatmap Grid */}
         <div>
-          <h2 className="text-lg font-semibold text-zinc-200 mb-3">
+          <h2 className="text-lg font-semibold text-zinc-200 mb-1">
             Ticker Heatmap
           </h2>
+          <p className="text-xs text-zinc-500 mb-3">{deckLabel} ({snapshot.universeSize} tickers)</p>
           <HeatmapGrid
             tickers={sortedTickers}
             onTileClick={handleTileClick}

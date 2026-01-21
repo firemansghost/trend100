@@ -13,75 +13,75 @@ import { validateUniverse } from './validateUniverse';
  * US Sectors deck (12 tickers)
  */
 const US_SECTORS_UNIVERSE: TrendUniverse = [
-  { ticker: 'SPY', tags: ['etf', 'index', 'broad-us'], section: 'Sectors' },
-  { ticker: 'XLB', tags: ['etf', 'sector', 'materials'], section: 'Sectors' },
-  { ticker: 'XLC', tags: ['etf', 'sector', 'communications'], section: 'Sectors' },
-  { ticker: 'XLE', tags: ['etf', 'sector', 'energy'], section: 'Sectors' },
-  { ticker: 'XLF', tags: ['etf', 'sector', 'financials'], section: 'Sectors' },
-  { ticker: 'XLI', tags: ['etf', 'sector', 'industrials'], section: 'Sectors' },
-  { ticker: 'XLK', tags: ['etf', 'sector', 'tech'], section: 'Sectors' },
-  { ticker: 'XLP', tags: ['etf', 'sector', 'staples'], section: 'Sectors' },
-  { ticker: 'XLRE', tags: ['etf', 'sector', 'real-estate'], section: 'Sectors' },
-  { ticker: 'XLU', tags: ['etf', 'sector', 'utilities'], section: 'Sectors' },
-  { ticker: 'XLV', tags: ['etf', 'sector', 'healthcare'], section: 'Sectors' },
-  { ticker: 'XLY', tags: ['etf', 'sector', 'discretionary'], section: 'Sectors' },
+  { ticker: 'SPY', tags: ['etf', 'index', 'broad-us'], section: 'Sectors', subtitle: 'S&P 500', name: 'SPDR S&P 500 ETF Trust' },
+  { ticker: 'XLB', tags: ['etf', 'sector', 'materials'], section: 'Sectors', subtitle: 'Materials', name: 'Materials Select Sector SPDR Fund' },
+  { ticker: 'XLC', tags: ['etf', 'sector', 'communications'], section: 'Sectors', subtitle: 'Comm Svcs', name: 'Communication Services Select Sector SPDR Fund' },
+  { ticker: 'XLE', tags: ['etf', 'sector', 'energy'], section: 'Sectors', subtitle: 'Energy', name: 'Energy Select Sector SPDR Fund' },
+  { ticker: 'XLF', tags: ['etf', 'sector', 'financials'], section: 'Sectors', subtitle: 'Financials', name: 'Financial Select Sector SPDR Fund' },
+  { ticker: 'XLI', tags: ['etf', 'sector', 'industrials'], section: 'Sectors', subtitle: 'Industrials', name: 'Industrial Select Sector SPDR Fund' },
+  { ticker: 'XLK', tags: ['etf', 'sector', 'tech'], section: 'Sectors', subtitle: 'Technology', name: 'Technology Select Sector SPDR Fund' },
+  { ticker: 'XLP', tags: ['etf', 'sector', 'staples'], section: 'Sectors', subtitle: 'Staples', name: 'Consumer Staples Select Sector SPDR Fund' },
+  { ticker: 'XLRE', tags: ['etf', 'sector', 'real-estate'], section: 'Sectors', subtitle: 'Real Estate', name: 'Real Estate Select Sector SPDR Fund' },
+  { ticker: 'XLU', tags: ['etf', 'sector', 'utilities'], section: 'Sectors', subtitle: 'Utilities', name: 'Utilities Select Sector SPDR Fund' },
+  { ticker: 'XLV', tags: ['etf', 'sector', 'healthcare'], section: 'Sectors', subtitle: 'Health Care', name: 'Health Care Select Sector SPDR Fund' },
+  { ticker: 'XLY', tags: ['etf', 'sector', 'discretionary'], section: 'Sectors', subtitle: 'Discretionary', name: 'Consumer Discretionary Select Sector SPDR Fund' },
 ];
 
 /**
  * US Equity Factors deck (10 tickers)
  */
 const US_FACTORS_UNIVERSE: TrendUniverse = [
-  { ticker: 'IWB', tags: ['etf', 'factor', 'us', 'broad'], section: 'Size' },
-  { ticker: 'IWD', tags: ['etf', 'factor', 'us', 'value'], section: 'Style' },
-  { ticker: 'IWF', tags: ['etf', 'factor', 'us', 'growth'], section: 'Style' },
-  { ticker: 'IWM', tags: ['etf', 'factor', 'us', 'smallcap'], section: 'Size' },
-  { ticker: 'IWR', tags: ['etf', 'factor', 'us', 'midcap'], section: 'Size' },
-  { ticker: 'MTUM', tags: ['etf', 'factor', 'us', 'momentum'], section: 'Momentum' },
-  { ticker: 'QQQ', tags: ['etf', 'factor', 'us', 'nasdaq100'], section: 'Size' },
-  { ticker: 'QUAL', tags: ['etf', 'factor', 'us', 'quality'], section: 'Quality/LowVol' },
-  { ticker: 'SPHD', tags: ['etf', 'factor', 'us', 'dividend'], section: 'Quality/LowVol' },
-  { ticker: 'SPLV', tags: ['etf', 'factor', 'us', 'low-vol'], section: 'Quality/LowVol' },
+  { ticker: 'IWB', tags: ['etf', 'factor', 'us', 'broad'], section: 'Size', subtitle: 'Large Cap', name: 'iShares Russell 1000 ETF' },
+  { ticker: 'IWD', tags: ['etf', 'factor', 'us', 'value'], section: 'Style', subtitle: 'Value', name: 'iShares Russell 1000 Value ETF' },
+  { ticker: 'IWF', tags: ['etf', 'factor', 'us', 'growth'], section: 'Style', subtitle: 'Growth', name: 'iShares Russell 1000 Growth ETF' },
+  { ticker: 'IWM', tags: ['etf', 'factor', 'us', 'smallcap'], section: 'Size', subtitle: 'Small Cap', name: 'iShares Russell 2000 ETF' },
+  { ticker: 'IWR', tags: ['etf', 'factor', 'us', 'midcap'], section: 'Size', subtitle: 'Mid Cap', name: 'iShares Russell Mid-Cap ETF' },
+  { ticker: 'MTUM', tags: ['etf', 'factor', 'us', 'momentum'], section: 'Momentum', subtitle: 'Momentum', name: 'iShares MSCI USA Momentum Factor ETF' },
+  { ticker: 'QQQ', tags: ['etf', 'factor', 'us', 'nasdaq100'], section: 'Size', subtitle: 'Nasdaq 100', name: 'Invesco QQQ Trust' },
+  { ticker: 'QUAL', tags: ['etf', 'factor', 'us', 'quality'], section: 'Quality/LowVol', subtitle: 'Quality', name: 'iShares MSCI USA Quality Factor ETF' },
+  { ticker: 'SPHD', tags: ['etf', 'factor', 'us', 'dividend'], section: 'Quality/LowVol', subtitle: 'HiDiv LowVol', name: 'Invesco S&P 500 High Dividend Low Volatility ETF' },
+  { ticker: 'SPLV', tags: ['etf', 'factor', 'us', 'low-vol'], section: 'Quality/LowVol', subtitle: 'Low Vol', name: 'Invesco S&P 500 Low Volatility ETF' },
 ];
 
 /**
  * Global Equities deck (11 tickers)
  */
 const GLOBAL_EQUITIES_UNIVERSE: TrendUniverse = [
-  { ticker: 'ACWX', tags: ['etf', 'global', 'ex-us'], section: 'Global ex-US' },
-  { ticker: 'EEM', tags: ['etf', 'global', 'emerging'], section: 'Emerging' },
-  { ticker: 'EWA', tags: ['etf', 'global', 'australia'], section: 'Developed' },
-  { ticker: 'EWC', tags: ['etf', 'global', 'canada'], section: 'Developed' },
-  { ticker: 'EWJ', tags: ['etf', 'global', 'japan'], section: 'Developed' },
-  { ticker: 'EWU', tags: ['etf', 'global', 'uk'], section: 'Developed' },
-  { ticker: 'EWZ', tags: ['etf', 'global', 'brazil'], section: 'Emerging' },
-  { ticker: 'EZU', tags: ['etf', 'global', 'europe'], section: 'Developed' },
-  { ticker: 'FXI', tags: ['etf', 'global', 'china'], section: 'Emerging' },
-  { ticker: 'GNR', tags: ['etf', 'global', 'natural-resources'], section: 'Commodities/Resources' },
-  { ticker: 'INDA', tags: ['etf', 'global', 'india'], section: 'Emerging' },
+  { ticker: 'ACWX', tags: ['etf', 'global', 'ex-us'], section: 'Global ex-US', subtitle: 'ACWI ex-US', name: 'iShares MSCI ACWI ex US ETF' },
+  { ticker: 'EEM', tags: ['etf', 'global', 'emerging'], section: 'Emerging', subtitle: 'Emerging', name: 'iShares MSCI Emerging Markets ETF' },
+  { ticker: 'EWA', tags: ['etf', 'global', 'australia'], section: 'Developed', subtitle: 'Australia', name: 'iShares MSCI Australia ETF' },
+  { ticker: 'EWC', tags: ['etf', 'global', 'canada'], section: 'Developed', subtitle: 'Canada', name: 'iShares MSCI Canada ETF' },
+  { ticker: 'EWJ', tags: ['etf', 'global', 'japan'], section: 'Developed', subtitle: 'Japan', name: 'iShares MSCI Japan ETF' },
+  { ticker: 'EWU', tags: ['etf', 'global', 'uk'], section: 'Developed', subtitle: 'UK', name: 'iShares MSCI United Kingdom ETF' },
+  { ticker: 'EWZ', tags: ['etf', 'global', 'brazil'], section: 'Emerging', subtitle: 'Brazil', name: 'iShares MSCI Brazil ETF' },
+  { ticker: 'EZU', tags: ['etf', 'global', 'europe'], section: 'Developed', subtitle: 'Eurozone', name: 'iShares MSCI Eurozone ETF' },
+  { ticker: 'FXI', tags: ['etf', 'global', 'china'], section: 'Emerging', subtitle: 'China LC', name: 'iShares China Large-Cap ETF' },
+  { ticker: 'GNR', tags: ['etf', 'global', 'natural-resources'], section: 'Commodities/Resources', subtitle: 'Nat Resources', name: 'SPDR S&P Global Natural Resources ETF' },
+  { ticker: 'INDA', tags: ['etf', 'global', 'india'], section: 'Emerging', subtitle: 'India', name: 'iShares MSCI India ETF' },
 ];
 
 /**
  * Fixed Income Sectors deck (18 tickers)
  */
 const FIXED_INCOME_UNIVERSE: TrendUniverse = [
-  { ticker: 'AGG', tags: ['etf', 'rates', 'aggregate'], section: 'Rates' },
-  { ticker: 'BILS', tags: ['etf', 'rates', 'short-term'], section: 'Cash' },
-  { ticker: 'BIZD', tags: ['etf', 'credit', 'business-dev'], section: 'Loans/BDC' },
-  { ticker: 'BKLN', tags: ['etf', 'credit', 'bank-loan'], section: 'Loans/BDC' },
-  { ticker: 'BNDX', tags: ['etf', 'rates', 'international'], section: 'Rates' },
-  { ticker: 'BWX', tags: ['etf', 'rates', 'international'], section: 'Rates' },
-  { ticker: 'CWB', tags: ['etf', 'credit', 'convertible'], section: 'Credit' },
-  { ticker: 'EMB', tags: ['etf', 'credit', 'emerging'], section: 'EM Debt' },
-  { ticker: 'EMLC', tags: ['etf', 'credit', 'emerging-local'], section: 'EM Debt' },
-  { ticker: 'HYG', tags: ['etf', 'credit', 'high-yield'], section: 'Credit' },
-  { ticker: 'IEF', tags: ['etf', 'rates', 'intermediate'], section: 'Rates' },
-  { ticker: 'LQD', tags: ['etf', 'credit', 'investment-grade'], section: 'Credit' },
-  { ticker: 'MBB', tags: ['etf', 'rates', 'mortgage'], section: 'Securitized' },
-  { ticker: 'PFF', tags: ['etf', 'credit', 'preferred'], section: 'Preferreds' },
-  { ticker: 'SHY', tags: ['etf', 'rates', 'short-term'], section: 'Rates' },
-  { ticker: 'STIP', tags: ['etf', 'rates', 'tips'], section: 'Rates' },
-  { ticker: 'TIP', tags: ['etf', 'rates', 'tips'], section: 'Rates' },
-  { ticker: 'TLT', tags: ['etf', 'rates', 'long-term'], section: 'Rates' },
+  { ticker: 'AGG', tags: ['etf', 'rates', 'aggregate'], section: 'Rates', subtitle: 'Agg Bond', name: 'iShares Core U.S. Aggregate Bond ETF' },
+  { ticker: 'BILS', tags: ['etf', 'rates', 'short-term'], section: 'Cash', subtitle: 'T-Bills', name: 'SPDR Bloomberg 3-12 Month T-Bill ETF' },
+  { ticker: 'BIZD', tags: ['etf', 'credit', 'business-dev'], section: 'Loans/BDC', subtitle: 'BDCs', name: 'VanEck Business Development Company ETF' },
+  { ticker: 'BKLN', tags: ['etf', 'credit', 'bank-loan'], section: 'Loans/BDC', subtitle: 'Bank Loans', name: 'Invesco Senior Loan ETF' },
+  { ticker: 'BNDX', tags: ['etf', 'rates', 'international'], section: 'Rates', subtitle: 'Intl Bond', name: 'Vanguard Total International Bond ETF' },
+  { ticker: 'BWX', tags: ['etf', 'rates', 'international'], section: 'Rates', subtitle: 'Intl Corp', name: 'SPDR Bloomberg International Corporate Bond ETF' },
+  { ticker: 'CWB', tags: ['etf', 'credit', 'convertible'], section: 'Credit', subtitle: 'Convertibles', name: 'SPDR Bloomberg Convertible Securities ETF' },
+  { ticker: 'EMB', tags: ['etf', 'credit', 'emerging'], section: 'EM Debt', subtitle: 'EM USD Debt', name: 'iShares J.P. Morgan USD Emerging Markets Bond ETF' },
+  { ticker: 'EMLC', tags: ['etf', 'credit', 'emerging-local'], section: 'EM Debt', subtitle: 'EM Local', name: 'VanEck J.P. Morgan EM Local Currency Bond ETF' },
+  { ticker: 'HYG', tags: ['etf', 'credit', 'high-yield'], section: 'Credit', subtitle: 'High Yield', name: 'iShares iBoxx $ High Yield Corporate Bond ETF' },
+  { ticker: 'IEF', tags: ['etf', 'rates', 'intermediate'], section: 'Rates', subtitle: '7–10y Tsy', name: 'iShares 7-10 Year Treasury Bond ETF' },
+  { ticker: 'LQD', tags: ['etf', 'credit', 'investment-grade'], section: 'Credit', subtitle: 'IG Credit', name: 'iShares iBoxx $ Investment Grade Corporate Bond ETF' },
+  { ticker: 'MBB', tags: ['etf', 'rates', 'mortgage'], section: 'Securitized', subtitle: 'MBS', name: 'iShares MBS ETF' },
+  { ticker: 'PFF', tags: ['etf', 'credit', 'preferred'], section: 'Preferreds', subtitle: 'Preferreds', name: 'iShares Preferred & Income Securities ETF' },
+  { ticker: 'SHY', tags: ['etf', 'rates', 'short-term'], section: 'Rates', subtitle: '1–3y Tsy', name: 'iShares 1-3 Year Treasury Bond ETF' },
+  { ticker: 'STIP', tags: ['etf', 'rates', 'tips'], section: 'Rates', subtitle: 'Short TIPS', name: 'iShares 0-5 Year TIPS Bond ETF' },
+  { ticker: 'TIP', tags: ['etf', 'rates', 'tips'], section: 'Rates', subtitle: 'TIPS', name: 'iShares TIPS Bond ETF' },
+  { ticker: 'TLT', tags: ['etf', 'rates', 'long-term'], section: 'Rates', subtitle: '20y+ Tsy', name: 'iShares 20+ Year Treasury Bond ETF' },
 ];
 
 /**
@@ -89,27 +89,27 @@ const FIXED_INCOME_UNIVERSE: TrendUniverse = [
  */
 const MACRO_UNIVERSE: TrendUniverse = [
   // Commodities
-  { ticker: 'DBA', tags: ['etf', 'commodities', 'agriculture'], section: 'Commodities' },
-  { ticker: 'DBB', tags: ['etf', 'commodities', 'metals'], section: 'Commodities' },
-  { ticker: 'PDBC', tags: ['etf', 'commodities', 'diversified'], section: 'Commodities' },
-  { ticker: 'USO', tags: ['etf', 'commodities', 'energy', 'oil'], section: 'Energy' },
+  { ticker: 'DBA', tags: ['etf', 'commodities', 'agriculture'], section: 'Commodities', subtitle: 'Agriculture', name: 'Invesco DB Agriculture Fund' },
+  { ticker: 'DBB', tags: ['etf', 'commodities', 'metals'], section: 'Commodities', subtitle: 'Base Metals', name: 'Invesco DB Base Metals Fund' },
+  { ticker: 'PDBC', tags: ['etf', 'commodities', 'diversified'], section: 'Commodities', subtitle: 'Commodities', name: 'Invesco Optimum Yield Diversified Commodity Strategy No K-1 ETF' },
+  { ticker: 'USO', tags: ['etf', 'commodities', 'energy', 'oil'], section: 'Energy', subtitle: 'Oil', name: 'United States Oil Fund LP' },
   // FX
-  { ticker: 'FXA', tags: ['etf', 'fx', 'australia'], section: 'FX' },
-  { ticker: 'FXB', tags: ['etf', 'fx', 'uk'], section: 'FX' },
-  { ticker: 'FXC', tags: ['etf', 'fx', 'canada'], section: 'FX' },
-  { ticker: 'FXE', tags: ['etf', 'fx', 'euro'], section: 'FX' },
-  { ticker: 'FXY', tags: ['etf', 'fx', 'japan'], section: 'FX' },
-  { ticker: 'UUP', tags: ['etf', 'fx', 'dollar'], section: 'Dollar' },
+  { ticker: 'FXA', tags: ['etf', 'fx', 'australia'], section: 'FX', subtitle: 'AUD', name: 'Invesco CurrencyShares Australian Dollar Trust' },
+  { ticker: 'FXB', tags: ['etf', 'fx', 'uk'], section: 'FX', subtitle: 'GBP', name: 'Invesco CurrencyShares British Pound Sterling Trust' },
+  { ticker: 'FXC', tags: ['etf', 'fx', 'canada'], section: 'FX', subtitle: 'CAD', name: 'Invesco CurrencyShares Canadian Dollar Trust' },
+  { ticker: 'FXE', tags: ['etf', 'fx', 'euro'], section: 'FX', subtitle: 'EUR', name: 'Invesco CurrencyShares Euro Trust' },
+  { ticker: 'FXY', tags: ['etf', 'fx', 'japan'], section: 'FX', subtitle: 'JPY', name: 'Invesco CurrencyShares Japanese Yen Trust' },
+  { ticker: 'UUP', tags: ['etf', 'fx', 'dollar'], section: 'Dollar', subtitle: 'Dollar', name: 'Invesco DB US Dollar Index Bullish Fund' },
   // Metals
-  { ticker: 'GDX', tags: ['etf', 'metals', 'gold-miners'], section: 'Metals' },
-  { ticker: 'GLDM', tags: ['etf', 'metals', 'gold'], section: 'Metals' },
-  { ticker: 'SIL', tags: ['etf', 'metals', 'silver-miners'], section: 'Metals' },
-  { ticker: 'SLV', tags: ['etf', 'metals', 'silver'], section: 'Metals' },
+  { ticker: 'GDX', tags: ['etf', 'metals', 'gold-miners'], section: 'Metals', subtitle: 'Gold Miners', name: 'VanEck Gold Miners ETF' },
+  { ticker: 'GLDM', tags: ['etf', 'metals', 'gold'], section: 'Metals', subtitle: 'Gold', name: 'SPDR Gold MiniShares Trust' },
+  { ticker: 'SIL', tags: ['etf', 'metals', 'silver-miners'], section: 'Metals', subtitle: 'Silver Miners', name: 'Global X Silver Miners ETF' },
+  { ticker: 'SLV', tags: ['etf', 'metals', 'silver'], section: 'Metals', subtitle: 'Silver', name: 'iShares Silver Trust' },
   // Uranium
-  { ticker: 'SRUUF', tags: ['etf', 'uranium', 'energy'], section: 'Uranium' },
+  { ticker: 'SRUUF', tags: ['etf', 'uranium', 'energy'], section: 'Uranium', subtitle: 'Uranium', name: 'Sprott Physical Uranium Trust' },
   // Crypto (using spot ETF proxies for Marketstack EOD compatibility)
-  { ticker: 'Bitcoin', tags: ['crypto'], section: 'Crypto', providerTicker: 'FBTC', subtitle: 'FBTC' },
-  { ticker: 'Ethereum', tags: ['crypto'], section: 'Crypto', providerTicker: 'FETH', subtitle: 'FETH' },
+  { ticker: 'Bitcoin', tags: ['crypto'], section: 'Crypto', providerTicker: 'FBTC', subtitle: 'FBTC', name: 'Fidelity Wise Origin Bitcoin Fund' },
+  { ticker: 'Ethereum', tags: ['crypto'], section: 'Crypto', providerTicker: 'FETH', subtitle: 'FETH', name: 'Fidelity Ethereum Fund' },
 ];
 
 // Validate all universes

@@ -107,7 +107,15 @@ export function TrendModal({
             </h2>
             {ticker.subtitle && (
               <div className="text-xs text-zinc-400 mb-1">
-                Proxy: {ticker.subtitle}
+                {/* Show "Proxy:" prefix only for human labels like Bitcoin/Ethereum */}
+                {ticker.ticker === 'Bitcoin' || ticker.ticker === 'Ethereum'
+                  ? `Proxy: ${ticker.subtitle}`
+                  : ticker.subtitle}
+              </div>
+            )}
+            {ticker.name && (
+              <div className="text-xs text-zinc-500 mb-1">
+                {ticker.name}
               </div>
             )}
             <div className={`text-sm font-medium ${statusColors[ticker.status]}`}>

@@ -57,7 +57,8 @@ export interface TrendUniverseItem {
   tags: TrendTag[];
   section?: string; // Optional section grouping (deck-specific)
   providerTicker?: string; // For future real-data provider mapping (e.g., "BTC-USD")
-  subtitle?: string; // Optional subtitle for context (e.g., proxy ticker like "FBTC")
+  subtitle?: string; // Optional short label for tiles (e.g., "FBTC", "Technology")
+  name?: string; // Optional full descriptive name for modal (e.g., "Technology Select Sector SPDR Fund")
 }
 
 export type TrendUniverse = TrendUniverseItem[];
@@ -69,7 +70,8 @@ export interface TrendTickerSnapshot {
   ticker: string;
   tags: string[];
   section?: string; // Optional section grouping (deck-specific)
-  subtitle?: string; // Optional subtitle for context (e.g., proxy ticker like "FBTC")
+  subtitle?: string; // Optional short label for tiles (e.g., "FBTC", "Technology")
+  name?: string; // Optional full descriptive name for modal (e.g., "Technology Select Sector SPDR Fund")
   status: TrendStatus;
   price: number;
   changePct?: number;

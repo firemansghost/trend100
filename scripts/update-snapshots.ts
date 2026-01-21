@@ -70,7 +70,7 @@ function saveHistory(deckId: TrendDeckId, history: TrendHealthHistoryPoint[]): v
 
 // Compute ticker snapshot from EOD series
 function computeTickerSnapshot(
-  item: { ticker: string; tags: string[]; section?: string; subtitle?: string },
+  item: { ticker: string; tags: string[]; section?: string; subtitle?: string; name?: string },
   eodBars: Array<{ date: string; close: number }>
 ): TrendTickerSnapshot | null {
   if (eodBars.length === 0) {
@@ -101,6 +101,7 @@ function computeTickerSnapshot(
       tags: item.tags,
       section: item.section,
       subtitle: item.subtitle,
+      name: item.name,
       status: 'UNKNOWN',
       price: latestClose,
       changePct: changePct ? Math.round(changePct * 100) / 100 : undefined,
@@ -152,6 +153,7 @@ function computeTickerSnapshot(
     tags: item.tags,
     section: item.section,
     subtitle: item.subtitle,
+    name: item.name,
     status,
     price: Math.round(latestClose * 100) / 100,
     changePct: changePct ? Math.round(changePct * 100) / 100 : undefined,
@@ -173,10 +175,10 @@ async function main() {
   console.log(`📅 History window: ${historyDays} days\n`);
 
   // Step 1: Build deduplicated symbol map
-  // Map: providerSymbol -> list of (deckId, ticker, tags, section, subtitle)
+  // Map: providerSymbol -> list of (deckId, ticker, tags, section, subtitle, name)
   const symbolMap = new Map<
     string,
-    Array<{ deckId: TrendDeckId; ticker: string; tags: string[]; section?: string; subtitle?: string }>
+    Array<{ deckId: TrendDeckId; ticker: string; tags: string[]; section?: string; subtitle?: string; name?: string }>
   >();
 
   for (const deckId of deckIds) {
@@ -193,6 +195,7 @@ async function main() {
         tags: item.tags,
         section: item.section,
         subtitle: item.subtitle,
+        name: item.name,
       });
     }
   }
@@ -234,6 +237,7 @@ async function main() {
           tags: item.tags,
           section: item.section,
           subtitle: item.subtitle,
+          name: item.name,
           status: 'UNKNOWN',
           price: 0,
           // All other fields undefined (safe for UI)
@@ -251,6 +255,7 @@ async function main() {
           tags: item.tags,
           section: item.section,
           subtitle: item.subtitle,
+          name: item.name,
           status: 'UNKNOWN',
           price: 0,
         });

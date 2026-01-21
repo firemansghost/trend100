@@ -9,7 +9,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { TrendHealthSummary, TrendTickerSnapshot, TrendDeckId } from '../types';
-import { getAllTags } from './tagUtils';
 import { TagPickerModal } from './TagPickerModal';
 import { DemoBadge } from './DemoBadge';
 import type { SortKey } from './sortUtils';
@@ -28,6 +27,8 @@ interface TopBarProps {
   onSortChange: (key: SortKey) => void;
   deckId: TrendDeckId;
   deckLabel: string;
+  availableTags: string[];
+  tagCounts?: Record<string, number>;
   isDemoMode?: boolean;
 }
 
@@ -44,10 +45,11 @@ export function TopBar({
   onSortChange,
   deckId,
   deckLabel,
+  availableTags,
+  tagCounts,
   isDemoMode = false,
 }: TopBarProps) {
   const router = useRouter();
-  const availableTags = getAllTags(allTickers);
   const isFiltered = filteredCount !== allTickers.length;
   const [isTagPickerOpen, setIsTagPickerOpen] = useState(false);
 
@@ -175,17 +177,18 @@ export function TopBar({
         </div>
 
         {/* Tag Filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          {(selectedTags.length > 0 || searchQuery) && (
-            <button
-              onClick={clearFilters}
-              className="px-3 py-1 text-xs bg-zinc-800 text-zinc-300 rounded border border-zinc-700 hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500"
-            >
-              Clear
-            </button>
-          )}
-          <div className="flex flex-wrap gap-2">
-            {availableTags.slice(0, 12).map((tag) => {
+        {availableTags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {(selectedTags.length > 0 || searchQuery) && (
+              <button
+                onClick={clearFilters}
+                className="px-3 py-1 text-xs bg-zinc-800 text-zinc-300 rounded border border-zinc-700 hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500"
+              >
+                Clear
+              </button>
+            )}
+            <div className="flex flex-wrap gap-2">
+              {availableTags.slice(0, 12).map((tag) => {
               const isSelected = selectedTags.includes(tag);
               return (
                 <button
@@ -210,8 +213,9 @@ export function TopBar({
                 +{availableTags.length - 12} more
               </button>
             )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
       </div>
       {isDemoMode && <DemoBadge />}
@@ -221,6 +225,7 @@ export function TopBar({
         availableTags={availableTags}
         selectedTags={selectedTags}
         onTagsChange={onTagsChange}
+        tagCounts={tagCounts}
       />
     </>
   );

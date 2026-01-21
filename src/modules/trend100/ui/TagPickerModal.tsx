@@ -15,6 +15,7 @@ interface TagPickerModalProps {
   availableTags: string[];
   selectedTags: string[];
   onTagsChange: (tags: string[]) => void;
+  tagCounts?: Record<string, number>;
 }
 
 export function TagPickerModal({
@@ -23,6 +24,7 @@ export function TagPickerModal({
   availableTags,
   selectedTags,
   onTagsChange,
+  tagCounts,
 }: TagPickerModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -138,6 +140,9 @@ export function TagPickerModal({
                   className="px-2 py-1 text-xs rounded border bg-zinc-700 text-zinc-100 border-zinc-600 hover:bg-zinc-600 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500"
                 >
                   {tag}
+                  {tagCounts?.[tag] && (
+                    <span className="ml-1 text-zinc-400">({tagCounts[tag]})</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -162,6 +167,9 @@ export function TagPickerModal({
                   className="px-2 py-1 text-xs rounded border bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500"
                 >
                   {tag}
+                  {tagCounts?.[tag] && (
+                    <span className="ml-1 text-zinc-500">({tagCounts[tag]})</span>
+                  )}
                 </button>
               ))}
             </div>

@@ -18,6 +18,19 @@ export function getAllTags(snapshots: TrendTickerSnapshot[]): string[] {
 }
 
 /**
+ * Computes tag counts (number of tickers that include each tag)
+ */
+export function getTagCounts(snapshots: TrendTickerSnapshot[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  snapshots.forEach((snapshot) => {
+    snapshot.tags.forEach((tag) => {
+      counts[tag] = (counts[tag] || 0) + 1;
+    });
+  });
+  return counts;
+}
+
+/**
  * Filters tickers by search query (case-insensitive ticker match)
  */
 export function filterBySearch(

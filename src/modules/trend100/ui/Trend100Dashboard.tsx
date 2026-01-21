@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type {
   TrendSnapshot,
   TrendTickerSnapshot,
@@ -17,7 +17,7 @@ import { TopBar } from './TopBar';
 import { HeatmapGrid } from './HeatmapGrid';
 import { TrendModal } from './TrendModal';
 import { HealthHistoryChart } from './HealthHistoryChart';
-import { applyFilters } from './tagUtils';
+import { applyFilters, getAllTags, getTagCounts } from './tagUtils';
 import { sortTickers, type SortKey } from './sortUtils';
 
 type Timeframe = '3M' | '1Y' | 'ALL';
@@ -46,6 +46,24 @@ export function Trend100Dashboard({
   const [selectedTicker, setSelectedTicker] =
     useState<TrendTickerSnapshot | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Compute deck-specific tags and counts from current deck's tickers
+  const availableTags = useMemo(
+    () => getAllTags(snapshot.tickers),
+    [snapshot.tickers]
+  );
+  const tagCounts = useMemo(
+    () => getTagCounts(snapshot.tickers),
+    [snapshot.tickers]
+  );
+
+  // Safety: remove any selected tags that aren't in the current deck
+  useEffect(() => {
+    const validTags = selectedTags.filter((tag) => availableTags.includes(tag));
+    if (validTags.length !== selectedTags.length) {
+      setSelectedTags(validTags);
+    }
+  }, [availableTags, selectedTags]);
 
   // Apply filters first
   const filteredTickers = applyFilters(
@@ -100,6 +118,8 @@ export function Trend100Dashboard({
         onSortChange={setSortKey}
         deckId={deckId}
         deckLabel={deckLabel}
+        availableTags={availableTags}
+        tagCounts={tagCounts}
         isDemoMode={isDemoMode}
       />
 

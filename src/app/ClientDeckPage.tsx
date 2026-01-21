@@ -28,8 +28,41 @@ function ClientDeckPageContent({ isDemoMode = false }: ClientDeckPageProps) {
   const deckId: TrendDeckId = isDeckId(rawDeck) ? rawDeck : 'LEADERSHIP';
   const deck = getDeck(deckId);
 
-  // Compute snapshot client-side (memoized per deckId)
-  const snapshot = useMemo(() => getLatestSnapshot(deckId), [deckId]);
+  // Snapshot state
+  const [snapshot, setSnapshot] = useState<ReturnType<typeof getLatestSnapshot> | null>(null);
+  const [snapshotSource, setSnapshotSource] = useState<'file' | 'mock'>('mock');
+  const [snapshotLoading, setSnapshotLoading] = useState(true);
+
+  // Load snapshot when deckId changes
+  useEffect(() => {
+    async function loadSnapshot() {
+      setSnapshotLoading(true);
+      try {
+        const fileName = `snapshot.${deckId}.json`;
+        const res = await fetch(`/${fileName}`, { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error('File not found');
+        }
+        const data = (await res.json()) as ReturnType<typeof getLatestSnapshot>;
+        // Validate it has required fields
+        if (data && typeof data === 'object' && 'tickers' in data && 'health' in data) {
+          setSnapshot(data);
+          setSnapshotSource('file');
+        } else {
+          throw new Error('Invalid snapshot format');
+        }
+      } catch (error) {
+        // Fallback to mock snapshot
+        const mockSnapshot = getLatestSnapshot(deckId);
+        setSnapshot(mockSnapshot);
+        setSnapshotSource('mock');
+      } finally {
+        setSnapshotLoading(false);
+      }
+    }
+
+    loadSnapshot();
+  }, [deckId]);
 
   // History state
   const [history, setHistory] = useState<TrendHealthHistoryPoint[]>([]);
@@ -80,7 +113,9 @@ function ClientDeckPageContent({ isDemoMode = false }: ClientDeckPageProps) {
           <span>rawDeck={rawDeck ?? 'undefined'}</span>
           <span>resolvedDeckId={deckId}</span>
           <span>deckLabel={deck.label}</span>
-          <span>universeSize={snapshot.universeSize}</span>
+          <span>universeSize={snapshot?.universeSize ?? 'loading...'}</span>
+          <span>snapshotSource={snapshotSource}</span>
+          <span>snapshotLoading={snapshotLoading ? 'true' : 'false'}</span>
           <span>historySource={historySource}</span>
           <span>historyLoading={historyLoading ? 'true' : 'false'}</span>
           <span>allowed={getAllDeckIds().join(',')}</span>
@@ -88,6 +123,18 @@ function ClientDeckPageContent({ isDemoMode = false }: ClientDeckPageProps) {
       </div>
     </div>
   );
+
+  // Show loading state
+  if (snapshotLoading || !snapshot) {
+    return (
+      <>
+        {debugPanel}
+        <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">
+          Loading snapshot...
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -100,7 +147,7 @@ function ClientDeckPageContent({ isDemoMode = false }: ClientDeckPageProps) {
         deckLabel={deck.label}
         deckDescription={deck.description}
         deckSections={deck.sections ?? []}
-        isDemoMode={isDemoMode}
+        isDemoMode={snapshotSource === 'mock' || isDemoMode}
       />
     </>
   );

@@ -53,13 +53,11 @@ export function TopBar({
 
   const handleDeckChange = (newDeckId: TrendDeckId) => {
     // Update URL with deck param (or remove it for default LEADERSHIP)
-    // Use router.refresh() to force server component re-render
+    // Client component will read searchParams and update automatically
     if (newDeckId === 'LEADERSHIP') {
       router.push('/');
-      router.refresh();
     } else {
       router.push(`/?deck=${newDeckId}`);
-      router.refresh();
     }
   };
 

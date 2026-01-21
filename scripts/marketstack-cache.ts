@@ -95,12 +95,24 @@ function getTradingDaysBetween(startDate: string, endDate: string): number {
 }
 
 /**
+ * Result of ensureHistory operation
+ */
+export interface EnsureHistoryResult {
+  ok: boolean;
+  symbol: string;
+  bars?: EodBar[];
+  reason?: string;
+}
+
+/**
  * Ensure history exists for a symbol (backfill if needed, update if stale)
  * 
+ * Returns structured result instead of throwing on unavailable symbols.
+ * 
  * @param symbol Provider symbol
- * @returns Array of EOD bars (cached or fetched)
+ * @returns Result with ok flag and bars (or reason if failed)
  */
-export async function ensureHistory(symbol: string): Promise<EodBar[]> {
+export async function ensureHistory(symbol: string): Promise<EnsureHistoryResult> {
   const cached = loadCachedBars(symbol);
   const today = new Date().toISOString().split('T')[0]!;
 
@@ -113,13 +125,19 @@ export async function ensureHistory(symbol: string): Promise<EodBar[]> {
   if (!cached || cached.length === 0) {
     // No cache - backfill full history
     console.log(`  📥 Backfilling ${symbol} (${historyDays} days)...`);
-    const bars = await fetchEodSeries(symbol, {
-      startDate: startDateStr,
-      limit: 1000,
-    });
-    saveCachedBars(symbol, bars);
-    console.log(`    ✓ Cached ${bars.length} bars`);
-    return bars;
+    try {
+      const bars = await fetchEodSeries(symbol, {
+        startDate: startDateStr,
+        limit: 1000,
+      });
+      saveCachedBars(symbol, bars);
+      console.log(`    ✓ Cached ${bars.length} bars`);
+      return { ok: true, symbol, bars };
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      console.warn(`    ⚠️  Failed to backfill ${symbol}: ${reason}`);
+      return { ok: false, symbol, reason };
+    }
   }
 
   // Cache exists - check if we need to update
@@ -139,19 +157,21 @@ export async function ensureHistory(symbol: string): Promise<EodBar[]> {
         const merged = mergeBars(cached, [latest]);
         saveCachedBars(symbol, merged);
         console.log(`    ✓ Updated with latest bar (${latest.date})`);
-        return merged;
+        return { ok: true, symbol, bars: merged };
       } else if (latest && latest.date === lastCachedDate) {
         // Already up to date
         console.log(`    ✓ Already up to date (${lastCachedDate})`);
-        return cached;
+        return { ok: true, symbol, bars: cached };
       } else {
-        // No latest data or error - return cached
-        console.log(`    ⚠️  No new data, using cache`);
-        return cached;
+        // No latest data (symbol unavailable) - return cached but mark as potentially stale
+        console.log(`    ⚠️  No new data available, using cache`);
+        return { ok: true, symbol, bars: cached };
       }
     } catch (error) {
-      console.warn(`    ⚠️  Failed to fetch latest for ${symbol}, using cache:`, error instanceof Error ? error.message : String(error));
-      return cached;
+      const reason = error instanceof Error ? error.message : String(error);
+      console.warn(`    ⚠️  Failed to fetch latest for ${symbol}, using cache: ${reason}`);
+      // Return cached data even on error (better than nothing)
+      return { ok: true, symbol, bars: cached };
     }
   } else {
     // Gap > 3 trading days - fetch recent history and merge
@@ -168,10 +188,12 @@ export async function ensureHistory(symbol: string): Promise<EodBar[]> {
       const merged = mergeBars(cached, newBars);
       saveCachedBars(symbol, merged);
       console.log(`    ✓ Merged ${newBars.length} new bars, total: ${merged.length}`);
-      return merged;
+      return { ok: true, symbol, bars: merged };
     } catch (error) {
-      console.warn(`    ⚠️  Failed to fill gap for ${symbol}, using cache:`, error instanceof Error ? error.message : String(error));
-      return cached;
+      const reason = error instanceof Error ? error.message : String(error);
+      console.warn(`    ⚠️  Failed to fill gap for ${symbol}, using cache: ${reason}`);
+      // Return cached data even on error
+      return { ok: true, symbol, bars: cached };
     }
   }
 }
@@ -179,11 +201,14 @@ export async function ensureHistory(symbol: string): Promise<EodBar[]> {
 /**
  * Ensure history for multiple symbols (batched latest updates)
  * 
+ * Handles failures gracefully - continues processing even if some symbols fail.
+ * 
  * @param symbols Array of provider symbols
- * @returns Map of symbol -> EOD bars
+ * @returns Map of symbol -> EOD bars (only successful symbols)
  */
 export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string, EodBar[]>> {
   const result = new Map<string, EodBar[]>();
+  const failures: string[] = [];
   
   // First, load all cached data
   const cachedMap = new Map<string, EodBar[]>();
@@ -211,8 +236,13 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
   
   // Backfill missing symbols
   for (const symbol of symbolsNeedingBackfill) {
-    const bars = await ensureHistory(symbol);
-    result.set(symbol, bars);
+    const historyResult = await ensureHistory(symbol);
+    if (historyResult.ok && historyResult.bars) {
+      result.set(symbol, historyResult.bars);
+    } else {
+      failures.push(symbol);
+      console.warn(`  ⚠️  Skipping ${symbol}: ${historyResult.reason || 'unavailable'}`);
+    }
   }
   
   // Batch update symbols with recent cache
@@ -226,9 +256,14 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
         const latest = latestMap.get(symbol);
         
         if (!cached) {
-          // Shouldn't happen, but handle gracefully
-          const bars = await ensureHistory(symbol);
-          result.set(symbol, bars);
+          // Shouldn't happen, but handle gracefully - try individual ensureHistory
+          const historyResult = await ensureHistory(symbol);
+          if (historyResult.ok && historyResult.bars) {
+            result.set(symbol, historyResult.bars);
+          } else {
+            failures.push(symbol);
+            console.warn(`  ⚠️  Skipping ${symbol}: ${historyResult.reason || 'unavailable'}`);
+          }
           continue;
         }
         
@@ -237,8 +272,12 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
           const merged = mergeBars(cached, [latest]);
           saveCachedBars(symbol, merged);
           result.set(symbol, merged);
+        } else if (latest === null) {
+          // Symbol unavailable - use cached but log warning
+          console.warn(`  ⚠️  ${symbol} unavailable, using cached data`);
+          result.set(symbol, cached);
         } else {
-          // No update needed or error
+          // No update needed
           result.set(symbol, cached);
         }
       }
@@ -246,8 +285,13 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
       console.warn(`  ⚠️  Batch update failed, falling back to individual updates:`, error instanceof Error ? error.message : String(error));
       // Fallback to individual updates
       for (const symbol of symbolsNeedingUpdate) {
-        const bars = await ensureHistory(symbol);
-        result.set(symbol, bars);
+        const historyResult = await ensureHistory(symbol);
+        if (historyResult.ok && historyResult.bars) {
+          result.set(symbol, historyResult.bars);
+        } else {
+          failures.push(symbol);
+          console.warn(`  ⚠️  Skipping ${symbol}: ${historyResult.reason || 'unavailable'}`);
+        }
       }
     }
   }
@@ -257,6 +301,10 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
     if (!result.has(symbol)) {
       result.set(symbol, bars);
     }
+  }
+  
+  if (failures.length > 0) {
+    console.warn(`\n  ⚠️  ${failures.length} symbol(s) unavailable: ${failures.join(', ')}`);
   }
   
   return result;

@@ -11,6 +11,15 @@ export interface EodBar {
   adjusted_close?: number; // Use if available, otherwise fallback to close
 }
 
+/**
+ * Normalize symbol for Marketstack API
+ * 
+ * Marketstack requires periods to be replaced with hyphens (e.g., BRK.B → BRK-B)
+ */
+export function normalizeMarketstackSymbol(symbol: string): string {
+  return symbol.replace(/\./g, '-');
+}
+
 export interface FetchEodSeriesOptions {
   startDate?: string; // YYYY-MM-DD
   limit?: number; // Max number of bars (default: 1000)
@@ -22,9 +31,11 @@ export interface FetchEodSeriesOptions {
  * Uses adjusted_close if available, otherwise close.
  * Returns bars sorted ascending by date (oldest first).
  * 
- * @param symbol Stock symbol (e.g., "AAPL")
+ * Handles symbol normalization (BRK.B → BRK-B) and retries on 406 errors.
+ * 
+ * @param symbol Stock symbol (e.g., "AAPL" or "BRK.B")
  * @param options Configuration options
- * @returns Array of EOD bars
+ * @returns Array of EOD bars, or throws if unavailable after retries
  */
 export async function fetchEodSeries(
   symbol: string,
@@ -37,82 +48,116 @@ export async function fetchEodSeries(
     throw new Error('MARKETSTACK_API_KEY environment variable is not set');
   }
 
-  // Build URL
-  const params = new URLSearchParams({
-    access_key: apiKey,
-    symbols: symbol,
-    limit: limit.toString(),
-  });
-
-  if (startDate) {
-    params.append('date_from', startDate);
+  // Try original symbol first, then normalized if 406
+  const symbolsToTry = [symbol];
+  const normalized = normalizeMarketstackSymbol(symbol);
+  if (normalized !== symbol) {
+    symbolsToTry.push(normalized);
   }
 
-  const url = `https://api.marketstack.com/v1/eod?${params.toString()}`;
-
-  // Retry logic for 429/5xx errors
-  const maxRetries = 3;
   let lastError: Error | null = null;
 
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Trend100/1.0',
-        },
-      });
+  for (const trySymbol of symbolsToTry) {
+    // Build URL
+    const params = new URLSearchParams({
+      access_key: apiKey,
+      symbols: trySymbol,
+      limit: limit.toString(),
+    });
 
-      if (!response.ok) {
-        if (response.status === 429 || response.status >= 500) {
-          // Rate limit or server error - retry with exponential backoff
-          if (attempt < maxRetries - 1) {
-            // Check Retry-After header if present
-            const retryAfter = response.headers.get('Retry-After');
-            const delay = retryAfter
-              ? parseInt(retryAfter, 10) * 1000
-              : Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
-            await new Promise((resolve) => setTimeout(resolve, delay));
-            continue;
+    if (startDate) {
+      params.append('date_from', startDate);
+    }
+
+    const url = `https://api.marketstack.com/v1/eod?${params.toString()}`;
+
+    // Retry logic for 429/5xx errors
+    const maxRetries = 3;
+    let response: Response | null = null;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Trend100/1.0',
+          },
+        });
+
+        if (!response.ok) {
+          // Handle 406 Not Acceptable or data_not_available - try normalized if not already
+          if (response.status === 406) {
+            const data = await response.json().catch(() => ({}));
+            const errorCode = data?.error?.code;
+            if (errorCode === 'data_not_available' || errorCode === 'symbol_not_found') {
+              // If we haven't tried normalized yet, break to outer loop to try it
+              if (trySymbol === symbol && normalized !== symbol) {
+                lastError = new Error(`Symbol ${symbol} not available (406)`);
+                break; // Break to try normalized
+              }
+              // Already tried normalized or no normalization needed - throw
+              throw new Error(`Symbol ${trySymbol} not available: ${errorCode}`);
+            }
           }
+
+          if (response.status === 429 || response.status >= 500) {
+            // Rate limit or server error - retry with exponential backoff
+            if (attempt < maxRetries - 1) {
+              // Check Retry-After header if present
+              const retryAfter = response.headers.get('Retry-After');
+              const delay = retryAfter
+                ? parseInt(retryAfter, 10) * 1000
+                : Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+              await new Promise((resolve) => setTimeout(resolve, delay));
+              continue;
+            }
+          }
+          throw new Error(
+            `Marketstack API error: ${response.status} ${response.statusText}`
+          );
         }
-        throw new Error(
-          `Marketstack API error: ${response.status} ${response.statusText}`
-        );
-      }
 
-      const data = await response.json();
+        const data = await response.json();
 
-      // Handle Marketstack response format
-      if (!data.data || !Array.isArray(data.data)) {
-        throw new Error('Invalid Marketstack response format');
-      }
+        // Handle Marketstack response format
+        if (!data.data || !Array.isArray(data.data)) {
+          throw new Error('Invalid Marketstack response format');
+        }
 
-      // Transform to our format
-      const bars: EodBar[] = data.data
-        .map((bar: any) => {
-          const close = bar.adjusted_close !== null && bar.adjusted_close !== undefined
-            ? bar.adjusted_close
-            : bar.close;
+        // Transform to our format
+        const bars: EodBar[] = data.data
+          .map((bar: any) => {
+            const close = bar.adjusted_close !== null && bar.adjusted_close !== undefined
+              ? bar.adjusted_close
+              : bar.close;
 
-          return {
-            date: bar.date.split('T')[0]!, // Extract YYYY-MM-DD from ISO string
-            close: parseFloat(close),
-            adjusted_close: bar.adjusted_close
-              ? parseFloat(bar.adjusted_close)
-              : undefined,
-          };
-        })
-        .filter((bar: EodBar) => !isNaN(bar.close))
-        .sort((a: EodBar, b: EodBar) => a.date.localeCompare(b.date)); // Ascending
+            return {
+              date: bar.date.split('T')[0]!, // Extract YYYY-MM-DD from ISO string
+              close: parseFloat(close),
+              adjusted_close: bar.adjusted_close
+                ? parseFloat(bar.adjusted_close)
+                : undefined,
+            };
+          })
+          .filter((bar: EodBar) => !isNaN(bar.close))
+          .sort((a: EodBar, b: EodBar) => a.date.localeCompare(b.date)); // Ascending
 
-      return bars;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (attempt < maxRetries - 1) {
-        const delay = Math.pow(2, attempt) * 1000;
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        return bars;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        // If 406 and we have another symbol to try, break to outer loop
+        if (error instanceof Error && error.message.includes('406') && trySymbol === symbol && normalized !== symbol) {
+          break; // Try normalized
+        }
+        // For other errors, retry if attempts remain and it's a retryable error
+        if (attempt < maxRetries - 1 && response && (response.status === 429 || response.status >= 500)) {
+          const delay = Math.pow(2, attempt) * 1000;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
       }
     }
+
+    // If we got here and have bars, return them (success case already returned above)
+    // If we tried normalized and still failed, lastError is set
   }
 
   throw lastError || new Error('Failed to fetch EOD series after retries');
@@ -122,9 +167,10 @@ export async function fetchEodSeries(
  * Fetch latest EOD bars for multiple symbols in a single request
  * 
  * Marketstack supports comma-separated symbols. This reduces API calls.
+ * Normalizes symbols (BRK.B → BRK-B) for Marketstack compatibility.
  * 
- * @param symbols Array of stock symbols (e.g., ["AAPL", "MSFT", "GOOGL"])
- * @returns Map of symbol -> latest EOD bar (or empty array if not found)
+ * @param symbols Array of stock symbols (e.g., ["AAPL", "MSFT", "BRK.B"])
+ * @returns Map of original symbol -> latest EOD bar (or null if not found)
  */
 export async function fetchEodLatestBatch(
   symbols: string[]
@@ -139,13 +185,27 @@ export async function fetchEodLatestBatch(
     return new Map();
   }
 
+  // Normalize symbols for Marketstack (create mapping)
+  const normalizedMap = new Map<string, string>(); // original -> normalized
+  const reverseMap = new Map<string, string>(); // normalized -> original
+  const normalizedSymbols: string[] = [];
+
+  for (const symbol of symbols) {
+    const normalized = normalizeMarketstackSymbol(symbol);
+    normalizedMap.set(symbol, normalized);
+    reverseMap.set(normalized, symbol);
+    if (!normalizedSymbols.includes(normalized)) {
+      normalizedSymbols.push(normalized);
+    }
+  }
+
   // Marketstack supports comma-separated symbols, but we'll chunk to keep URLs reasonable
   const BATCH_SIZE = 50;
   const result = new Map<string, EodBar | null>();
 
-  // Process in batches
-  for (let i = 0; i < symbols.length; i += BATCH_SIZE) {
-    const batch = symbols.slice(i, i + BATCH_SIZE);
+  // Process in batches (using normalized symbols)
+  for (let i = 0; i < normalizedSymbols.length; i += BATCH_SIZE) {
+    const batch = normalizedSymbols.slice(i, i + BATCH_SIZE);
     const symbolsStr = batch.join(',');
 
     const params = new URLSearchParams({
@@ -178,6 +238,21 @@ export async function fetchEodLatestBatch(
               continue;
             }
           }
+          // For 406, mark batch symbols as unavailable but continue
+          if (response.status === 406) {
+            const data = await response.json().catch(() => ({}));
+            const errorCode = data?.error?.code;
+            if (errorCode === 'data_not_available' || errorCode === 'symbol_not_found') {
+              // Mark all symbols in batch as null and continue
+              for (const normalized of batch) {
+                const original = reverseMap.get(normalized);
+                if (original) {
+                  result.set(original, null);
+                }
+              }
+              break; // Continue to next batch
+            }
+          }
           throw new Error(
             `Marketstack API error: ${response.status} ${response.statusText}`
           );
@@ -189,14 +264,17 @@ export async function fetchEodLatestBatch(
           throw new Error('Invalid Marketstack response format');
         }
 
-        // Map results by symbol
+        // Map results by original symbol (using reverse map)
         for (const bar of data.data) {
-          const symbol = bar.symbol;
+          const normalizedSymbol = bar.symbol;
+          const originalSymbol = reverseMap.get(normalizedSymbol);
+          if (!originalSymbol) continue;
+
           const close = bar.adjusted_close !== null && bar.adjusted_close !== undefined
             ? bar.adjusted_close
             : bar.close;
 
-          result.set(symbol, {
+          result.set(originalSymbol, {
             date: bar.date.split('T')[0]!,
             close: parseFloat(close),
             adjusted_close: bar.adjusted_close
@@ -205,16 +283,27 @@ export async function fetchEodLatestBatch(
           });
         }
 
-        // Mark symbols not found as null
-        for (const symbol of batch) {
-          if (!result.has(symbol)) {
-            result.set(symbol, null);
+        // Mark symbols not found as null (by original symbol)
+        for (const normalized of batch) {
+          const original = reverseMap.get(normalized);
+          if (original && !result.has(original)) {
+            result.set(original, null);
           }
         }
 
         break; // Success, exit retry loop
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
+        // Don't throw on 406 - mark as unavailable and continue
+        if (error instanceof Error && error.message.includes('406')) {
+          for (const normalized of batch) {
+            const original = reverseMap.get(normalized);
+            if (original) {
+              result.set(original, null);
+            }
+          }
+          break; // Continue to next batch
+        }
         if (attempt < maxRetries - 1) {
           const delay = Math.pow(2, attempt) * 1000;
           await new Promise((resolve) => setTimeout(resolve, delay));
@@ -222,13 +311,16 @@ export async function fetchEodLatestBatch(
       }
     }
 
-    if (lastError && !result.size) {
-      throw lastError;
-    }
-
     // Rate limiting: 4 requests/sec = 250ms spacing
-    if (i + BATCH_SIZE < symbols.length) {
+    if (i + BATCH_SIZE < normalizedSymbols.length) {
       await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
+
+  // Ensure all original symbols are in result map
+  for (const symbol of symbols) {
+    if (!result.has(symbol)) {
+      result.set(symbol, null);
     }
   }
 

@@ -224,14 +224,15 @@ async function main() {
       const eodBars = seriesCache.get(providerSymbol);
 
       if (!eodBars || eodBars.length === 0) {
-        console.log(`  ⚠️  No data for ${item.ticker} (${providerSymbol})`);
-        // Create UNKNOWN snapshot
+        console.log(`  ⚠️  No data for ${item.ticker} (${providerSymbol}) - creating UNKNOWN snapshot`);
+        // Create UNKNOWN snapshot with safe defaults
         tickers.push({
           ticker: item.ticker,
           tags: item.tags,
           section: item.section,
           status: 'UNKNOWN',
           price: 0,
+          // All other fields undefined (safe for UI)
         });
         continue;
       }

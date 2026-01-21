@@ -66,14 +66,31 @@ export function filterByTags(
 }
 
 /**
- * Applies both search and tag filters
+ * Filters tickers by section (single-select)
+ */
+export function filterBySection(
+  snapshots: TrendTickerSnapshot[],
+  selectedSection: string | null
+): TrendTickerSnapshot[] {
+  if (selectedSection === null) {
+    return snapshots;
+  }
+  return snapshots.filter(
+    (snapshot) => snapshot.section === selectedSection
+  );
+}
+
+/**
+ * Applies section, search, and tag filters in order
  */
 export function applyFilters(
   snapshots: TrendTickerSnapshot[],
   searchQuery: string,
-  selectedTags: string[]
+  selectedTags: string[],
+  selectedSection: string | null = null
 ): TrendTickerSnapshot[] {
-  let filtered = filterBySearch(snapshots, searchQuery);
+  let filtered = filterBySection(snapshots, selectedSection);
+  filtered = filterBySearch(filtered, searchQuery);
   filtered = filterByTags(filtered, selectedTags);
   return filtered;
 }

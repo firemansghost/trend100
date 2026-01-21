@@ -55,6 +55,7 @@ export type TrendTag = string;
 export interface TrendUniverseItem {
   ticker: string;
   tags: TrendTag[];
+  section?: string; // Optional section grouping (deck-specific)
   providerTicker?: string; // For future real-data provider mapping (e.g., "BTC-USD")
 }
 
@@ -66,6 +67,7 @@ export type TrendStatus = 'GREEN' | 'YELLOW' | 'RED' | 'UNKNOWN';
 export interface TrendTickerSnapshot {
   ticker: string;
   tags: string[];
+  section?: string; // Optional section grouping (deck-specific)
   status: TrendStatus;
   price: number;
   changePct?: number;
@@ -108,9 +110,15 @@ export type TrendDeckId =
   | 'FIXED_INCOME'
   | 'MACRO';
 
+export interface TrendDeckSection {
+  id: string;
+  label: string;
+}
+
 export interface TrendDeck {
   id: TrendDeckId;
   label: string;
   description?: string;
   universe: TrendUniverse;
+  sections?: TrendDeckSection[]; // Optional sections for this deck
 }

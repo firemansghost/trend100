@@ -99,6 +99,7 @@ function ClientDeckPageContent({ isDemoMode = false }: ClientDeckPageProps) {
         deckId={deckId}
         deckLabel={deck.label}
         deckDescription={deck.description}
+        deckSections={deck.sections ?? []}
         isDemoMode={isDemoMode}
       />
     </>

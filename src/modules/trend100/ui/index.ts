@@ -3,6 +3,7 @@
  */
 
 export { Trend100Dashboard } from './Trend100Dashboard';
+export { SectionPills } from './SectionPills';
 export { TopBar } from './TopBar';
 export { HeatmapGrid } from './HeatmapGrid';
 export { TrendTile } from './TrendTile';

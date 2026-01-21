@@ -19,6 +19,8 @@ import { TrendModal } from './TrendModal';
 import { HealthHistoryChart } from './HealthHistoryChart';
 import { applyFilters, getAllTags, getTagCounts } from './tagUtils';
 import { sortTickers, type SortKey } from './sortUtils';
+import { SectionPills } from './SectionPills';
+import type { TrendDeckSection } from '../types';
 
 type Timeframe = '3M' | '1Y' | 'ALL';
 
@@ -28,6 +30,7 @@ interface Trend100DashboardProps {
   deckId: TrendDeckId;
   deckLabel: string;
   deckDescription?: string;
+  deckSections?: TrendDeckSection[];
   isDemoMode?: boolean;
 }
 
@@ -37,10 +40,12 @@ export function Trend100Dashboard({
   deckId,
   deckLabel,
   deckDescription,
+  deckSections = [],
   isDemoMode = false,
 }: Trend100DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('UNIVERSE');
   const [timeframe, setTimeframe] = useState<Timeframe>('1Y');
   const [selectedTicker, setSelectedTicker] =
@@ -57,6 +62,17 @@ export function Trend100Dashboard({
     [snapshot.tickers]
   );
 
+  // Compute section counts from current deck's tickers
+  const sectionCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    snapshot.tickers.forEach((ticker) => {
+      if (ticker.section) {
+        counts[ticker.section] = (counts[ticker.section] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [snapshot.tickers]);
+
   // Safety: remove any selected tags that aren't in the current deck
   useEffect(() => {
     const validTags = selectedTags.filter((tag) => availableTags.includes(tag));
@@ -65,11 +81,22 @@ export function Trend100Dashboard({
     }
   }, [availableTags, selectedTags]);
 
-  // Apply filters first
+  // Safety: reset selectedSection if it's not in current deck sections
+  useEffect(() => {
+    if (selectedSection !== null) {
+      const sectionIds = deckSections.map((s) => s.id);
+      if (!sectionIds.includes(selectedSection)) {
+        setSelectedSection(null);
+      }
+    }
+  }, [selectedSection, deckSections]);
+
+  // Apply filters first (section -> search -> tags)
   const filteredTickers = applyFilters(
     snapshot.tickers,
     searchQuery,
-    selectedTags
+    selectedTags,
+    selectedSection
   );
 
   // Then apply sorting
@@ -122,6 +149,17 @@ export function Trend100Dashboard({
         tagCounts={tagCounts}
         isDemoMode={isDemoMode}
       />
+      {/* Section Pills - between TopBar and chart */}
+      {deckSections.length > 0 && (
+        <div className="container mx-auto px-4 py-3 border-b border-zinc-800">
+          <SectionPills
+            sections={deckSections}
+            selectedSection={selectedSection}
+            onChange={setSelectedSection}
+            counts={sectionCounts}
+          />
+        </div>
+      )}
 
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Health History Chart */}

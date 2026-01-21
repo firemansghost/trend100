@@ -9,3 +9,4 @@ export { TrendTile } from './TrendTile';
 export { TrendModal } from './TrendModal';
 export { TagPickerModal } from './TagPickerModal';
 export { DemoBadge } from './DemoBadge';
+export { HealthHistoryChart } from './HealthHistoryChart';

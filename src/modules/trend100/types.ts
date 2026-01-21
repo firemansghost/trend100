@@ -88,3 +88,12 @@ export interface TrendSnapshot {
   tickers: TrendTickerSnapshot[];
   health: TrendHealthSummary;
 }
+
+// Health history types
+export interface TrendHealthHistoryPoint {
+  date: string; // YYYY-MM-DD
+  greenPct: number; // 0-100 (can be 1 decimal)
+  yellowPct?: number;
+  redPct?: number;
+  regimeLabel?: 'RISK_ON' | 'TRANSITION' | 'RISK_OFF';
+}

@@ -5,3 +5,4 @@
 export { DEFAULT_UNIVERSE } from './universe';
 export { validateUniverse } from './validateUniverse';
 export { getLatestSnapshot } from './getLatestSnapshot';
+export { getHealthHistory } from './getHealthHistory';

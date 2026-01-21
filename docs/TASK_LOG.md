@@ -1,5 +1,22 @@
 # TASK LOG — Trend100
 
+### 2026-01-21 — Vercel live milestone recorded
+**Completed:**
+- Updated project brain docs to record Vercel deployment milestone
+- Added deployment decision entry to DECISIONS.md
+- Updated STATUS.md to reflect live deployment state
+- Updated HANDOFF.md with current priorities
+
+**Changed:**
+- docs/DECISIONS.md: Added Vercel deployment decision
+- docs/STATUS.md: Updated current state and next actions
+- docs/HANDOFF.md: Updated session summary and priorities
+
+**Discovered:**
+- Future work should proceed with mock snapshot + UI development now that deployment pipeline is established
+
+---
+
 ### 2026-01-19 — Kickoff + project brain initialized
 **Completed:**
 - Captured kickoff brief, V1 scope, and trend rules

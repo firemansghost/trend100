@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-01-21 — (Ops) Trend100 deployed to Vercel
+**Choice:** Trend100 is live on Vercel at https://trend100.vercel.app/  
+**Why:** Live URL enables rapid iteration, shareability, and continuous deployment from main  
+**Alternatives considered:** Waiting until UI is polished, self-hosting, delaying deployment
+
+---
+
 ### 2026-01-19 — (Ops) Trend100 is its own repo
 **Choice:** Create Trend100 as a standalone repository (standalone deploy).  
 **Why:** Cleanest public shipping path; avoids coupling to Ghost Allocator while preserving future module embedding.  

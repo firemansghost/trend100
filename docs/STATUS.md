@@ -1,7 +1,7 @@
 # STATUS — Trend100
 
 ## Current State
-Project brain is initialized. Repo decision is locked: Trend100 will be its **own repo**. Kickoff brief and trend rules are defined. No code scaffold yet.
+Next.js app is scaffolded with module structure (`src/modules/trend100/{engine,data,ui}` + `types`). Site is deployed and live on Vercel at https://trend100.vercel.app/. Project brain documentation is established.
 
 ## Scope Guardrail
 V1 = heatmap + health score + modal + tests + metadata + snapshot-first data layer. Everything else is V2 unless explicitly approved.
@@ -11,8 +11,8 @@ V1 = heatmap + health score + modal + tests + metadata + snapshot-first data lay
 - Tooling choices not locked (chart library; test runner; data provider later).
 
 ## Next Actions
-1) Scaffold a new Next.js (App Router) + Tailwind repo for Trend100.
-2) Add portable module structure: `src/modules/trend100/{engine,data,ui}` + `types`.
-3) Add curated tickers + tags (v0 list is fine) and wire mock snapshot → UI.
+1) Create curated 100 ticker list + tag taxonomy as committed source-of-truth file
+2) Build mock snapshot loader in `data/` layer
+3) Build dashboard heatmap UI in `ui/` layer
 
-Last updated: 2026-01-19
+Last updated: 2026-01-21

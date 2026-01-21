@@ -2,8 +2,9 @@ name: Update Snapshots
 
 on:
   schedule:
-    # Run daily at 12:15 UTC (≈ 6:15 AM CST in January)
-    - cron: '15 12 * * *'
+    # Run weekdays only at 12:15 UTC (≈ 6:15 AM CST in January)
+    # Monday=1, Friday=5
+    - cron: '15 12 * * 1-5'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -35,6 +36,7 @@ jobs:
         env:
           DATA_PROVIDER: marketstack
           MARKETSTACK_API_KEY: ${{ secrets.MARKETSTACK_API_KEY }}
+          MARKETSTACK_HISTORY_DAYS: 365
         run: pnpm update:snapshots
 
       - name: Check for changes
@@ -51,6 +53,6 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add public/snapshot.*.json public/health-history.*.json
-          git commit -m "chore: update snapshots and health history for all decks [skip ci]"
+          git add public/snapshot.*.json public/health-history.*.json data/marketstack/eod/*.json
+          git commit -m "chore: update snapshots, health history, and EOD cache [skip ci]"
           git push

@@ -1,0 +1,222 @@
+{
+  "asOfDate": "2026-01-21",
+  "universeSize": 18,
+  "tickers": [
+    {
+      "ticker": "AGG",
+      "tags": [
+        "etf",
+        "rates",
+        "aggregate"
+      ],
+      "section": "Rates",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "BILS",
+      "tags": [
+        "etf",
+        "rates",
+        "short-term"
+      ],
+      "section": "Cash",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "BIZD",
+      "tags": [
+        "etf",
+        "credit",
+        "business-dev"
+      ],
+      "section": "Loans/BDC",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "BKLN",
+      "tags": [
+        "etf",
+        "credit",
+        "bank-loan"
+      ],
+      "section": "Loans/BDC",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "BNDX",
+      "tags": [
+        "etf",
+        "rates",
+        "international"
+      ],
+      "section": "Rates",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "BWX",
+      "tags": [
+        "etf",
+        "rates",
+        "international"
+      ],
+      "section": "Rates",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "CWB",
+      "tags": [
+        "etf",
+        "credit",
+        "convertible"
+      ],
+      "section": "Credit",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "EMB",
+      "tags": [
+        "etf",
+        "credit",
+        "emerging"
+      ],
+      "section": "EM Debt",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "EMLC",
+      "tags": [
+        "etf",
+        "credit",
+        "emerging-local"
+      ],
+      "section": "EM Debt",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "HYG",
+      "tags": [
+        "etf",
+        "credit",
+        "high-yield"
+      ],
+      "section": "Credit",
+      "status": "GREEN",
+      "price": 80.88,
+      "changePct": -0.26,
+      "sma200": 80.07,
+      "sma50w": 79.97,
+      "ema50w": 80.27,
+      "distanceTo200dPct": 1.01,
+      "distanceToUpperBandPct": 0.76
+    },
+    {
+      "ticker": "IEF",
+      "tags": [
+        "etf",
+        "rates",
+        "intermediate"
+      ],
+      "section": "Rates",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "LQD",
+      "tags": [
+        "etf",
+        "credit",
+        "investment-grade"
+      ],
+      "section": "Credit",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "MBB",
+      "tags": [
+        "etf",
+        "rates",
+        "mortgage"
+      ],
+      "section": "Securitized",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "PFF",
+      "tags": [
+        "etf",
+        "credit",
+        "preferred"
+      ],
+      "section": "Preferreds",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "SHY",
+      "tags": [
+        "etf",
+        "rates",
+        "short-term"
+      ],
+      "section": "Rates",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "STIP",
+      "tags": [
+        "etf",
+        "rates",
+        "tips"
+      ],
+      "section": "Rates",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "TIP",
+      "tags": [
+        "etf",
+        "rates",
+        "tips"
+      ],
+      "section": "Rates",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "TLT",
+      "tags": [
+        "etf",
+        "rates",
+        "long-term"
+      ],
+      "section": "Rates",
+      "status": "RED",
+      "price": 86.65,
+      "changePct": -1.31,
+      "sma200": 87.97,
+      "sma50w": 88.27,
+      "ema50w": 88.12,
+      "distanceTo200dPct": -1.5,
+      "distanceToUpperBandPct": -1.83
+    }
+  ],
+  "health": {
+    "greenPct": 50,
+    "yellowPct": 0,
+    "redPct": 50,
+    "regimeLabel": "TRANSITION"
+  }
+}

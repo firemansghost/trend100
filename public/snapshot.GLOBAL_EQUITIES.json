@@ -1,0 +1,133 @@
+{
+  "asOfDate": "2026-01-21",
+  "universeSize": 11,
+  "tickers": [
+    {
+      "ticker": "ACWX",
+      "tags": [
+        "etf",
+        "global",
+        "ex-us"
+      ],
+      "section": "Global ex-US",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "EEM",
+      "tags": [
+        "etf",
+        "global",
+        "emerging"
+      ],
+      "section": "Emerging",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "EWA",
+      "tags": [
+        "etf",
+        "global",
+        "australia"
+      ],
+      "section": "Developed",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "EWC",
+      "tags": [
+        "etf",
+        "global",
+        "canada"
+      ],
+      "section": "Developed",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "EWJ",
+      "tags": [
+        "etf",
+        "global",
+        "japan"
+      ],
+      "section": "Developed",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "EWU",
+      "tags": [
+        "etf",
+        "global",
+        "uk"
+      ],
+      "section": "Developed",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "EWZ",
+      "tags": [
+        "etf",
+        "global",
+        "brazil"
+      ],
+      "section": "Emerging",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "EZU",
+      "tags": [
+        "etf",
+        "global",
+        "europe"
+      ],
+      "section": "Developed",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "FXI",
+      "tags": [
+        "etf",
+        "global",
+        "china"
+      ],
+      "section": "Emerging",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "GNR",
+      "tags": [
+        "etf",
+        "global",
+        "natural-resources"
+      ],
+      "section": "Commodities/Resources",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "INDA",
+      "tags": [
+        "etf",
+        "global",
+        "india"
+      ],
+      "section": "Emerging",
+      "status": "UNKNOWN",
+      "price": 0
+    }
+  ],
+  "health": {
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  }
+}

@@ -1,15 +1,20 @@
 /**
  * Update snapshots script
  * 
- * Fetches real EOD data from Marketstack and generates TrendSnapshot JSON files
+ * Fetches real EOD data from Marketstack (with caching) and generates TrendSnapshot JSON files
  * for all decks. Also updates health history files.
  * 
  * This script:
  * 1. Deduplicates tickers across all decks (by providerSymbol)
- * 2. Fetches EOD series once per unique symbol
- * 3. Computes snapshots for each deck using the fetched data
+ * 2. Uses cached EOD data (backfills if missing, updates incrementally if stale)
+ * 3. Computes snapshots for each deck using the cached data
  * 4. Writes public/snapshot.<DECK_ID>.json files
  * 5. Updates public/health-history.<DECK_ID>.json files
+ * 
+ * Caching strategy:
+ * - First run: backfills 1 year of history per symbol (configurable via MARKETSTACK_HISTORY_DAYS)
+ * - Subsequent runs: uses batched "latest" calls to update incrementally
+ * - Cache files stored in data/marketstack/eod/<symbol>.json
  */
 
 import { readFileSync, writeFileSync } from 'fs';
@@ -21,7 +26,7 @@ import type {
   TrendHealthHistoryPoint,
 } from '../src/modules/trend100/types';
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
-import { fetchEodSeries } from '../src/modules/trend100/data/providers';
+import { ensureHistoryBatch } from './marketstack-cache';
 import { calcSMA, calcEMA, resampleDailyToWeekly } from '../src/modules/trend100/engine/movingAverages';
 import { classifyTrend } from '../src/modules/trend100/engine/classifyTrend';
 import { computeHealthScore } from '../src/modules/trend100/engine/healthScore';
@@ -161,6 +166,9 @@ async function main() {
 
   const today = getTodayDate();
   const deckIds = getAllDeckIds();
+  const historyDays = parseInt(process.env.MARKETSTACK_HISTORY_DAYS || '365', 10);
+  
+  console.log(`📅 History window: ${historyDays} days\n`);
 
   // Step 1: Build deduplicated symbol map
   // Map: providerSymbol -> list of (deckId, ticker, tags, section)
@@ -188,30 +196,20 @@ async function main() {
 
   console.log(`📊 Found ${symbolMap.size} unique symbols across ${deckIds.length} decks\n`);
 
-  // Step 2: Fetch EOD series for each unique symbol
-  const seriesCache = new Map<string, Array<{ date: string; close: number }>>();
-  const startDate = new Date();
-  startDate.setFullYear(startDate.getFullYear() - 2); // ~2 years of history
-  const startDateStr = startDate.toISOString().split('T')[0]!;
-
-  console.log('📥 Fetching EOD data from Marketstack...\n');
-
-  for (const [symbol, items] of symbolMap.entries()) {
-    try {
-      console.log(`  Fetching ${symbol}...`);
-      const bars = await fetchEodSeries(symbol, {
-        startDate: startDateStr,
-        limit: 1000,
-      });
-      seriesCache.set(symbol, bars);
-      console.log(`    ✓ Got ${bars.length} bars`);
-    } catch (error) {
-      console.error(`    ✗ Error fetching ${symbol}:`, error instanceof Error ? error.message : String(error));
-      // Continue with other symbols
-    }
-  }
-
-  console.log(`\n✅ Fetched data for ${seriesCache.size} symbols\n`);
+  // Step 2: Ensure history exists for all symbols (uses cache, backfills if needed, updates incrementally)
+  console.log('📥 Ensuring EOD history (using cache, backfilling if needed)...\n');
+  
+  const allSymbols = Array.from(symbolMap.keys());
+  const seriesCache = await ensureHistoryBatch(allSymbols);
+  
+  const backfilledCount = Array.from(seriesCache.values()).filter((bars) => {
+    // Rough heuristic: if we have ~365 bars, likely backfilled
+    return bars.length >= historyDays * 0.8;
+  }).length;
+  
+  const updatedCount = allSymbols.length - backfilledCount;
+  
+  console.log(`\n✅ History ready: ${backfilledCount} backfilled, ${updatedCount} updated incrementally\n`);
 
   // Step 3: Generate snapshots for each deck
   const snapshots = new Map<TrendDeckId, TrendSnapshot>();

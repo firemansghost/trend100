@@ -1,0 +1,216 @@
+{
+  "asOfDate": "2026-01-21",
+  "universeSize": 12,
+  "tickers": [
+    {
+      "ticker": "SPY",
+      "tags": [
+        "etf",
+        "index",
+        "broad-us"
+      ],
+      "section": "Sectors",
+      "status": "GREEN",
+      "price": 677.58,
+      "changePct": -2.04,
+      "sma200": 634.38,
+      "sma50w": 626.6,
+      "ema50w": 644.82,
+      "distanceTo200dPct": 6.81,
+      "distanceToUpperBandPct": 5.08
+    },
+    {
+      "ticker": "XLB",
+      "tags": [
+        "etf",
+        "sector",
+        "materials"
+      ],
+      "section": "Sectors",
+      "status": "RED",
+      "price": 48.19,
+      "changePct": -1.01,
+      "sma200": 81.45,
+      "sma50w": 80.98,
+      "ema50w": 76.83,
+      "distanceTo200dPct": -40.83,
+      "distanceToUpperBandPct": -40.49
+    },
+    {
+      "ticker": "XLC",
+      "tags": [
+        "etf",
+        "sector",
+        "communications"
+      ],
+      "section": "Sectors",
+      "status": "GREEN",
+      "price": 113.47,
+      "changePct": -1.48,
+      "sma200": 108.97,
+      "sma50w": 107.61,
+      "ema50w": 109.92,
+      "distanceTo200dPct": 4.13,
+      "distanceToUpperBandPct": 3.23
+    },
+    {
+      "ticker": "XLE",
+      "tags": [
+        "etf",
+        "sector",
+        "energy"
+      ],
+      "section": "Sectors",
+      "status": "RED",
+      "price": 47.6,
+      "changePct": -0.19,
+      "sma200": 80.16,
+      "sma50w": 80.41,
+      "ema50w": 76.63,
+      "distanceTo200dPct": -40.62,
+      "distanceToUpperBandPct": -40.8
+    },
+    {
+      "ticker": "XLF",
+      "tags": [
+        "etf",
+        "sector",
+        "financials"
+      ],
+      "section": "Sectors",
+      "status": "GREEN",
+      "price": 53.2,
+      "changePct": -2.28,
+      "sma200": 52.15,
+      "sma50w": 51.86,
+      "ema50w": 52.57,
+      "distanceTo200dPct": 2.01,
+      "distanceToUpperBandPct": 1.19
+    },
+    {
+      "ticker": "XLI",
+      "tags": [
+        "etf",
+        "sector",
+        "industrials"
+      ],
+      "section": "Sectors",
+      "status": "GREEN",
+      "price": 163.53,
+      "changePct": -2.02,
+      "sma200": 148.42,
+      "sma50w": 146.58,
+      "ema50w": 150.11,
+      "distanceTo200dPct": 10.18,
+      "distanceToUpperBandPct": 8.94
+    },
+    {
+      "ticker": "XLK",
+      "tags": [
+        "etf",
+        "sector",
+        "tech"
+      ],
+      "section": "Sectors",
+      "status": "RED",
+      "price": 141.84,
+      "changePct": -2.6,
+      "sma200": 239.55,
+      "sma50w": 232.18,
+      "ema50w": 226.46,
+      "distanceTo200dPct": -40.79,
+      "distanceToUpperBandPct": -38.91
+    },
+    {
+      "ticker": "XLP",
+      "tags": [
+        "etf",
+        "sector",
+        "staples"
+      ],
+      "section": "Sectors",
+      "status": "GREEN",
+      "price": 82.36,
+      "changePct": 0.3,
+      "sma200": 79.95,
+      "sma50w": 80.26,
+      "ema50w": 79.55,
+      "distanceTo200dPct": 3.01,
+      "distanceToUpperBandPct": 2.62
+    },
+    {
+      "ticker": "XLRE",
+      "tags": [
+        "etf",
+        "sector",
+        "real-estate"
+      ],
+      "section": "Sectors",
+      "status": "YELLOW",
+      "price": 41.4,
+      "changePct": -1.92,
+      "sma200": 41.32,
+      "sma50w": 41.45,
+      "ema50w": 41.4,
+      "distanceTo200dPct": 0.19,
+      "distanceToUpperBandPct": -0.12
+    },
+    {
+      "ticker": "XLU",
+      "tags": [
+        "etf",
+        "sector",
+        "utilities"
+      ],
+      "section": "Sectors",
+      "status": "RED",
+      "price": 42.96,
+      "changePct": -0.99,
+      "sma200": 78.03,
+      "sma50w": 76.83,
+      "ema50w": 72.86,
+      "distanceTo200dPct": -44.95,
+      "distanceToUpperBandPct": -44.08
+    },
+    {
+      "ticker": "XLV",
+      "tags": [
+        "etf",
+        "sector",
+        "healthcare"
+      ],
+      "section": "Sectors",
+      "status": "GREEN",
+      "price": 155.4,
+      "changePct": -0.22,
+      "sma200": 141.07,
+      "sma50w": 142.19,
+      "ema50w": 145.35,
+      "distanceTo200dPct": 10.16,
+      "distanceToUpperBandPct": 6.91
+    },
+    {
+      "ticker": "XLY",
+      "tags": [
+        "etf",
+        "sector",
+        "discretionary"
+      ],
+      "section": "Sectors",
+      "status": "RED",
+      "price": 119.12,
+      "changePct": -2.6,
+      "sma200": 206.95,
+      "sma50w": 203.34,
+      "ema50w": 197.13,
+      "distanceTo200dPct": -42.44,
+      "distanceToUpperBandPct": -41.42
+    }
+  ],
+  "health": {
+    "greenPct": 50,
+    "yellowPct": 8.3,
+    "redPct": 41.7,
+    "regimeLabel": "TRANSITION"
+  }
+}

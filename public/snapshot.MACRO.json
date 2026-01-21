@@ -1,0 +1,196 @@
+{
+  "asOfDate": "2026-01-21",
+  "universeSize": 17,
+  "tickers": [
+    {
+      "ticker": "DBA",
+      "tags": [
+        "etf",
+        "commodities",
+        "agriculture"
+      ],
+      "section": "Commodities",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "DBB",
+      "tags": [
+        "etf",
+        "commodities",
+        "metals"
+      ],
+      "section": "Commodities",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "PDBC",
+      "tags": [
+        "etf",
+        "commodities",
+        "diversified"
+      ],
+      "section": "Commodities",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "USO",
+      "tags": [
+        "etf",
+        "commodities",
+        "energy",
+        "oil"
+      ],
+      "section": "Energy",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "FXA",
+      "tags": [
+        "etf",
+        "fx",
+        "australia"
+      ],
+      "section": "FX",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "FXB",
+      "tags": [
+        "etf",
+        "fx",
+        "uk"
+      ],
+      "section": "FX",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "FXC",
+      "tags": [
+        "etf",
+        "fx",
+        "canada"
+      ],
+      "section": "FX",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "FXE",
+      "tags": [
+        "etf",
+        "fx",
+        "euro"
+      ],
+      "section": "FX",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "FXY",
+      "tags": [
+        "etf",
+        "fx",
+        "japan"
+      ],
+      "section": "FX",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "UUP",
+      "tags": [
+        "etf",
+        "fx",
+        "dollar"
+      ],
+      "section": "Dollar",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "GDX",
+      "tags": [
+        "etf",
+        "metals",
+        "gold-miners"
+      ],
+      "section": "Metals",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "GLDM",
+      "tags": [
+        "etf",
+        "metals",
+        "gold"
+      ],
+      "section": "Metals",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "SIL",
+      "tags": [
+        "etf",
+        "metals",
+        "silver-miners"
+      ],
+      "section": "Metals",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "SLV",
+      "tags": [
+        "etf",
+        "metals",
+        "silver"
+      ],
+      "section": "Metals",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "SRUUF",
+      "tags": [
+        "etf",
+        "uranium",
+        "energy"
+      ],
+      "section": "Uranium",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "Bitcoin",
+      "tags": [
+        "crypto"
+      ],
+      "section": "Crypto",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "Ethereum",
+      "tags": [
+        "crypto"
+      ],
+      "section": "Crypto",
+      "status": "UNKNOWN",
+      "price": 0
+    }
+  ],
+  "health": {
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  }
+}

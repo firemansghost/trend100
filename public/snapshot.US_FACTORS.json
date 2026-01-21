@@ -1,0 +1,144 @@
+{
+  "asOfDate": "2026-01-21",
+  "universeSize": 10,
+  "tickers": [
+    {
+      "ticker": "IWB",
+      "tags": [
+        "etf",
+        "factor",
+        "us",
+        "broad"
+      ],
+      "section": "Size",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "IWD",
+      "tags": [
+        "etf",
+        "factor",
+        "us",
+        "value"
+      ],
+      "section": "Style",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "IWF",
+      "tags": [
+        "etf",
+        "factor",
+        "us",
+        "growth"
+      ],
+      "section": "Style",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "IWM",
+      "tags": [
+        "etf",
+        "factor",
+        "us",
+        "smallcap"
+      ],
+      "section": "Size",
+      "status": "GREEN",
+      "price": 262.58,
+      "changePct": -1.2,
+      "sma200": 228.03,
+      "sma50w": 225.93,
+      "ema50w": 235.59,
+      "distanceTo200dPct": 15.15,
+      "distanceToUpperBandPct": 11.46
+    },
+    {
+      "ticker": "IWR",
+      "tags": [
+        "etf",
+        "factor",
+        "us",
+        "midcap"
+      ],
+      "section": "Size",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "MTUM",
+      "tags": [
+        "etf",
+        "factor",
+        "us",
+        "momentum"
+      ],
+      "section": "Momentum",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "QQQ",
+      "tags": [
+        "etf",
+        "factor",
+        "us",
+        "nasdaq100"
+      ],
+      "section": "Size",
+      "status": "GREEN",
+      "price": 608.06,
+      "changePct": -2.12,
+      "sma200": 566.28,
+      "sma50w": 556.2,
+      "ema50w": 575.5,
+      "distanceTo200dPct": 7.38,
+      "distanceToUpperBandPct": 5.66
+    },
+    {
+      "ticker": "QUAL",
+      "tags": [
+        "etf",
+        "factor",
+        "us",
+        "quality"
+      ],
+      "section": "Quality/LowVol",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "SPHD",
+      "tags": [
+        "etf",
+        "factor",
+        "us",
+        "dividend"
+      ],
+      "section": "Quality/LowVol",
+      "status": "UNKNOWN",
+      "price": 0
+    },
+    {
+      "ticker": "SPLV",
+      "tags": [
+        "etf",
+        "factor",
+        "us",
+        "low-vol"
+      ],
+      "section": "Quality/LowVol",
+      "status": "UNKNOWN",
+      "price": 0
+    }
+  ],
+  "health": {
+    "greenPct": 100,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_ON"
+  }
+}

@@ -840,8 +840,14 @@
       "tags": [
         "financials"
       ],
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "RED",
+      "price": 485.39,
+      "changePct": -1.6,
+      "sma200": 496.03,
+      "sma50w": 497.68,
+      "ema50w": 491.76,
+      "distanceTo200dPct": -2.14,
+      "distanceToUpperBandPct": -2.47
     },
     {
       "ticker": "JPM",
@@ -1457,22 +1463,34 @@
         "real-estate",
         "reits"
       ],
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "RED",
+      "price": 177.75,
+      "changePct": -3.17,
+      "sma200": 200.15,
+      "sma50w": 200.91,
+      "ema50w": 191.92,
+      "distanceTo200dPct": -11.19,
+      "distanceToUpperBandPct": -11.53
     },
     {
       "ticker": "NEE",
       "tags": [
         "utilities"
       ],
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 83.51,
+      "changePct": -0.14,
+      "sma200": 75.59,
+      "sma50w": 75.18,
+      "ema50w": 77.22,
+      "distanceTo200dPct": 10.48,
+      "distanceToUpperBandPct": 8.15
     }
   ],
   "health": {
-    "greenPct": 66,
-    "yellowPct": 2.1,
-    "redPct": 32,
+    "greenPct": 65,
+    "yellowPct": 2,
+    "redPct": 33,
     "regimeLabel": "TRANSITION"
   }
 }

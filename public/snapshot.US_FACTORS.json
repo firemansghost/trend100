@@ -11,8 +11,14 @@
         "broad"
       ],
       "section": "Size",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 371.79,
+      "changePct": -2.02,
+      "sma200": 348.15,
+      "sma50w": 343.98,
+      "ema50w": 354.03,
+      "distanceTo200dPct": 6.79,
+      "distanceToUpperBandPct": 5.02
     },
     {
       "ticker": "IWD",
@@ -23,8 +29,14 @@
         "value"
       ],
       "section": "Style",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 215.94,
+      "changePct": -1.39,
+      "sma200": 198.28,
+      "sma50w": 197.43,
+      "ema50w": 201.69,
+      "distanceTo200dPct": 8.91,
+      "distanceToUpperBandPct": 7.06
     },
     {
       "ticker": "IWF",
@@ -35,8 +47,14 @@
         "growth"
       ],
       "section": "Style",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 458.66,
+      "changePct": -2.53,
+      "sma200": 437.41,
+      "sma50w": 429.3,
+      "ema50w": 444.57,
+      "distanceTo200dPct": 4.86,
+      "distanceToUpperBandPct": 3.17
     },
     {
       "ticker": "IWM",
@@ -65,8 +83,14 @@
         "midcap"
       ],
       "section": "Size",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 99.25,
+      "changePct": -1.54,
+      "sma200": 93,
+      "sma50w": 92.3,
+      "ema50w": 94.43,
+      "distanceTo200dPct": 6.72,
+      "distanceToUpperBandPct": 5.11
     },
     {
       "ticker": "MTUM",
@@ -77,8 +101,14 @@
         "momentum"
       ],
       "section": "Momentum",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 252.84,
+      "changePct": -2.14,
+      "sma200": 239.67,
+      "sma50w": 235.42,
+      "ema50w": 241.02,
+      "distanceTo200dPct": 5.5,
+      "distanceToUpperBandPct": 4.91
     },
     {
       "ticker": "QQQ",
@@ -107,8 +137,14 @@
         "quality"
       ],
       "section": "Quality/LowVol",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 199.53,
+      "changePct": -1.86,
+      "sma200": 186.84,
+      "sma50w": 185.45,
+      "ema50w": 190.11,
+      "distanceTo200dPct": 6.79,
+      "distanceToUpperBandPct": 4.95
     },
     {
       "ticker": "SPHD",
@@ -119,8 +155,14 @@
         "dividend"
       ],
       "section": "Quality/LowVol",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 48.96,
+      "changePct": -0.79,
+      "sma200": 48.1,
+      "sma50w": 48.41,
+      "ema50w": 48.46,
+      "distanceTo200dPct": 1.79,
+      "distanceToUpperBandPct": 1.02
     },
     {
       "ticker": "SPLV",
@@ -131,13 +173,19 @@
         "low-vol"
       ],
       "section": "Quality/LowVol",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "YELLOW",
+      "price": 72.6,
+      "changePct": -0.86,
+      "sma200": 72.41,
+      "sma50w": 72.6,
+      "ema50w": 72.26,
+      "distanceTo200dPct": 0.26,
+      "distanceToUpperBandPct": 0
     }
   ],
   "health": {
-    "greenPct": 100,
-    "yellowPct": 0,
+    "greenPct": 90,
+    "yellowPct": 10,
     "redPct": 0,
     "regimeLabel": "RISK_ON"
   }

@@ -10,8 +10,14 @@
         "agriculture"
       ],
       "section": "Commodities",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "RED",
+      "price": 25.49,
+      "changePct": -0.43,
+      "sma200": 26.53,
+      "sma50w": 26.57,
+      "ema50w": 26.52,
+      "distanceTo200dPct": -3.91,
+      "distanceToUpperBandPct": -4.05
     },
     {
       "ticker": "DBB",
@@ -21,8 +27,14 @@
         "metals"
       ],
       "section": "Commodities",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 23.74,
+      "changePct": -0.08,
+      "sma200": 20.22,
+      "sma50w": 20.18,
+      "ema50w": 20.78,
+      "distanceTo200dPct": 17.41,
+      "distanceToUpperBandPct": 14.22
     },
     {
       "ticker": "PDBC",
@@ -32,8 +44,14 @@
         "diversified"
       ],
       "section": "Commodities",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 13.93,
+      "changePct": 1.46,
+      "sma200": 13.25,
+      "sma50w": 13.3,
+      "ema50w": 13.42,
+      "distanceTo200dPct": 5.09,
+      "distanceToUpperBandPct": 3.82
     },
     {
       "ticker": "USO",
@@ -44,8 +62,14 @@
         "oil"
       ],
       "section": "Energy",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "YELLOW",
+      "price": 71.86,
+      "changePct": 0.29,
+      "sma200": 71.7,
+      "sma50w": 72.1,
+      "ema50w": 72.76,
+      "distanceTo200dPct": 0.22,
+      "distanceToUpperBandPct": -1.24
     },
     {
       "ticker": "FXA",
@@ -55,8 +79,14 @@
         "australia"
       ],
       "section": "FX",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 66.7,
+      "changePct": 0.74,
+      "sma200": 64.57,
+      "sma50w": 64.29,
+      "ema50w": 64.56,
+      "distanceTo200dPct": 3.3,
+      "distanceToUpperBandPct": 3.31
     },
     {
       "ticker": "FXB",
@@ -66,8 +96,14 @@
         "uk"
       ],
       "section": "FX",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 129.19,
+      "changePct": 0.41,
+      "sma200": 128.72,
+      "sma50w": 127.91,
+      "ema50w": 127.27,
+      "distanceTo200dPct": 0.36,
+      "distanceToUpperBandPct": 0.99
     },
     {
       "ticker": "FXC",
@@ -77,8 +113,14 @@
         "canada"
       ],
       "section": "FX",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 70.67,
+      "changePct": 0.67,
+      "sma200": 70.58,
+      "sma50w": 70.28,
+      "ema50w": 70.11,
+      "distanceTo200dPct": 0.13,
+      "distanceToUpperBandPct": 0.55
     },
     {
       "ticker": "FXE",
@@ -88,8 +130,14 @@
         "euro"
       ],
       "section": "FX",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 108.18,
+      "changePct": 1.07,
+      "sma200": 106.76,
+      "sma50w": 105.66,
+      "ema50w": 105.47,
+      "distanceTo200dPct": 1.33,
+      "distanceToUpperBandPct": 2.39
     },
     {
       "ticker": "FXY",
@@ -99,8 +147,14 @@
         "japan"
       ],
       "section": "FX",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "RED",
+      "price": 58.14,
+      "changePct": -0.07,
+      "sma200": 61.71,
+      "sma50w": 61.64,
+      "ema50w": 60.53,
+      "distanceTo200dPct": -5.79,
+      "distanceToUpperBandPct": -5.67
     },
     {
       "ticker": "UUP",
@@ -110,8 +164,14 @@
         "dollar"
       ],
       "section": "Dollar",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "RED",
+      "price": 27.21,
+      "changePct": -0.8,
+      "sma200": 27.57,
+      "sma50w": 27.73,
+      "ema50w": 27.87,
+      "distanceTo200dPct": -1.32,
+      "distanceToUpperBandPct": -2.38
     },
     {
       "ticker": "GDX",
@@ -121,8 +181,14 @@
         "gold-miners"
       ],
       "section": "Metals",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 102.78,
+      "changePct": 5.7,
+      "sma200": 65.11,
+      "sma50w": 62.68,
+      "ema50w": 67.35,
+      "distanceTo200dPct": 57.85,
+      "distanceToUpperBandPct": 52.59
     },
     {
       "ticker": "GLDM",
@@ -132,8 +198,14 @@
         "gold"
       ],
       "section": "Metals",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 94.14,
+      "changePct": 3.78,
+      "sma200": 73.17,
+      "sma50w": 71.48,
+      "ema50w": 73.99,
+      "distanceTo200dPct": 28.65,
+      "distanceToUpperBandPct": 27.23
     },
     {
       "ticker": "SIL",
@@ -143,8 +215,14 @@
         "silver-miners"
       ],
       "section": "Metals",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 103.39,
+      "changePct": 5.12,
+      "sma200": 59.91,
+      "sma50w": 57.63,
+      "ema50w": 62.96,
+      "distanceTo200dPct": 72.58,
+      "distanceToUpperBandPct": 64.22
     },
     {
       "ticker": "SLV",
@@ -154,8 +232,14 @@
         "silver"
       ],
       "section": "Metals",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 85.39,
+      "changePct": 5.39,
+      "sma200": 41.24,
+      "sma50w": 40.58,
+      "ema50w": 45.28,
+      "distanceTo200dPct": 107.04,
+      "distanceToUpperBandPct": 88.56
     },
     {
       "ticker": "SRUUF",
@@ -165,8 +249,14 @@
         "energy"
       ],
       "section": "Uranium",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 21.62,
+      "changePct": 0.23,
+      "sma200": 17.48,
+      "sma50w": 17.14,
+      "ema50w": 17.9,
+      "distanceTo200dPct": 23.7,
+      "distanceToUpperBandPct": 20.8
     },
     {
       "ticker": "Bitcoin",
@@ -188,9 +278,9 @@
     }
   ],
   "health": {
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 73.3,
+    "yellowPct": 6.7,
+    "redPct": 20,
+    "regimeLabel": "RISK_ON"
   }
 }

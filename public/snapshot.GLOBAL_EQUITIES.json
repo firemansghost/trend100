@@ -10,8 +10,14 @@
         "ex-us"
       ],
       "section": "Global ex-US",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 69.03,
+      "changePct": -1.23,
+      "sma200": 62.71,
+      "sma50w": 61.86,
+      "ema50w": 62.88,
+      "distanceTo200dPct": 10.09,
+      "distanceToUpperBandPct": 9.78
     },
     {
       "ticker": "EEM",
@@ -21,8 +27,14 @@
         "emerging"
       ],
       "section": "Emerging",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 57.31,
+      "changePct": -0.97,
+      "sma200": 50.41,
+      "sma50w": 49.6,
+      "ema50w": 50.82,
+      "distanceTo200dPct": 13.68,
+      "distanceToUpperBandPct": 12.76
     },
     {
       "ticker": "EWA",
@@ -32,8 +44,14 @@
         "australia"
       ],
       "section": "Developed",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 26.46,
+      "changePct": -1.05,
+      "sma200": 26.09,
+      "sma50w": 25.78,
+      "ema50w": 26.01,
+      "distanceTo200dPct": 1.44,
+      "distanceToUpperBandPct": 1.72
     },
     {
       "ticker": "EWC",
@@ -43,8 +61,14 @@
         "canada"
       ],
       "section": "Developed",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 54.75,
+      "changePct": -0.69,
+      "sma200": 48.15,
+      "sma50w": 47.28,
+      "ema50w": 48.68,
+      "distanceTo200dPct": 13.7,
+      "distanceToUpperBandPct": 12.47
     },
     {
       "ticker": "EWJ",
@@ -54,8 +78,14 @@
         "japan"
       ],
       "section": "Developed",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 83.72,
+      "changePct": -2.06,
+      "sma200": 77.45,
+      "sma50w": 76.44,
+      "ema50w": 77.85,
+      "distanceTo200dPct": 8.09,
+      "distanceToUpperBandPct": 7.54
     },
     {
       "ticker": "EWU",
@@ -65,8 +95,14 @@
         "uk"
       ],
       "section": "Developed",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 44.7,
+      "changePct": -1.06,
+      "sma200": 41.03,
+      "sma50w": 40.57,
+      "ema50w": 41,
+      "distanceTo200dPct": 8.94,
+      "distanceToUpperBandPct": 9.03
     },
     {
       "ticker": "EWZ",
@@ -76,8 +112,14 @@
         "brazil"
       ],
       "section": "Emerging",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 33.62,
+      "changePct": 1.36,
+      "sma200": 29.36,
+      "sma50w": 28.9,
+      "ema50w": 29.5,
+      "distanceTo200dPct": 14.5,
+      "distanceToUpperBandPct": 13.98
     },
     {
       "ticker": "EZU",
@@ -87,8 +129,14 @@
         "europe"
       ],
       "section": "Developed",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 64.93,
+      "changePct": -1.71,
+      "sma200": 60.21,
+      "sma50w": 59.41,
+      "ema50w": 59.9,
+      "distanceTo200dPct": 7.84,
+      "distanceToUpperBandPct": 8.39
     },
     {
       "ticker": "FXI",
@@ -98,8 +146,14 @@
         "china"
       ],
       "section": "Emerging",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 38.87,
+      "changePct": -1.09,
+      "sma200": 37.95,
+      "sma50w": 37.61,
+      "ema50w": 37.56,
+      "distanceTo200dPct": 2.42,
+      "distanceToUpperBandPct": 3.34
     },
     {
       "ticker": "GNR",
@@ -109,8 +163,14 @@
         "natural-resources"
       ],
       "section": "Commodities/Resources",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "GREEN",
+      "price": 66.67,
+      "changePct": 0.2,
+      "sma200": 57.02,
+      "sma50w": 56.68,
+      "ema50w": 58.1,
+      "distanceTo200dPct": 16.93,
+      "distanceToUpperBandPct": 14.75
     },
     {
       "ticker": "INDA",
@@ -120,14 +180,20 @@
         "india"
       ],
       "section": "Emerging",
-      "status": "UNKNOWN",
-      "price": 0
+      "status": "RED",
+      "price": 51.73,
+      "changePct": -2.12,
+      "sma200": 53.62,
+      "sma50w": 52.96,
+      "ema50w": 52.99,
+      "distanceTo200dPct": -3.52,
+      "distanceToUpperBandPct": -2.38
     }
   ],
   "health": {
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   }
 }

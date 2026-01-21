@@ -1,8 +1,8 @@
 [
   {
     "date": "2026-01-21",
-    "greenPct": 100,
-    "yellowPct": 0,
+    "greenPct": 90,
+    "yellowPct": 10,
     "redPct": 0,
     "regimeLabel": "RISK_ON"
   }

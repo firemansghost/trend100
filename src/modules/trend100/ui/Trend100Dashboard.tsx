@@ -11,6 +11,7 @@ import type {
   TrendSnapshot,
   TrendTickerSnapshot,
   TrendHealthHistoryPoint,
+  TrendDeckId,
 } from '../types';
 import { TopBar } from './TopBar';
 import { HeatmapGrid } from './HeatmapGrid';
@@ -24,12 +25,16 @@ type Timeframe = '3M' | '1Y' | 'ALL';
 interface Trend100DashboardProps {
   snapshot: TrendSnapshot;
   history: TrendHealthHistoryPoint[];
+  deckId: TrendDeckId;
+  deckLabel: string;
   isDemoMode?: boolean;
 }
 
 export function Trend100Dashboard({
   snapshot,
   history,
+  deckId,
+  deckLabel,
   isDemoMode = false,
 }: Trend100DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -91,6 +96,8 @@ export function Trend100Dashboard({
         onTagsChange={setSelectedTags}
         sortKey={sortKey}
         onSortChange={setSortKey}
+        deckId={deckId}
+        deckLabel={deckLabel}
         isDemoMode={isDemoMode}
       />
 
@@ -98,9 +105,12 @@ export function Trend100Dashboard({
         {/* Health History Chart */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-zinc-200">
-              Market Health Over Time
-            </h2>
+            <div>
+              <h2 className="text-lg font-semibold text-zinc-200">
+                Market Health Over Time
+              </h2>
+              <p className="text-xs text-zinc-500 mt-1">{deckLabel}</p>
+            </div>
             <div className="flex gap-2">
               {(['3M', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
                 <button

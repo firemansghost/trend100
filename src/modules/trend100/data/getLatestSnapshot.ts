@@ -2,29 +2,38 @@
  * Get latest snapshot API
  * 
  * Main data layer entry point for UI components.
- * Returns the latest snapshot for the 100-ticker universe.
+ * Returns the latest snapshot for the specified deck's universe.
  */
 
-import type { TrendSnapshot } from '../types';
-import { DEFAULT_UNIVERSE } from './universe';
+import type { TrendSnapshot, TrendDeckId } from '../types';
+import { getDeck } from './decks';
 import { generateMockTickerSnapshot } from './mockSnapshot';
 import { computeHealthScore } from '../engine/healthScore';
 
 /**
- * Returns the latest snapshot for the DEFAULT_UNIVERSE.
+ * Returns the latest snapshot for the specified deck.
  * 
  * Currently uses mock data. In production, this will fetch from
  * a snapshot store (database, file, or API).
  * 
- * @returns Latest trend snapshot with all 100 tickers and health summary
+ * @param deckId Deck ID (defaults to "LEADERSHIP")
+ * @returns Latest trend snapshot with all tickers and health summary
  */
-export function getLatestSnapshot(): TrendSnapshot {
+export function getLatestSnapshot(
+  deckId: TrendDeckId = 'LEADERSHIP'
+): TrendSnapshot {
   // Generate today's date in ISO format (YYYY-MM-DD)
   const today = new Date();
   const asOfDate = today.toISOString().split('T')[0];
 
-  // Generate ticker snapshots from universe
-  const tickers = DEFAULT_UNIVERSE.map(generateMockTickerSnapshot);
+  // Get deck and its universe
+  const deck = getDeck(deckId);
+
+  // Generate ticker snapshots from deck's universe
+  // Pass deckId and date for deterministic but daily-varying values
+  const tickers = deck.universe.map((item) =>
+    generateMockTickerSnapshot(item, deckId, asOfDate)
+  );
 
   // Compute health summary from statuses
   const statuses = tickers.map((t) => t.status);
@@ -32,7 +41,7 @@ export function getLatestSnapshot(): TrendSnapshot {
 
   return {
     asOfDate,
-    universeSize: DEFAULT_UNIVERSE.length,
+    universeSize: deck.universe.length,
     tickers,
     health,
   };

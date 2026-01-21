@@ -1,20 +1,25 @@
 /**
  * Update health history script
  * 
- * Reads public/health-history.json, computes today's health from snapshot,
- * and upserts today's entry. Keeps file sorted by date.
+ * Updates health history for ALL decks.
+ * Reads per-deck JSON files, computes today's health from snapshot,
+ * and upserts today's entry. Keeps files sorted by date.
  */
 
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import type { TrendHealthHistoryPoint } from '../src/modules/trend100/types';
+import type { TrendHealthHistoryPoint, TrendDeckId } from '../src/modules/trend100/types';
 import { getLatestSnapshot } from '../src/modules/trend100/data/getLatestSnapshot';
+import { getAllDeckIds } from '../src/modules/trend100/data/decks';
 
-const HISTORY_FILE = join(process.cwd(), 'public', 'health-history.json');
+function getHistoryFilePath(deckId: TrendDeckId): string {
+  return join(process.cwd(), 'public', `health-history.${deckId}.json`);
+}
 
-function loadHistory(): TrendHealthHistoryPoint[] {
+function loadHistory(deckId: TrendDeckId): TrendHealthHistoryPoint[] {
+  const filePath = getHistoryFilePath(deckId);
   try {
-    const content = readFileSync(HISTORY_FILE, 'utf-8');
+    const content = readFileSync(filePath, 'utf-8');
     const history = JSON.parse(content) as TrendHealthHistoryPoint[];
     if (!Array.isArray(history)) {
       return [];
@@ -26,23 +31,24 @@ function loadHistory(): TrendHealthHistoryPoint[] {
   }
 }
 
-function saveHistory(history: TrendHealthHistoryPoint[]): void {
+function saveHistory(deckId: TrendDeckId, history: TrendHealthHistoryPoint[]): void {
   // Sort by date ascending
   const sorted = [...history].sort((a, b) => a.date.localeCompare(b.date));
 
   // Write with pretty formatting (2 spaces)
-  writeFileSync(HISTORY_FILE, JSON.stringify(sorted, null, 2) + '\n', 'utf-8');
+  const filePath = getHistoryFilePath(deckId);
+  writeFileSync(filePath, JSON.stringify(sorted, null, 2) + '\n', 'utf-8');
 }
 
-function main() {
-  console.log('Updating health history...');
+function updateDeckHistory(deckId: TrendDeckId): void {
+  console.log(`\nUpdating health history for ${deckId}...`);
 
-  // Get today's snapshot
-  const snapshot = getLatestSnapshot();
+  // Get today's snapshot for this deck
+  const snapshot = getLatestSnapshot(deckId);
   const today = snapshot.asOfDate; // Already in YYYY-MM-DD format
 
   // Load existing history
-  const history = loadHistory();
+  const history = loadHistory(deckId);
 
   // Find existing entry for today
   const existingIndex = history.findIndex((point) => point.date === today);
@@ -59,16 +65,28 @@ function main() {
   // Upsert: replace if exists, append if not
   if (existingIndex >= 0) {
     history[existingIndex] = todayEntry;
-    console.log(`Updated entry for ${today}`);
+    console.log(`  Updated entry for ${today}`);
   } else {
     history.push(todayEntry);
-    console.log(`Added entry for ${today}`);
+    console.log(`  Added entry for ${today}`);
   }
 
   // Save back to file
-  saveHistory(history);
+  saveHistory(deckId, history);
 
-  console.log(`Health history updated. Total entries: ${history.length}`);
+  console.log(`  Total entries: ${history.length}`);
+}
+
+function main() {
+  console.log('Updating health history for all decks...');
+
+  const deckIds = getAllDeckIds();
+
+  for (const deckId of deckIds) {
+    updateDeckHistory(deckId);
+  }
+
+  console.log('\n✅ Health history update complete for all decks');
 }
 
 main();

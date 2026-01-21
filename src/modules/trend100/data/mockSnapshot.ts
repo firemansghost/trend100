@@ -26,11 +26,19 @@ function hashString(str: string): number {
 
 /**
  * Generates deterministic mock values for a ticker
+ * 
+ * Seeds with ticker + deckId + date to allow daily variation while staying stable within a day
  */
-function generateMockValues(ticker: string) {
-  const hash = hashString(ticker);
-  const hash2 = hashString(ticker + '_alt');
-  const hash3 = hashString(ticker + '_alt2');
+function generateMockValues(
+  ticker: string,
+  deckId: string,
+  date: string
+) {
+  // Combine ticker, deckId, and date for seeding
+  const seed = `${ticker}_${deckId}_${date}`;
+  const hash = hashString(seed);
+  const hash2 = hashString(seed + '_alt');
+  const hash3 = hashString(seed + '_alt2');
 
   // Base price range: 25-500
   const basePrice = 25 + hash * 475;
@@ -57,10 +65,12 @@ function generateMockValues(ticker: string) {
  * Generates a mock ticker snapshot from universe item
  */
 export function generateMockTickerSnapshot(
-  item: TrendUniverseItem
+  item: TrendUniverseItem,
+  deckId: string,
+  date: string
 ): TrendTickerSnapshot {
   const { ticker, tags } = item;
-  const mock = generateMockValues(ticker);
+  const mock = generateMockValues(ticker, deckId, date);
 
   // Classify trend
   const status = classifyTrend({

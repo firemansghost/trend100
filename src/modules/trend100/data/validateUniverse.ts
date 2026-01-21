@@ -8,16 +8,16 @@ import type { TrendUniverse } from '../types';
 
 /**
  * Validates the universe meets requirements:
- * - Exactly 100 items
  * - No duplicate tickers
+ * - At least 1 item
+ * 
+ * Note: Length validation removed to support decks with varying sizes.
  * 
  * @throws Error if validation fails
  */
 export function validateUniverse(universe: TrendUniverse): void {
-  if (universe.length !== 100) {
-    throw new Error(
-      `Universe must contain exactly 100 tickers, found ${universe.length}`
-    );
+  if (universe.length === 0) {
+    throw new Error('Universe must contain at least 1 ticker');
   }
 
   const tickers = new Set<string>();

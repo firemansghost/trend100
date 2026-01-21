@@ -50,10 +50,12 @@ function getRegimeLabel(greenPct: number): 'RISK_ON' | 'TRANSITION' | 'RISK_OFF'
  * @returns Array of health history points (730 days = ~2 years)
  */
 export function buildMockHealthHistory(
-  options?: { days?: number }
+  options?: { days?: number; deckId?: string }
 ): TrendHealthHistoryPoint[] {
   const days = options?.days ?? 730; // Default to 2 years
-  const prng = new SeededPRNG('TREND100');
+  // Seed with deckId if provided for deck-specific variation
+  const seed = options?.deckId ? `TREND100_${options.deckId}` : 'TREND100';
+  const prng = new SeededPRNG(seed);
   const history: TrendHealthHistoryPoint[] = [];
 
   // Start with a base greenPct around 50-60%

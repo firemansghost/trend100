@@ -2,35 +2,39 @@
  * Get health history API
  * 
  * Returns health history data for chart visualization.
- * Tries to load from public/health-history.json, falls back to mock data.
+ * Tries to load from per-deck JSON file, falls back to mock data.
  */
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import type { TrendHealthHistoryPoint } from '../types';
+import type { TrendHealthHistoryPoint, TrendDeckId } from '../types';
 import { buildMockHealthHistory } from './mockHealthHistory';
 
 /**
- * Returns health history data.
+ * Returns health history data for the specified deck.
  * 
- * Tries to load from public/health-history.json if available.
+ * Tries to load from public/health-history.<deckId>.json if available.
  * Falls back to mock data if file is missing or invalid.
  * 
+ * @param deckId Deck ID (defaults to "LEADERSHIP")
  * @returns Array of health history points
  */
-export function getHealthHistory(): TrendHealthHistoryPoint[] {
+export function getHealthHistory(
+  deckId: TrendDeckId = 'LEADERSHIP'
+): TrendHealthHistoryPoint[] {
   try {
-    // Try to read from public/health-history.json
-    // In Next.js, public files are served from the public directory
-    // For server-side, we read from the file system
-    const filePath = join(process.cwd(), 'public', 'health-history.json');
+    // Try to read from per-deck history file
+    const fileName = `health-history.${deckId}.json`;
+    const filePath = join(process.cwd(), 'public', fileName);
     const fileContent = readFileSync(filePath, 'utf-8');
     const history = JSON.parse(fileContent) as TrendHealthHistoryPoint[];
 
     // Validate it's an array
     if (!Array.isArray(history)) {
-      console.warn('health-history.json is not an array, using mock data');
-      return buildMockHealthHistory();
+      console.warn(
+        `${fileName} is not an array, using mock data for deck ${deckId}`
+      );
+      return buildMockHealthHistory({ deckId });
     }
 
     // Validate entries have required fields
@@ -43,8 +47,10 @@ export function getHealthHistory(): TrendHealthHistoryPoint[] {
     );
 
     if (!isValid) {
-      console.warn('health-history.json has invalid entries, using mock data');
-      return buildMockHealthHistory();
+      console.warn(
+        `${fileName} has invalid entries, using mock data for deck ${deckId}`
+      );
+      return buildMockHealthHistory({ deckId });
     }
 
     // Sort by date ascending
@@ -53,7 +59,10 @@ export function getHealthHistory(): TrendHealthHistoryPoint[] {
     return sorted;
   } catch (error) {
     // File doesn't exist or can't be read - use mock data
-    console.warn('Could not load health-history.json, using mock data:', error);
-    return buildMockHealthHistory();
+    console.warn(
+      `Could not load health-history.${deckId}.json, using mock data:`,
+      error
+    );
+    return buildMockHealthHistory({ deckId });
   }
 }

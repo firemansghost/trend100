@@ -7,11 +7,13 @@
 'use client';
 
 import { useState } from 'react';
-import type { TrendHealthSummary, TrendTickerSnapshot } from '../types';
+import { useRouter, useSearchParams } from 'next/navigation';
+import type { TrendHealthSummary, TrendTickerSnapshot, TrendDeckId } from '../types';
 import { getAllTags } from './tagUtils';
 import { TagPickerModal } from './TagPickerModal';
 import { DemoBadge } from './DemoBadge';
 import type { SortKey } from './sortUtils';
+import { DECKS } from '../data/decks';
 
 interface TopBarProps {
   health: TrendHealthSummary;
@@ -24,6 +26,8 @@ interface TopBarProps {
   onTagsChange: (tags: string[]) => void;
   sortKey: SortKey;
   onSortChange: (key: SortKey) => void;
+  deckId: TrendDeckId;
+  deckLabel: string;
   isDemoMode?: boolean;
 }
 
@@ -38,11 +42,25 @@ export function TopBar({
   onTagsChange,
   sortKey,
   onSortChange,
+  deckId,
+  deckLabel,
   isDemoMode = false,
 }: TopBarProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const availableTags = getAllTags(allTickers);
   const isFiltered = filteredCount !== allTickers.length;
   const [isTagPickerOpen, setIsTagPickerOpen] = useState(false);
+
+  const handleDeckChange = (newDeckId: TrendDeckId) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (newDeckId === 'LEADERSHIP') {
+      params.delete('deck'); // Remove param for default deck
+    } else {
+      params.set('deck', newDeckId);
+    }
+    router.push(`/?${params.toString()}`);
+  };
 
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -73,8 +91,23 @@ export function TopBar({
   return (
     <>
       <div className="bg-zinc-900 border-b border-zinc-800 p-4 space-y-4">
-        {/* Market Health Row */}
+        {/* Deck Selector and Market Health Row */}
         <div className="flex flex-wrap items-center gap-4">
+          {/* Deck Selector */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-zinc-400 whitespace-nowrap">Deck:</label>
+            <select
+              value={deckId}
+              onChange={(e) => handleDeckChange(e.target.value as TrendDeckId)}
+              className="px-3 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
+            >
+              {DECKS.map((deck) => (
+                <option key={deck.id} value={deck.id}>
+                  {deck.label}
+                </option>
+              ))}
+            </select>
+          </div>
         <div>
           <div className="text-xs text-zinc-400 mb-1">Market Health</div>
           <div className="flex items-center gap-3">

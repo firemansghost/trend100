@@ -1,7 +1,7 @@
 # STATUS — Trend100
 
 ## Current State
-Next.js app is scaffolded with module structure (`src/modules/trend100/{engine,data,ui}` + `types`). Site is deployed and live on Vercel at https://trend100.vercel.app/. Dashboard UI is complete with heatmap, search, tag filtering (OR logic), and Sort toggle (Universe/Status/Change/Ticker). Demo mode indicator and tag picker modal are implemented. Mock snapshot data layer is functional.
+Next.js app is scaffolded with module structure (`src/modules/trend100/{engine,data,ui}` + `types`). Site is deployed and live on Vercel at https://trend100.vercel.app/. Multi-deck architecture implemented: 6 decks (Leadership 100, US Sectors, US Factors, Global Equities, Fixed Income, Macro) with deck selector in UI. Each deck has its own universe, snapshot, health summary, and persisted history file. Dashboard UI complete with heatmap, search, tag filtering (OR logic), Sort toggle, health history chart, and demo mode indicator. Mock snapshot data layer is functional.
 
 ## Scope Guardrail
 V1 = heatmap + health score + modal + tests + metadata + snapshot-first data layer. Everything else is V2 unless explicitly approved.

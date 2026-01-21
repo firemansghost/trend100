@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-01-21 — (Architecture) Multi-deck architecture with deck selector
+**Choice:** Implement Trend100 as a command center with multiple curated Decks (universes). Each deck has its own universe, snapshot, health summary, and persisted history. Leadership 100 is one deck preset.  
+**Why:** Separate health scores per deck avoid blending "All Assets" with equities leadership. Enables focused analysis by asset class/theme.  
+**Alternatives considered:** Single blended universe (loses signal clarity), dynamic universe builder (too complex for V1).
+
+---
+
 ### 2026-01-21 — (UI) Sort control added with green-first status ordering
 **Choice:** Added Sort toggle with default UNIVERSE (preserves original order). STATUS sort orders GREEN → YELLOW → RED → UNKNOWN (green-first).  
 **Why:** Users need to reorder tiles for analysis. Green-first aligns with "leadership tells the truth" philosophy. UNIVERSE default preserves curated order.  

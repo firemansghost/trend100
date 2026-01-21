@@ -1,15 +1,15 @@
 # HANDOFF — Trend100
 
 ## Last Session Summary
-Sort toggle feature implemented. Dashboard now supports Universe/Status/Change/Ticker sorting. Centralized sorting logic in sortUtils.ts. All V1 core features complete: universe, snapshot data layer, dashboard UI, search, tag filtering, sort, and modal.
+Multi-deck architecture implemented. Trend100 now supports 6 curated decks (Leadership 100, US Sectors, US Factors, Global Equities, Fixed Income, Macro) with deck selector in UI. Each deck has independent universe, snapshot, health summary, and persisted history. URL search param (?deck=) enables shareable deck links. GitHub Actions workflow updates all decks daily at 12:15 UTC.
 
 ## State of Work
-Dashboard UI is feature-complete for V1 MVP. All core functionality implemented: heatmap, search, tag filtering (OR logic), sort toggle, modal view, demo mode indicator. Mock data layer functional. Ready for chart integration and testing.
+Multi-deck command center architecture complete. All 6 decks defined with their universes. Per-deck health history persistence working. Deck selector integrated with URL navigation. Dashboard UI fully functional for all decks. Mock data layer supports deck-specific variation. Ready for real data provider integration per deck.
 
 ## Priority for Next Session
 1) Add chart visualization to TrendModal (Visser View) - placeholder exists, needs real chart
 2) Implement unit tests for engine functions (classifyTrend, computeHealthScore)
-3) Evaluate real data provider options and integration path
+3) Evaluate real data provider options and integration path (per-deck provider mapping via providerTicker field)
 
 ## Open Questions
 - Custom domain now vs later (trend100.com or subdomain?)

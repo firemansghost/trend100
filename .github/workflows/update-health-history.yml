@@ -2,8 +2,8 @@ name: Update Health History
 
 on:
   schedule:
-    # Run daily at 02:15 UTC (adjust for your timezone)
-    - cron: '15 2 * * *'
+    # Run daily at 12:15 UTC (≈ 6:15 AM CST in January)
+    - cron: '15 12 * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -48,6 +48,6 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add public/health-history.json
-          git commit -m "chore: update health history [skip ci]"
+          git add public/health-history.*.json
+          git commit -m "chore: update health history for all decks [skip ci]"
           git push

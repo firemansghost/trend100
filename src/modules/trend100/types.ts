@@ -55,6 +55,7 @@ export type TrendTag = string;
 export interface TrendUniverseItem {
   ticker: string;
   tags: TrendTag[];
+  providerTicker?: string; // For future real-data provider mapping (e.g., "BTC-USD")
 }
 
 export type TrendUniverse = TrendUniverseItem[];
@@ -96,4 +97,20 @@ export interface TrendHealthHistoryPoint {
   yellowPct?: number;
   redPct?: number;
   regimeLabel?: 'RISK_ON' | 'TRANSITION' | 'RISK_OFF';
+}
+
+// Deck types
+export type TrendDeckId =
+  | 'LEADERSHIP'
+  | 'US_SECTORS'
+  | 'US_FACTORS'
+  | 'GLOBAL_EQUITIES'
+  | 'FIXED_INCOME'
+  | 'MACRO';
+
+export interface TrendDeck {
+  id: TrendDeckId;
+  label: string;
+  description?: string;
+  universe: TrendUniverse;
 }

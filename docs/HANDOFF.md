@@ -1,10 +1,10 @@
 # HANDOFF — Trend100
 
 ## Last Session Summary
-Multi-deck architecture completed and deployed. Trend100 now supports 6 curated decks (Leadership 100, US Sectors, US Factors, Global Equities, Fixed Income, Macro) with deck selector dropdown in TopBar. URL search param `?deck=<DECK_ID>` enables shareable deck links (Leadership default hides param). Per-deck health history persistence working (`public/health-history.<DECK_ID>.json`). GitHub Actions workflow updated to 12:15 UTC and commits all per-deck files. Fixed Vercel build error (removed useSearchParams). All decks functional with independent universes, snapshots, and history.
+Fixed deck switching bug by implementing client-side deck resolution via ClientDeckPage component. Deck selection now works reliably - URL param changes immediately update UI. History loads client-side from public JSON files with mock fallback. Debug panel available when ?debug=1 for testing. All 6 decks functional with independent universes, snapshots, and history. Multi-deck architecture complete and working.
 
 ## State of Work
-Multi-deck command center architecture complete. All 6 decks defined with their universes. Per-deck health history persistence working. Deck selector integrated with URL navigation. Dashboard UI fully functional for all decks. Mock data layer supports deck-specific variation. Ready for real data provider integration per deck.
+Multi-deck command center architecture complete and working. Client-side deck resolution ensures reliable URL param reactivity. All 6 decks defined with their universes. Per-deck health history persistence working (files updated daily via GitHub Actions). Deck selector integrated with URL navigation. History loads client-side from public JSON files. Dashboard UI fully functional for all decks. Mock data layer supports deck-specific variation. Ready for real data provider integration per deck.
 
 ## Priority for Next Session
 1) UX polish for deck selector (add descriptions/tooltips, improve visual hierarchy)

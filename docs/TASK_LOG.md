@@ -1,5 +1,27 @@
 # TASK LOG — Trend100
 
+### 2026-01-21 — Client-side deck switching fix implemented
+**Completed:**
+- Created ClientDeckPage component for client-side deck resolution
+- Moved deck selection logic from server to client component
+- Implemented client-side history fetching from public JSON files with mock fallback
+- Added debug panel when ?debug=1 for live testing
+- Simplified server page.tsx to minimal wrapper
+- Fixed deck switching bug where URL changes didn't update UI
+
+**Changed:**
+- src/app/ClientDeckPage.tsx: New client component that reads useSearchParams() and handles deck resolution
+- src/app/page.tsx: Simplified to server wrapper that only determines isDemoMode
+- src/modules/trend100/data/mockHealthHistory.ts: Added seed parameter support
+- src/modules/trend100/ui/TopBar.tsx: Removed router.refresh() calls (not needed with client-side)
+
+**Discovered:**
+- Client-side resolution avoids Next.js server caching/static generation issues
+- useSearchParams() in client component provides immediate reactivity to URL changes
+- Client-side fetch for history files works reliably with proper error handling
+
+---
+
 ### 2026-01-21 — Multi-deck architecture completed and deployed
 **Completed:**
 - Deck registry created with 6 decks (Leadership 100, US Sectors, US Factors, Global Equities, Fixed Income, Macro)

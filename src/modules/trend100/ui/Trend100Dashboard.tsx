@@ -212,6 +212,8 @@ export function Trend100Dashboard({
         ticker={selectedTicker}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+        deckId={deckId}
+        asOfDate={snapshot.asOfDate}
       />
     </div>
   );

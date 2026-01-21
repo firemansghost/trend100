@@ -8,3 +8,4 @@ export { classifyTrend } from './classifyTrend';
 export type { TrendInputs, TrendStatus as EngineTrendStatus } from './classifyTrend';
 export { computeHealthScore } from './healthScore';
 export type { HealthScoreInput, HealthScoreOutput } from './healthScore';
+export { calcSMA, calcEMA, resampleDailyToWeekly } from './movingAverages';

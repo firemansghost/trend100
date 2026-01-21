@@ -6,13 +6,17 @@
 
 'use client';
 
-import { useEffect } from 'react';
-import type { TrendTickerSnapshot } from '../types';
+import { useEffect, useMemo } from 'react';
+import type { TrendTickerSnapshot, TrendDeckId } from '../types';
+import { getTickerSeries } from '../data/getTickerSeries';
+import { TrendChart } from './TrendChart';
 
 interface TrendModalProps {
   ticker: TrendTickerSnapshot | null;
   isOpen: boolean;
   onClose: () => void;
+  deckId: TrendDeckId;
+  asOfDate: string; // YYYY-MM-DD
 }
 
 /**
@@ -24,7 +28,24 @@ function formatPct(value?: number): string {
   return `${sign}${value.toFixed(2)}%`;
 }
 
-export function TrendModal({ ticker, isOpen, onClose }: TrendModalProps) {
+export function TrendModal({
+  ticker,
+  isOpen,
+  onClose,
+  deckId,
+  asOfDate,
+}: TrendModalProps) {
+  // Generate series when ticker is available
+  const series = useMemo(() => {
+    if (!ticker) {
+      return null;
+    }
+    return getTickerSeries({
+      ticker: ticker.ticker,
+      deckId,
+      asOfDate,
+    });
+  }, [ticker, deckId, asOfDate]);
   // Close on Escape key
   useEffect(() => {
     if (!isOpen) return;
@@ -187,12 +208,51 @@ export function TrendModal({ ticker, isOpen, onClose }: TrendModalProps) {
           </div>
         )}
 
-        {/* Chart Placeholder */}
-        <div className="mt-6 pt-6 border-t border-zinc-700">
-          <h3 className="text-sm font-semibold text-zinc-300 mb-3">Chart</h3>
-          <div className="bg-zinc-800 rounded p-8 text-center text-zinc-500">
-            Chart coming soon
+        {/* Key Metrics */}
+        {series?.latest && (
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-zinc-300 mb-3">
+              Key Metrics
+            </h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              {series.latest.price !== undefined &&
+                series.latest.sma200 !== undefined && (
+                  <div>
+                    <div className="text-zinc-400 mb-1">Distance to 200d</div>
+                    <div className="text-zinc-100">
+                      {formatPct(
+                        ((series.latest.price / series.latest.sma200 - 1) * 100)
+                      )}
+                    </div>
+                  </div>
+                )}
+              {series.latest.price !== undefined &&
+                series.latest.upperBand !== undefined && (
+                  <div>
+                    <div className="text-zinc-400 mb-1">Distance to Upper Band</div>
+                    <div className="text-zinc-100">
+                      {formatPct(
+                        ((series.latest.price / series.latest.upperBand - 1) * 100)
+                      )}
+                    </div>
+                  </div>
+                )}
+            </div>
           </div>
+        )}
+
+        {/* Chart */}
+        <div className="mt-6 pt-6 border-t border-zinc-700">
+          <h3 className="text-sm font-semibold text-zinc-300 mb-3">Price Chart</h3>
+          {series ? (
+            <div className="bg-zinc-800 rounded p-4">
+              <TrendChart points={series.points} />
+            </div>
+          ) : (
+            <div className="bg-zinc-800 rounded p-8 text-center text-zinc-500">
+              Loading chart...
+            </div>
+          )}
         </div>
       </div>
     </div>

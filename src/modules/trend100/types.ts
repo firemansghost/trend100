@@ -57,6 +57,7 @@ export interface TrendUniverseItem {
   tags: TrendTag[];
   section?: string; // Optional section grouping (deck-specific)
   providerTicker?: string; // For future real-data provider mapping (e.g., "BTC-USD")
+  subtitle?: string; // Optional subtitle for context (e.g., proxy ticker like "FBTC")
 }
 
 export type TrendUniverse = TrendUniverseItem[];
@@ -68,6 +69,7 @@ export interface TrendTickerSnapshot {
   ticker: string;
   tags: string[];
   section?: string; // Optional section grouping (deck-specific)
+  subtitle?: string; // Optional subtitle for context (e.g., proxy ticker like "FBTC")
   status: TrendStatus;
   price: number;
   changePct?: number;

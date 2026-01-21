@@ -67,6 +67,11 @@ export function TrendTile({ snapshot, onClick }: TrendTileProps) {
       <div className="text-lg font-bold text-zinc-100 mb-1">
         {snapshot.ticker}
       </div>
+      {snapshot.subtitle && (
+        <div className="text-xs text-zinc-400 truncate max-w-full">
+          {snapshot.subtitle}
+        </div>
+      )}
       <div className="text-xs text-zinc-400">
         ${snapshot.price.toFixed(2)}
       </div>

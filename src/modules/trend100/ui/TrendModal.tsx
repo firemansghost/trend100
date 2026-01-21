@@ -105,6 +105,11 @@ export function TrendModal({
             <h2 className="text-2xl font-bold text-zinc-100 mb-1">
               {ticker.ticker}
             </h2>
+            {ticker.subtitle && (
+              <div className="text-xs text-zinc-400 mb-1">
+                Proxy: {ticker.subtitle}
+              </div>
+            )}
             <div className={`text-sm font-medium ${statusColors[ticker.status]}`}>
               {ticker.status}
             </div>

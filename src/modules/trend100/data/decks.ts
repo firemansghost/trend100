@@ -108,8 +108,8 @@ const MACRO_UNIVERSE: TrendUniverse = [
   // Uranium
   { ticker: 'SRUUF', tags: ['etf', 'uranium', 'energy'], section: 'Uranium' },
   // Crypto (using spot ETF proxies for Marketstack EOD compatibility)
-  { ticker: 'Bitcoin', tags: ['crypto'], section: 'Crypto', providerTicker: 'FBTC' },
-  { ticker: 'Ethereum', tags: ['crypto'], section: 'Crypto', providerTicker: 'FETH' },
+  { ticker: 'Bitcoin', tags: ['crypto'], section: 'Crypto', providerTicker: 'FBTC', subtitle: 'FBTC' },
+  { ticker: 'Ethereum', tags: ['crypto'], section: 'Crypto', providerTicker: 'FETH', subtitle: 'FETH' },
 ];
 
 // Validate all universes

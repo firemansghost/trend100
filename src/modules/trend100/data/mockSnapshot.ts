@@ -69,7 +69,7 @@ export function generateMockTickerSnapshot(
   deckId: string,
   date: string
 ): TrendTickerSnapshot {
-  const { ticker, tags, section } = item;
+  const { ticker, tags, section, subtitle } = item;
   const mock = generateMockValues(ticker, deckId, date);
 
   // Classify trend
@@ -96,6 +96,7 @@ export function generateMockTickerSnapshot(
     ticker,
     tags,
     section: section ?? undefined,
+    subtitle: subtitle ?? undefined,
     status,
     price: mock.price,
     changePct: mock.changePct,

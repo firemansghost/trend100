@@ -1,5 +1,23 @@
 # TASK LOG — Trend100
 
+### 2026-01-21 — Sort toggle implemented
+**Completed:**
+- Implemented Sort toggle feature with four options: Universe, Status, Change, Ticker
+- Created centralized sorting logic in `sortUtils.ts`
+- Added sort control UI to TopBar (dropdown)
+- Integrated sorting into dashboard (applies after filtering)
+
+**Changed:**
+- src/modules/trend100/ui/sortUtils.ts: New file with sortTickers() function
+- src/modules/trend100/ui/Trend100Dashboard.tsx: Added sort state and sorting pipeline
+- src/modules/trend100/ui/TopBar.tsx: Added sort dropdown control
+
+**Discovered:**
+- Sorting logic centralized for maintainability; default UNIVERSE preserves original order
+- STATUS sort uses green-first ordering (GREEN → YELLOW → RED → UNKNOWN)
+
+---
+
 ### 2026-01-21 — Vercel live milestone recorded
 **Completed:**
 - Updated project brain docs to record Vercel deployment milestone

@@ -1,15 +1,15 @@
 # HANDOFF — Trend100
 
 ## Last Session Summary
-Vercel deployment milestone recorded. Site is live at https://trend100.vercel.app/. Next.js app scaffolded with module structure. Project brain documentation updated to reflect deployment state.
+Sort toggle feature implemented. Dashboard now supports Universe/Status/Change/Ticker sorting. Centralized sorting logic in sortUtils.ts. All V1 core features complete: universe, snapshot data layer, dashboard UI, search, tag filtering, sort, and modal.
 
 ## State of Work
-Next.js app scaffolded with module architecture. Site deployed and live on Vercel. Ready to begin V1 UI development with mock snapshot data.
+Dashboard UI is feature-complete for V1 MVP. All core functionality implemented: heatmap, search, tag filtering (OR logic), sort toggle, modal view, demo mode indicator. Mock data layer functional. Ready for chart integration and testing.
 
 ## Priority for Next Session
-1) Create curated 100 ticker list + tag taxonomy as committed source-of-truth file
-2) Build mock snapshot loader in `data/` layer
-3) Build dashboard heatmap UI in `ui/` layer
+1) Add chart visualization to TrendModal (Visser View) - placeholder exists, needs real chart
+2) Implement unit tests for engine functions (classifyTrend, computeHealthScore)
+3) Evaluate real data provider options and integration path
 
 ## Open Questions
 - Custom domain now vs later (trend100.com or subdomain?)

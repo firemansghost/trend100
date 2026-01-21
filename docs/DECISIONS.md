@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-01-21 — (UI) Sort control added with green-first status ordering
+**Choice:** Added Sort toggle with default UNIVERSE (preserves original order). STATUS sort orders GREEN → YELLOW → RED → UNKNOWN (green-first).  
+**Why:** Users need to reorder tiles for analysis. Green-first aligns with "leadership tells the truth" philosophy. UNIVERSE default preserves curated order.  
+**Alternatives considered:** Red-first status ordering (may add as option later), no default sort (chose UNIVERSE for consistency).
+
+---
+
 ### 2026-01-21 — (Ops) Trend100 deployed to Vercel
 **Choice:** Trend100 is live on Vercel at https://trend100.vercel.app/  
 **Why:** Live URL enables rapid iteration, shareability, and continuous deployment from main  

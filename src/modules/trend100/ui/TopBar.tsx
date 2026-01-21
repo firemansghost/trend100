@@ -7,7 +7,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import type { TrendHealthSummary, TrendTickerSnapshot, TrendDeckId } from '../types';
 import { getAllTags } from './tagUtils';
 import { TagPickerModal } from './TagPickerModal';
@@ -47,19 +47,17 @@ export function TopBar({
   isDemoMode = false,
 }: TopBarProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const availableTags = getAllTags(allTickers);
   const isFiltered = filteredCount !== allTickers.length;
   const [isTagPickerOpen, setIsTagPickerOpen] = useState(false);
 
   const handleDeckChange = (newDeckId: TrendDeckId) => {
-    const params = new URLSearchParams(searchParams.toString());
+    // Update URL with deck param (or remove it for default LEADERSHIP)
     if (newDeckId === 'LEADERSHIP') {
-      params.delete('deck'); // Remove param for default deck
+      router.push('/');
     } else {
-      params.set('deck', newDeckId);
+      router.push(`/?deck=${newDeckId}`);
     }
-    router.push(`/?${params.toString()}`);
   };
 
   const toggleTag = (tag: string) => {

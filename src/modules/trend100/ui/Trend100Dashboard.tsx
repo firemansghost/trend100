@@ -12,24 +12,33 @@ import { TopBar } from './TopBar';
 import { HeatmapGrid } from './HeatmapGrid';
 import { TrendModal } from './TrendModal';
 import { applyFilters } from './tagUtils';
+import { sortTickers, type SortKey } from './sortUtils';
 
 interface Trend100DashboardProps {
   snapshot: TrendSnapshot;
+  isDemoMode?: boolean;
 }
 
-export function Trend100Dashboard({ snapshot }: Trend100DashboardProps) {
+export function Trend100Dashboard({
+  snapshot,
+  isDemoMode = false,
+}: Trend100DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sortKey, setSortKey] = useState<SortKey>('UNIVERSE');
   const [selectedTicker, setSelectedTicker] =
     useState<TrendTickerSnapshot | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Apply filters
+  // Apply filters first
   const filteredTickers = applyFilters(
     snapshot.tickers,
     searchQuery,
     selectedTags
   );
+
+  // Then apply sorting
+  const sortedTickers = sortTickers(filteredTickers, sortKey);
 
   const handleTileClick = (ticker: TrendTickerSnapshot) => {
     setSelectedTicker(ticker);
@@ -52,11 +61,14 @@ export function Trend100Dashboard({ snapshot }: Trend100DashboardProps) {
         onSearchChange={setSearchQuery}
         selectedTags={selectedTags}
         onTagsChange={setSelectedTags}
+        sortKey={sortKey}
+        onSortChange={setSortKey}
+        isDemoMode={isDemoMode}
       />
 
       <main className="container mx-auto px-4 py-6">
         <HeatmapGrid
-          tickers={filteredTickers}
+          tickers={sortedTickers}
           onTileClick={handleTileClick}
         />
       </main>

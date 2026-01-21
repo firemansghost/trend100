@@ -7,3 +7,5 @@ export { TopBar } from './TopBar';
 export { HeatmapGrid } from './HeatmapGrid';
 export { TrendTile } from './TrendTile';
 export { TrendModal } from './TrendModal';
+export { TagPickerModal } from './TagPickerModal';
+export { DemoBadge } from './DemoBadge';

@@ -9,6 +9,9 @@
 import { useState } from 'react';
 import type { TrendHealthSummary, TrendTickerSnapshot } from '../types';
 import { getAllTags } from './tagUtils';
+import { TagPickerModal } from './TagPickerModal';
+import { DemoBadge } from './DemoBadge';
+import type { SortKey } from './sortUtils';
 
 interface TopBarProps {
   health: TrendHealthSummary;
@@ -19,6 +22,9 @@ interface TopBarProps {
   onSearchChange: (query: string) => void;
   selectedTags: string[];
   onTagsChange: (tags: string[]) => void;
+  sortKey: SortKey;
+  onSortChange: (key: SortKey) => void;
+  isDemoMode?: boolean;
 }
 
 export function TopBar({
@@ -30,9 +36,13 @@ export function TopBar({
   onSearchChange,
   selectedTags,
   onTagsChange,
+  sortKey,
+  onSortChange,
+  isDemoMode = false,
 }: TopBarProps) {
   const availableTags = getAllTags(allTickers);
   const isFiltered = filteredCount !== allTickers.length;
+  const [isTagPickerOpen, setIsTagPickerOpen] = useState(false);
 
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -61,9 +71,10 @@ export function TopBar({
   };
 
   return (
-    <div className="bg-zinc-900 border-b border-zinc-800 p-4 space-y-4">
-      {/* Market Health Row */}
-      <div className="flex flex-wrap items-center gap-4">
+    <>
+      <div className="bg-zinc-900 border-b border-zinc-800 p-4 space-y-4">
+        {/* Market Health Row */}
+        <div className="flex flex-wrap items-center gap-4">
         <div>
           <div className="text-xs text-zinc-400 mb-1">Market Health</div>
           <div className="flex items-center gap-3">
@@ -116,6 +127,21 @@ export function TopBar({
           />
         </div>
 
+        {/* Sort Control */}
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-zinc-400 whitespace-nowrap">Sort:</label>
+          <select
+            value={sortKey}
+            onChange={(e) => onSortChange(e.target.value as SortKey)}
+            className="px-3 py-2 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
+          >
+            <option value="UNIVERSE">Universe</option>
+            <option value="STATUS">Status</option>
+            <option value="CHANGE">Change</option>
+            <option value="TICKER">Ticker</option>
+          </select>
+        </div>
+
         {/* Tag Filters */}
         <div className="flex flex-wrap items-center gap-2">
           {(selectedTags.length > 0 || searchQuery) && (
@@ -144,13 +170,26 @@ export function TopBar({
               );
             })}
             {availableTags.length > 12 && (
-              <span className="px-2 py-1 text-xs text-zinc-500">
+              <button
+                onClick={() => setIsTagPickerOpen(true)}
+                className="px-2 py-1 text-xs text-zinc-400 border border-zinc-700 rounded bg-zinc-800 hover:bg-zinc-700 hover:text-zinc-300 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                aria-label={`Show all ${availableTags.length} tags`}
+              >
                 +{availableTags.length - 12} more
-              </span>
+              </button>
             )}
           </div>
         </div>
       </div>
-    </div>
+      </div>
+      {isDemoMode && <DemoBadge />}
+      <TagPickerModal
+        isOpen={isTagPickerOpen}
+        onClose={() => setIsTagPickerOpen(false)}
+        availableTags={availableTags}
+        selectedTags={selectedTags}
+        onTagsChange={onTagsChange}
+      />
+    </>
   );
 }

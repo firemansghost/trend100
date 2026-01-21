@@ -58,3 +58,33 @@ export interface TrendUniverseItem {
 }
 
 export type TrendUniverse = TrendUniverseItem[];
+
+// Snapshot types
+export type TrendStatus = 'GREEN' | 'YELLOW' | 'RED' | 'UNKNOWN';
+
+export interface TrendTickerSnapshot {
+  ticker: string;
+  tags: string[];
+  status: TrendStatus;
+  price: number;
+  changePct?: number;
+  sma200?: number;
+  sma50w?: number;
+  ema50w?: number;
+  distanceTo200dPct?: number;
+  distanceToUpperBandPct?: number;
+}
+
+export interface TrendHealthSummary {
+  greenPct: number;
+  yellowPct: number;
+  redPct: number;
+  regimeLabel: 'RISK_ON' | 'TRANSITION' | 'RISK_OFF';
+}
+
+export interface TrendSnapshot {
+  asOfDate: string; // ISO YYYY-MM-DD
+  universeSize: number;
+  tickers: TrendTickerSnapshot[];
+  health: TrendHealthSummary;
+}

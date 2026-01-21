@@ -1,5 +1,6 @@
 {
-  "asOfDate": "2026-01-21",
+  "runDate": "2026-01-21",
+  "asOfDate": "2026-01-20",
   "universeSize": 17,
   "tickers": [
     {
@@ -10,6 +11,8 @@
         "agriculture"
       ],
       "section": "Commodities",
+      "subtitle": "Agriculture",
+      "name": "Invesco DB Agriculture Fund",
       "status": "RED",
       "price": 25.49,
       "changePct": -0.43,
@@ -27,6 +30,8 @@
         "metals"
       ],
       "section": "Commodities",
+      "subtitle": "Base Metals",
+      "name": "Invesco DB Base Metals Fund",
       "status": "GREEN",
       "price": 23.74,
       "changePct": -0.08,
@@ -44,6 +49,8 @@
         "diversified"
       ],
       "section": "Commodities",
+      "subtitle": "Commodities",
+      "name": "Invesco Optimum Yield Diversified Commodity Strategy No K-1 ETF",
       "status": "GREEN",
       "price": 13.93,
       "changePct": 1.46,
@@ -62,6 +69,8 @@
         "oil"
       ],
       "section": "Energy",
+      "subtitle": "Oil",
+      "name": "United States Oil Fund LP",
       "status": "YELLOW",
       "price": 71.86,
       "changePct": 0.29,
@@ -79,6 +88,8 @@
         "australia"
       ],
       "section": "FX",
+      "subtitle": "AUD",
+      "name": "Invesco CurrencyShares Australian Dollar Trust",
       "status": "GREEN",
       "price": 66.7,
       "changePct": 0.74,
@@ -96,6 +107,8 @@
         "uk"
       ],
       "section": "FX",
+      "subtitle": "GBP",
+      "name": "Invesco CurrencyShares British Pound Sterling Trust",
       "status": "GREEN",
       "price": 129.19,
       "changePct": 0.41,
@@ -113,6 +126,8 @@
         "canada"
       ],
       "section": "FX",
+      "subtitle": "CAD",
+      "name": "Invesco CurrencyShares Canadian Dollar Trust",
       "status": "GREEN",
       "price": 70.67,
       "changePct": 0.67,
@@ -130,6 +145,8 @@
         "euro"
       ],
       "section": "FX",
+      "subtitle": "EUR",
+      "name": "Invesco CurrencyShares Euro Trust",
       "status": "GREEN",
       "price": 108.18,
       "changePct": 1.07,
@@ -147,6 +164,8 @@
         "japan"
       ],
       "section": "FX",
+      "subtitle": "JPY",
+      "name": "Invesco CurrencyShares Japanese Yen Trust",
       "status": "RED",
       "price": 58.14,
       "changePct": -0.07,
@@ -164,6 +183,8 @@
         "dollar"
       ],
       "section": "Dollar",
+      "subtitle": "Dollar",
+      "name": "Invesco DB US Dollar Index Bullish Fund",
       "status": "RED",
       "price": 27.21,
       "changePct": -0.8,
@@ -181,6 +202,8 @@
         "gold-miners"
       ],
       "section": "Metals",
+      "subtitle": "Gold Miners",
+      "name": "VanEck Gold Miners ETF",
       "status": "GREEN",
       "price": 102.78,
       "changePct": 5.7,
@@ -198,6 +221,8 @@
         "gold"
       ],
       "section": "Metals",
+      "subtitle": "Gold",
+      "name": "SPDR Gold MiniShares Trust",
       "status": "GREEN",
       "price": 94.14,
       "changePct": 3.78,
@@ -215,6 +240,8 @@
         "silver-miners"
       ],
       "section": "Metals",
+      "subtitle": "Silver Miners",
+      "name": "Global X Silver Miners ETF",
       "status": "GREEN",
       "price": 103.39,
       "changePct": 5.12,
@@ -232,6 +259,8 @@
         "silver"
       ],
       "section": "Metals",
+      "subtitle": "Silver",
+      "name": "iShares Silver Trust",
       "status": "GREEN",
       "price": 85.39,
       "changePct": 5.39,
@@ -249,6 +278,8 @@
         "energy"
       ],
       "section": "Uranium",
+      "subtitle": "Uranium",
+      "name": "Sprott Physical Uranium Trust",
       "status": "GREEN",
       "price": 21.62,
       "changePct": 0.23,
@@ -264,6 +295,8 @@
         "crypto"
       ],
       "section": "Crypto",
+      "subtitle": "FBTC",
+      "name": "Fidelity Wise Origin Bitcoin Fund",
       "status": "UNKNOWN",
       "price": 0
     },
@@ -273,6 +306,8 @@
         "crypto"
       ],
       "section": "Crypto",
+      "subtitle": "FETH",
+      "name": "Fidelity Ethereum Fund",
       "status": "UNKNOWN",
       "price": 0
     }

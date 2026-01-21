@@ -1,5 +1,6 @@
 {
-  "asOfDate": "2026-01-21",
+  "runDate": "2026-01-21",
+  "asOfDate": "2026-01-20",
   "universeSize": 11,
   "tickers": [
     {
@@ -10,6 +11,8 @@
         "ex-us"
       ],
       "section": "Global ex-US",
+      "subtitle": "ACWI ex-US",
+      "name": "iShares MSCI ACWI ex US ETF",
       "status": "GREEN",
       "price": 69.03,
       "changePct": -1.23,
@@ -27,6 +30,8 @@
         "emerging"
       ],
       "section": "Emerging",
+      "subtitle": "Emerging",
+      "name": "iShares MSCI Emerging Markets ETF",
       "status": "GREEN",
       "price": 57.31,
       "changePct": -0.97,
@@ -44,6 +49,8 @@
         "australia"
       ],
       "section": "Developed",
+      "subtitle": "Australia",
+      "name": "iShares MSCI Australia ETF",
       "status": "GREEN",
       "price": 26.46,
       "changePct": -1.05,
@@ -61,6 +68,8 @@
         "canada"
       ],
       "section": "Developed",
+      "subtitle": "Canada",
+      "name": "iShares MSCI Canada ETF",
       "status": "GREEN",
       "price": 54.75,
       "changePct": -0.69,
@@ -78,6 +87,8 @@
         "japan"
       ],
       "section": "Developed",
+      "subtitle": "Japan",
+      "name": "iShares MSCI Japan ETF",
       "status": "GREEN",
       "price": 83.72,
       "changePct": -2.06,
@@ -95,6 +106,8 @@
         "uk"
       ],
       "section": "Developed",
+      "subtitle": "UK",
+      "name": "iShares MSCI United Kingdom ETF",
       "status": "GREEN",
       "price": 44.7,
       "changePct": -1.06,
@@ -112,6 +125,8 @@
         "brazil"
       ],
       "section": "Emerging",
+      "subtitle": "Brazil",
+      "name": "iShares MSCI Brazil ETF",
       "status": "GREEN",
       "price": 33.62,
       "changePct": 1.36,
@@ -129,6 +144,8 @@
         "europe"
       ],
       "section": "Developed",
+      "subtitle": "Eurozone",
+      "name": "iShares MSCI Eurozone ETF",
       "status": "GREEN",
       "price": 64.93,
       "changePct": -1.71,
@@ -146,6 +163,8 @@
         "china"
       ],
       "section": "Emerging",
+      "subtitle": "China LC",
+      "name": "iShares China Large-Cap ETF",
       "status": "GREEN",
       "price": 38.87,
       "changePct": -1.09,
@@ -163,6 +182,8 @@
         "natural-resources"
       ],
       "section": "Commodities/Resources",
+      "subtitle": "Nat Resources",
+      "name": "SPDR S&P Global Natural Resources ETF",
       "status": "GREEN",
       "price": 66.67,
       "changePct": 0.2,
@@ -180,6 +201,8 @@
         "india"
       ],
       "section": "Emerging",
+      "subtitle": "India",
+      "name": "iShares MSCI India ETF",
       "status": "RED",
       "price": 51.73,
       "changePct": -2.12,

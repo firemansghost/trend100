@@ -224,41 +224,57 @@ async function main() {
     console.log(`\n📦 Generating snapshot for ${deckId}...`);
     const deck = getDeck(deckId);
     const tickers: TrendTickerSnapshot[] = [];
+    
+    // Track latest EOD bar date across all tickers that have data
+    let latestBarDate: string | null = null;
 
+    // Iterate deck.universe as source of truth for metadata (subtitle, name, section, tags)
     for (const item of deck.universe) {
       const providerSymbol = item.providerTicker ?? item.ticker;
       const eodBars = seriesCache.get(providerSymbol);
 
+      // Always include deck metadata regardless of data availability
+      const baseSnapshot: Partial<TrendTickerSnapshot> = {
+        ticker: item.ticker,
+        tags: item.tags,
+        section: item.section,
+        subtitle: item.subtitle,
+        name: item.name,
+      };
+
       if (!eodBars || eodBars.length === 0) {
         console.log(`  ⚠️  No data for ${item.ticker} (${providerSymbol}) - creating UNKNOWN snapshot`);
-        // Create UNKNOWN snapshot with safe defaults
+        // Create UNKNOWN snapshot with deck metadata
         tickers.push({
-          ticker: item.ticker,
-          tags: item.tags,
-          section: item.section,
-          subtitle: item.subtitle,
-          name: item.name,
+          ...baseSnapshot,
           status: 'UNKNOWN',
           price: 0,
           // All other fields undefined (safe for UI)
-        });
+        } as TrendTickerSnapshot);
         continue;
+      }
+
+      // Track latest bar date
+      const lastBar = eodBars[eodBars.length - 1];
+      if (lastBar && (!latestBarDate || lastBar.date > latestBarDate)) {
+        latestBarDate = lastBar.date;
       }
 
       const snapshot = computeTickerSnapshot(item, eodBars);
       if (snapshot) {
-        tickers.push(snapshot);
+        // Ensure deck metadata is included (computeTickerSnapshot already includes it, but be explicit)
+        tickers.push({
+          ...baseSnapshot,
+          ...snapshot,
+        } as TrendTickerSnapshot);
       } else {
         console.log(`  ⚠️  Failed to compute snapshot for ${item.ticker}`);
+        // Create UNKNOWN snapshot with deck metadata
         tickers.push({
-          ticker: item.ticker,
-          tags: item.tags,
-          section: item.section,
-          subtitle: item.subtitle,
-          name: item.name,
+          ...baseSnapshot,
           status: 'UNKNOWN',
           price: 0,
-        });
+        } as TrendTickerSnapshot);
       }
     }
 
@@ -266,15 +282,19 @@ async function main() {
     const statuses = tickers.map((t) => t.status);
     const health = computeHealthScore({ statuses });
 
+    // Use latest bar date if available, otherwise fall back to today
+    const asOfDate = latestBarDate || today;
+
     const snapshot: TrendSnapshot = {
-      asOfDate: today,
+      runDate: today,
+      asOfDate,
       universeSize: tickers.length,
       tickers,
       health,
     };
 
     snapshots.set(deckId, snapshot);
-    console.log(`  ✓ Generated snapshot: ${tickers.length} tickers, ${health.greenPct}% green`);
+    console.log(`  ✓ Generated snapshot: ${tickers.length} tickers, ${health.greenPct}% green, asOfDate: ${asOfDate}`);
   }
 
   // Step 4: Write snapshot files

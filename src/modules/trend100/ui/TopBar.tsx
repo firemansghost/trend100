@@ -138,7 +138,7 @@ export function TopBar({
         </div>
 
         <div className="text-xs text-zinc-500">
-          As of {asOfDate}
+          As of {asOfDate} (EOD)
         </div>
 
         {isFiltered && (

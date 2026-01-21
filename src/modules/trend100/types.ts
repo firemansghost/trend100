@@ -90,7 +90,8 @@ export interface TrendHealthSummary {
 }
 
 export interface TrendSnapshot {
-  asOfDate: string; // ISO YYYY-MM-DD
+  runDate: string; // ISO YYYY-MM-DD - when the script ran
+  asOfDate: string; // ISO YYYY-MM-DD - latest market bar date used (max bar.date across tickers)
   universeSize: number;
   tickers: TrendTickerSnapshot[];
   health: TrendHealthSummary;

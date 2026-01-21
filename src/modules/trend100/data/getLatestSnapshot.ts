@@ -40,6 +40,7 @@ export function getLatestSnapshot(
   const health = computeHealthScore({ statuses });
 
   return {
+    runDate: asOfDate, // For mock snapshots, runDate and asOfDate are the same
     asOfDate,
     universeSize: deck.universe.length,
     tickers,

@@ -1,5 +1,6 @@
 {
-  "asOfDate": "2026-01-21",
+  "runDate": "2026-01-21",
+  "asOfDate": "2026-01-20",
   "universeSize": 10,
   "tickers": [
     {
@@ -11,6 +12,8 @@
         "broad"
       ],
       "section": "Size",
+      "subtitle": "Large Cap",
+      "name": "iShares Russell 1000 ETF",
       "status": "GREEN",
       "price": 371.79,
       "changePct": -2.02,
@@ -29,6 +32,8 @@
         "value"
       ],
       "section": "Style",
+      "subtitle": "Value",
+      "name": "iShares Russell 1000 Value ETF",
       "status": "GREEN",
       "price": 215.94,
       "changePct": -1.39,
@@ -47,6 +52,8 @@
         "growth"
       ],
       "section": "Style",
+      "subtitle": "Growth",
+      "name": "iShares Russell 1000 Growth ETF",
       "status": "GREEN",
       "price": 458.66,
       "changePct": -2.53,
@@ -65,6 +72,8 @@
         "smallcap"
       ],
       "section": "Size",
+      "subtitle": "Small Cap",
+      "name": "iShares Russell 2000 ETF",
       "status": "GREEN",
       "price": 262.58,
       "changePct": -1.2,
@@ -83,6 +92,8 @@
         "midcap"
       ],
       "section": "Size",
+      "subtitle": "Mid Cap",
+      "name": "iShares Russell Mid-Cap ETF",
       "status": "GREEN",
       "price": 99.25,
       "changePct": -1.54,
@@ -101,6 +112,8 @@
         "momentum"
       ],
       "section": "Momentum",
+      "subtitle": "Momentum",
+      "name": "iShares MSCI USA Momentum Factor ETF",
       "status": "GREEN",
       "price": 252.84,
       "changePct": -2.14,
@@ -119,6 +132,8 @@
         "nasdaq100"
       ],
       "section": "Size",
+      "subtitle": "Nasdaq 100",
+      "name": "Invesco QQQ Trust",
       "status": "GREEN",
       "price": 608.06,
       "changePct": -2.12,
@@ -137,6 +152,8 @@
         "quality"
       ],
       "section": "Quality/LowVol",
+      "subtitle": "Quality",
+      "name": "iShares MSCI USA Quality Factor ETF",
       "status": "GREEN",
       "price": 199.53,
       "changePct": -1.86,
@@ -155,6 +172,8 @@
         "dividend"
       ],
       "section": "Quality/LowVol",
+      "subtitle": "HiDiv LowVol",
+      "name": "Invesco S&P 500 High Dividend Low Volatility ETF",
       "status": "GREEN",
       "price": 48.96,
       "changePct": -0.79,
@@ -173,6 +192,8 @@
         "low-vol"
       ],
       "section": "Quality/LowVol",
+      "subtitle": "Low Vol",
+      "name": "Invesco S&P 500 Low Volatility ETF",
       "status": "YELLOW",
       "price": 72.6,
       "changePct": -0.86,

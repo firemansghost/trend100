@@ -16,10 +16,10 @@ import { getDeck, isDeckId, getAllDeckIds } from '@/modules/trend100/data/decks'
 import { buildMockHealthHistory } from '@/modules/trend100/data/mockHealthHistory';
 
 interface ClientDeckPageProps {
-  isDemoMode?: boolean;
+  // Removed isDemoMode prop - demo mode is determined by snapshotSource only
 }
 
-function ClientDeckPageContent({ isDemoMode = false }: ClientDeckPageProps) {
+function ClientDeckPageContent() {
   const searchParams = useSearchParams();
   const rawDeck = searchParams.get('deck');
   const debug = searchParams.get('debug') === '1';
@@ -116,6 +116,8 @@ function ClientDeckPageContent({ isDemoMode = false }: ClientDeckPageProps) {
           <span>universeSize={snapshot?.universeSize ?? 'loading...'}</span>
           <span>snapshotSource={snapshotSource}</span>
           <span>snapshotLoading={snapshotLoading ? 'true' : 'false'}</span>
+          <span>asOfDate={snapshot?.asOfDate ?? 'loading...'}</span>
+          <span>runDate={snapshot?.runDate ?? 'loading...'}</span>
           <span>historySource={historySource}</span>
           <span>historyLoading={historyLoading ? 'true' : 'false'}</span>
           <span>allowed={getAllDeckIds().join(',')}</span>
@@ -147,16 +149,16 @@ function ClientDeckPageContent({ isDemoMode = false }: ClientDeckPageProps) {
         deckLabel={deck.label}
         deckDescription={deck.description}
         deckSections={deck.sections ?? []}
-        isDemoMode={snapshotSource === 'mock' || isDemoMode}
+        isDemoMode={snapshotSource === 'mock'}
       />
     </>
   );
 }
 
-export function ClientDeckPage({ isDemoMode = false }: ClientDeckPageProps) {
+export function ClientDeckPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">Loading...</div>}>
-      <ClientDeckPageContent isDemoMode={isDemoMode} />
+      <ClientDeckPageContent />
     </Suspense>
   );
 }

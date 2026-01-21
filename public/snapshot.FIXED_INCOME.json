@@ -1,5 +1,6 @@
 {
-  "asOfDate": "2026-01-21",
+  "runDate": "2026-01-21",
+  "asOfDate": "2026-01-20",
   "universeSize": 18,
   "tickers": [
     {
@@ -10,6 +11,8 @@
         "aggregate"
       ],
       "section": "Rates",
+      "subtitle": "Agg Bond",
+      "name": "iShares Core U.S. Aggregate Bond ETF",
       "status": "GREEN",
       "price": 99.67,
       "changePct": -0.38,
@@ -27,6 +30,8 @@
         "short-term"
       ],
       "section": "Cash",
+      "subtitle": "T-Bills",
+      "name": "SPDR Bloomberg 3-12 Month T-Bill ETF",
       "status": "GREEN",
       "price": 99.37,
       "sma200": 99.31,
@@ -43,6 +48,8 @@
         "business-dev"
       ],
       "section": "Loans/BDC",
+      "subtitle": "BDCs",
+      "name": "VanEck Business Development Company ETF",
       "status": "RED",
       "price": 14.33,
       "changePct": -1.38,
@@ -60,6 +67,8 @@
         "bank-loan"
       ],
       "section": "Loans/BDC",
+      "subtitle": "Bank Loans",
+      "name": "Invesco Senior Loan ETF",
       "status": "YELLOW",
       "price": 20.92,
       "changePct": -0.66,
@@ -77,6 +86,8 @@
         "international"
       ],
       "section": "Rates",
+      "subtitle": "Intl Bond",
+      "name": "Vanguard Total International Bond ETF",
       "status": "RED",
       "price": 48.39,
       "changePct": -0.31,
@@ -94,6 +105,8 @@
         "international"
       ],
       "section": "Rates",
+      "subtitle": "Intl Corp",
+      "name": "SPDR Bloomberg International Corporate Bond ETF",
       "status": "RED",
       "price": 22.33,
       "changePct": -0.04,
@@ -111,6 +124,8 @@
         "convertible"
       ],
       "section": "Credit",
+      "subtitle": "Convertibles",
+      "name": "SPDR Bloomberg Convertible Securities ETF",
       "status": "GREEN",
       "price": 93.11,
       "changePct": -0.83,
@@ -128,6 +143,8 @@
         "emerging"
       ],
       "section": "EM Debt",
+      "subtitle": "EM USD Debt",
+      "name": "iShares J.P. Morgan USD Emerging Markets Bond ETF",
       "status": "GREEN",
       "price": 95.73,
       "changePct": -0.5,
@@ -145,6 +162,8 @@
         "emerging-local"
       ],
       "section": "EM Debt",
+      "subtitle": "EM Local",
+      "name": "VanEck J.P. Morgan EM Local Currency Bond ETF",
       "status": "GREEN",
       "price": 25.98,
       "changePct": 0.19,
@@ -162,6 +181,8 @@
         "high-yield"
       ],
       "section": "Credit",
+      "subtitle": "High Yield",
+      "name": "iShares iBoxx $ High Yield Corporate Bond ETF",
       "status": "GREEN",
       "price": 80.88,
       "changePct": -0.26,
@@ -179,6 +200,8 @@
         "intermediate"
       ],
       "section": "Rates",
+      "subtitle": "7–10y Tsy",
+      "name": "iShares 7-10 Year Treasury Bond ETF",
       "status": "RED",
       "price": 95.55,
       "changePct": -0.4,
@@ -196,6 +219,8 @@
         "investment-grade"
       ],
       "section": "Credit",
+      "subtitle": "IG Credit",
+      "name": "iShares iBoxx $ Investment Grade Corporate Bond ETF",
       "status": "GREEN",
       "price": 109.9,
       "changePct": -0.61,
@@ -213,6 +238,8 @@
         "mortgage"
       ],
       "section": "Securitized",
+      "subtitle": "MBS",
+      "name": "iShares MBS ETF",
       "status": "GREEN",
       "price": 95.16,
       "changePct": -0.43,
@@ -230,6 +257,8 @@
         "preferred"
       ],
       "section": "Preferreds",
+      "subtitle": "Preferreds",
+      "name": "iShares Preferred & Income Securities ETF",
       "status": "GREEN",
       "price": 31.61,
       "changePct": -0.53,
@@ -247,6 +276,8 @@
         "short-term"
       ],
       "section": "Rates",
+      "subtitle": "1–3y Tsy",
+      "name": "iShares 1-3 Year Treasury Bond ETF",
       "status": "GREEN",
       "price": 82.8,
       "changePct": 0.01,
@@ -264,6 +295,8 @@
         "tips"
       ],
       "section": "Rates",
+      "subtitle": "Short TIPS",
+      "name": "iShares 0-5 Year TIPS Bond ETF",
       "status": "RED",
       "price": 102.38,
       "changePct": -0.03,
@@ -281,6 +314,8 @@
         "tips"
       ],
       "section": "Rates",
+      "subtitle": "TIPS",
+      "name": "iShares TIPS Bond ETF",
       "status": "RED",
       "price": 109.69,
       "changePct": -0.3,
@@ -298,6 +333,8 @@
         "long-term"
       ],
       "section": "Rates",
+      "subtitle": "20y+ Tsy",
+      "name": "iShares 20+ Year Treasury Bond ETF",
       "status": "RED",
       "price": 86.65,
       "changePct": -1.31,

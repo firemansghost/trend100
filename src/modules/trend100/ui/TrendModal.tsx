@@ -6,10 +6,18 @@
 
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { TrendTickerSnapshot, TrendDeckId } from '../types';
 import { getTickerSeries } from '../data/getTickerSeries';
 import { TrendChart } from './TrendChart';
+
+export interface ChartVisibility {
+  price: boolean;
+  sma200: boolean;
+  sma50w: boolean;
+  ema50w: boolean;
+  band?: boolean;
+}
 
 interface TrendModalProps {
   ticker: TrendTickerSnapshot | null;
@@ -35,6 +43,15 @@ export function TrendModal({
   deckId,
   asOfDate,
 }: TrendModalProps) {
+  // Chart line visibility state (persists within modal session)
+  const [visible, setVisible] = useState<ChartVisibility>({
+    price: true,
+    sma200: true,
+    sma50w: true,
+    ema50w: true,
+    band: true,
+  });
+
   // Generate series when ticker is available
   const series = useMemo(() => {
     if (!ticker) {
@@ -243,10 +260,69 @@ export function TrendModal({
 
         {/* Chart */}
         <div className="mt-6 pt-6 border-t border-zinc-700">
-          <h3 className="text-sm font-semibold text-zinc-300 mb-3">Price Chart</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-zinc-300">Price Chart</h3>
+            {/* Line toggles */}
+            {series && (
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setVisible((v) => ({ ...v, price: !v.price }))}
+                  className={`px-2 py-1 text-xs rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 ${
+                    visible.price
+                      ? 'bg-zinc-700 text-zinc-100 border-zinc-600'
+                      : 'bg-zinc-800 text-zinc-500 border-zinc-700 hover:bg-zinc-700'
+                  }`}
+                >
+                  Price
+                </button>
+                <button
+                  onClick={() => setVisible((v) => ({ ...v, sma200: !v.sma200 }))}
+                  className={`px-2 py-1 text-xs rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 ${
+                    visible.sma200
+                      ? 'bg-zinc-700 text-green-400 border-green-600/50'
+                      : 'bg-zinc-800 text-zinc-500 border-zinc-700 hover:bg-zinc-700'
+                  }`}
+                >
+                  200d SMA
+                </button>
+                <button
+                  onClick={() => setVisible((v) => ({ ...v, sma50w: !v.sma50w }))}
+                  className={`px-2 py-1 text-xs rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 ${
+                    visible.sma50w
+                      ? 'bg-zinc-700 text-amber-400 border-amber-600/50'
+                      : 'bg-zinc-800 text-zinc-500 border-zinc-700 hover:bg-zinc-700'
+                  }`}
+                >
+                  50w SMA
+                </button>
+                <button
+                  onClick={() => setVisible((v) => ({ ...v, ema50w: !v.ema50w }))}
+                  className={`px-2 py-1 text-xs rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 ${
+                    visible.ema50w
+                      ? 'bg-zinc-700 text-purple-400 border-purple-600/50'
+                      : 'bg-zinc-800 text-zinc-500 border-zinc-700 hover:bg-zinc-700'
+                  }`}
+                >
+                  50w EMA
+                </button>
+                {series.points.some((p) => p.upperBand !== undefined && p.lowerBand !== undefined) && (
+                  <button
+                    onClick={() => setVisible((v) => ({ ...v, band: !v.band }))}
+                    className={`px-2 py-1 text-xs rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 ${
+                      visible.band
+                        ? 'bg-zinc-700 text-zinc-300 border-zinc-600'
+                        : 'bg-zinc-800 text-zinc-500 border-zinc-700 hover:bg-zinc-700'
+                    }`}
+                  >
+                    Band
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
           {series ? (
             <div className="bg-zinc-800 rounded p-4">
-              <TrendChart points={series.points} />
+              <TrendChart points={series.points} visible={visible} />
             </div>
           ) : (
             <div className="bg-zinc-800 rounded p-8 text-center text-zinc-500">

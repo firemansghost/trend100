@@ -48,3 +48,13 @@ export interface MarketSummary {
   cautionCount: number;
   bearCount: number;
 }
+
+// Universe types
+export type TrendTag = string;
+
+export interface TrendUniverseItem {
+  ticker: string;
+  tags: TrendTag[];
+}
+
+export type TrendUniverse = TrendUniverseItem[];

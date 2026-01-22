@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-01-22 — (Ops) Workflow: concurrency + rebase/retry to avoid non-fast-forward push failures
+**Choice:** Added concurrency group with `cancel-in-progress: true` to prevent overlapping workflow runs. Implemented rebase-before-commit and retry loop (3 attempts) in push step to handle race conditions when main advances during job execution.  
+**Why:** Workflow was failing with "cannot lock ref" errors due to concurrent runs or main advancing between commit and push. Concurrency prevents overlaps; rebase+retry handles remaining race conditions without force-push.  
+**Alternatives considered:** Force-push (rejected - dangerous), locking mechanism (overkill), accepting failures (unreliable).
+
+---
+
 ### 2026-01-21 — (Architecture) Client-side deck switching to avoid server caching issues
 **Choice:** Implement deck selection and resolution in a client component (ClientDeckPage) that reads `useSearchParams()` directly. Compute snapshot and fetch history client-side.  
 **Why:** Server-side rendering with Next.js had caching/static generation issues where URL param changes didn't trigger re-renders. Client-side approach ensures URL changes always update UI immediately.  

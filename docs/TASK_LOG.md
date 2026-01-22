@@ -1,5 +1,22 @@
 # TASK LOG — Trend100
 
+### 2026-01-22 — Fix update-snapshots workflow push race condition
+**Completed:**
+- Added concurrency group to prevent overlapping workflow runs
+- Set fetch-depth: 0 for full git history
+- Implemented rebase-before-commit in push step
+- Added retry loop (3 attempts) with rebase on push failures
+- Added check to exit early if no staged changes after rebase
+
+**Changed:**
+- .github/workflows/update-snapshots.yml: Added concurrency, fetch-depth: 0, rebase/retry logic in commit/push step
+
+**Discovered:**
+- Race conditions occur when main advances between checkout and push
+- Concurrency prevents overlapping runs; rebase+retry handles remaining edge cases
+
+---
+
 ### 2026-01-21 — Client-side deck switching fix implemented
 **Completed:**
 - Created ClientDeckPage component for client-side deck resolution

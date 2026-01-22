@@ -7,6 +7,10 @@ on:
     - cron: '15 12 * * 1-5'
   workflow_dispatch: # Allow manual trigger
 
+concurrency:
+  group: update-snapshots-main
+  cancel-in-progress: true
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -18,6 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -53,6 +58,40 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          
+          # Stage the files
           git add public/snapshot.*.json public/health-history.*.json data/marketstack/eod/*.json
+          
+          # Check if there are staged changes
+          if [ -z "$(git diff --cached --name-only)" ]; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          
+          # Commit first (on current HEAD)
           git commit -m "chore: update snapshots, health history, and EOD cache [skip ci]"
-          git push
+          
+          # Fetch latest origin/main and rebase our commit on top
+          git fetch origin main
+          git rebase origin/main
+          
+          # Push with retry loop (3 attempts)
+          MAX_RETRIES=3
+          ATTEMPT=1
+          while [ $ATTEMPT -le $MAX_RETRIES ]; do
+            if git push; then
+              echo "Push succeeded on attempt $ATTEMPT"
+              exit 0
+            else
+              echo "Push failed on attempt $ATTEMPT"
+              if [ $ATTEMPT -lt $MAX_RETRIES ]; then
+                echo "Fetching and rebasing before retry..."
+                git fetch origin main
+                git rebase origin/main
+              else
+                echo "Push failed after $MAX_RETRIES attempts"
+                exit 1
+              fi
+            fi
+            ATTEMPT=$((ATTEMPT + 1))
+          done

@@ -1,6 +1,6 @@
 {
-  "runDate": "2026-01-21",
-  "asOfDate": "2026-01-20",
+  "runDate": "2026-01-22",
+  "asOfDate": "2026-01-21",
   "universeSize": 10,
   "tickers": [
     {
@@ -15,13 +15,13 @@
       "subtitle": "Large Cap",
       "name": "iShares Russell 1000 ETF",
       "status": "GREEN",
-      "price": 371.79,
-      "changePct": -2.02,
-      "sma200": 348.15,
-      "sma50w": 343.98,
-      "ema50w": 354.03,
-      "distanceTo200dPct": 6.79,
-      "distanceToUpperBandPct": 5.02
+      "price": 376.12,
+      "changePct": 1.16,
+      "sma200": 348.56,
+      "sma50w": 344.07,
+      "ema50w": 354.2,
+      "distanceTo200dPct": 7.91,
+      "distanceToUpperBandPct": 6.19
     },
     {
       "ticker": "IWD",
@@ -35,13 +35,13 @@
       "subtitle": "Value",
       "name": "iShares Russell 1000 Value ETF",
       "status": "GREEN",
-      "price": 215.94,
-      "changePct": -1.39,
-      "sma200": 198.28,
-      "sma50w": 197.43,
-      "ema50w": 201.69,
-      "distanceTo200dPct": 8.91,
-      "distanceToUpperBandPct": 7.06
+      "price": 219.13,
+      "changePct": 1.48,
+      "sma200": 198.47,
+      "sma50w": 197.5,
+      "ema50w": 201.82,
+      "distanceTo200dPct": 10.41,
+      "distanceToUpperBandPct": 8.58
     },
     {
       "ticker": "IWF",
@@ -55,13 +55,13 @@
       "subtitle": "Growth",
       "name": "iShares Russell 1000 Growth ETF",
       "status": "GREEN",
-      "price": 458.66,
-      "changePct": -2.53,
-      "sma200": 437.41,
-      "sma50w": 429.3,
-      "ema50w": 444.57,
-      "distanceTo200dPct": 4.86,
-      "distanceToUpperBandPct": 3.17
+      "price": 462.42,
+      "changePct": 0.82,
+      "sma200": 437.98,
+      "sma50w": 429.37,
+      "ema50w": 444.72,
+      "distanceTo200dPct": 5.58,
+      "distanceToUpperBandPct": 3.98
     },
     {
       "ticker": "IWM",
@@ -75,13 +75,13 @@
       "subtitle": "Small Cap",
       "name": "iShares Russell 2000 ETF",
       "status": "GREEN",
-      "price": 262.58,
-      "changePct": -1.2,
-      "sma200": 228.03,
-      "sma50w": 225.93,
-      "ema50w": 235.59,
-      "distanceTo200dPct": 15.15,
-      "distanceToUpperBandPct": 11.46
+      "price": 267.79,
+      "changePct": 1.98,
+      "sma200": 228.42,
+      "sma50w": 226.03,
+      "ema50w": 235.8,
+      "distanceTo200dPct": 17.24,
+      "distanceToUpperBandPct": 13.57
     },
     {
       "ticker": "IWR",
@@ -95,13 +95,13 @@
       "subtitle": "Mid Cap",
       "name": "iShares Russell Mid-Cap ETF",
       "status": "GREEN",
-      "price": 99.25,
-      "changePct": -1.54,
-      "sma200": 93,
-      "sma50w": 92.3,
-      "ema50w": 94.43,
-      "distanceTo200dPct": 6.72,
-      "distanceToUpperBandPct": 5.11
+      "price": 100.86,
+      "changePct": 1.62,
+      "sma200": 93.09,
+      "sma50w": 92.33,
+      "ema50w": 94.49,
+      "distanceTo200dPct": 8.34,
+      "distanceToUpperBandPct": 6.74
     },
     {
       "ticker": "MTUM",
@@ -115,13 +115,13 @@
       "subtitle": "Momentum",
       "name": "iShares MSCI USA Momentum Factor ETF",
       "status": "GREEN",
-      "price": 252.84,
-      "changePct": -2.14,
-      "sma200": 239.67,
-      "sma50w": 235.42,
-      "ema50w": 241.02,
-      "distanceTo200dPct": 5.5,
-      "distanceToUpperBandPct": 4.91
+      "price": 255.4,
+      "changePct": 1.01,
+      "sma200": 239.97,
+      "sma50w": 235.47,
+      "ema50w": 241.12,
+      "distanceTo200dPct": 6.43,
+      "distanceToUpperBandPct": 5.92
     },
     {
       "ticker": "QQQ",
@@ -135,13 +135,13 @@
       "subtitle": "Nasdaq 100",
       "name": "Invesco QQQ Trust",
       "status": "GREEN",
-      "price": 608.06,
-      "changePct": -2.12,
-      "sma200": 566.28,
-      "sma50w": 556.2,
-      "ema50w": 575.5,
-      "distanceTo200dPct": 7.38,
-      "distanceToUpperBandPct": 5.66
+      "price": 616.28,
+      "changePct": 1.35,
+      "sma200": 567.11,
+      "sma50w": 556.36,
+      "ema50w": 575.82,
+      "distanceTo200dPct": 8.67,
+      "distanceToUpperBandPct": 7.03
     },
     {
       "ticker": "QUAL",
@@ -155,13 +155,13 @@
       "subtitle": "Quality",
       "name": "iShares MSCI USA Quality Factor ETF",
       "status": "GREEN",
-      "price": 199.53,
-      "changePct": -1.86,
-      "sma200": 186.84,
-      "sma50w": 185.45,
-      "ema50w": 190.11,
-      "distanceTo200dPct": 6.79,
-      "distanceToUpperBandPct": 4.95
+      "price": 201.97,
+      "changePct": 1.22,
+      "sma200": 187.03,
+      "sma50w": 185.5,
+      "ema50w": 190.21,
+      "distanceTo200dPct": 7.99,
+      "distanceToUpperBandPct": 6.18
     },
     {
       "ticker": "SPHD",
@@ -175,13 +175,13 @@
       "subtitle": "HiDiv LowVol",
       "name": "Invesco S&P 500 High Dividend Low Volatility ETF",
       "status": "GREEN",
-      "price": 48.96,
-      "changePct": -0.79,
+      "price": 49.32,
+      "changePct": 0.74,
       "sma200": 48.1,
-      "sma50w": 48.41,
-      "ema50w": 48.46,
-      "distanceTo200dPct": 1.79,
-      "distanceToUpperBandPct": 1.02
+      "sma50w": 48.42,
+      "ema50w": 48.48,
+      "distanceTo200dPct": 2.54,
+      "distanceToUpperBandPct": 1.74
     },
     {
       "ticker": "SPLV",
@@ -194,19 +194,19 @@
       "section": "Quality/LowVol",
       "subtitle": "Low Vol",
       "name": "Invesco S&P 500 Low Volatility ETF",
-      "status": "YELLOW",
-      "price": 72.6,
-      "changePct": -0.86,
+      "status": "GREEN",
+      "price": 72.98,
+      "changePct": 0.52,
       "sma200": 72.41,
-      "sma50w": 72.6,
-      "ema50w": 72.26,
-      "distanceTo200dPct": 0.26,
-      "distanceToUpperBandPct": 0
+      "sma50w": 72.61,
+      "ema50w": 72.27,
+      "distanceTo200dPct": 0.79,
+      "distanceToUpperBandPct": 0.51
     }
   ],
   "health": {
-    "greenPct": 90,
-    "yellowPct": 10,
+    "greenPct": 100,
+    "yellowPct": 0,
     "redPct": 0,
     "regimeLabel": "RISK_ON"
   }

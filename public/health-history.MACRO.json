@@ -8,9 +8,9 @@
   },
   {
     "date": "2026-01-22",
-    "greenPct": 0,
-    "yellowPct": 58.8,
-    "redPct": 41.2,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 70.6,
+    "yellowPct": 0,
+    "redPct": 29.4,
+    "regimeLabel": "RISK_ON"
   }
 ]

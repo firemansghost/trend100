@@ -5,5 +5,12 @@
     "yellowPct": 2,
     "redPct": 33,
     "regimeLabel": "TRANSITION"
+  },
+  {
+    "date": "2026-01-22",
+    "greenPct": 6,
+    "yellowPct": 39,
+    "redPct": 55,
+    "regimeLabel": "RISK_OFF"
   }
 ]

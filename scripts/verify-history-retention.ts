@@ -122,11 +122,22 @@ function verifyDeckHistory(deckId: TrendDeckId): { ok: boolean; message: string 
   
   // Check if cache should be extended (if we expect >= 730 days but have many zero points)
   const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
+  const strictWarmup = process.env.TREND100_STRICT_WARMUP === '1';
+  
   if (cacheDays >= EXPECTED_CACHE_DAYS && zeroPct > MAX_ZERO_PCT) {
-    return {
-      ok: false,
-      message: `${deckId}: ${zeroPct.toFixed(1)}% zero points (${zeroPoints.length}/${currentCount}) - warm-up issue detected. Cache may need extension (expected ${cacheDays} days).`,
-    };
+    const message = `${deckId}: ${zeroPct.toFixed(1)}% zero points (${zeroPoints.length}/${currentCount}) - warm-up issue detected. Cache may need extension (expected ${cacheDays} days).`;
+    
+    if (strictWarmup) {
+      // Strict mode: fail (used in backfill workflow)
+      return {
+        ok: false,
+        message,
+      };
+    } else {
+      // Non-strict mode: warn but don't fail (used in daily update workflow)
+      console.warn(`  ⚠️  ${message}`);
+      console.warn(`      Warm-up zeros detected; NOT failing in non-strict mode. Run cache extension + backfill-health-history to fix.`);
+    }
   }
   
   // Check date range

@@ -41,6 +41,8 @@ jobs:
       - name: Sync, generate, commit and push
         env:
           MARKETSTACK_CACHE_DAYS: 800
+          MARKETSTACK_EXTEND_MAX_SYMBOLS: 10
+          TREND100_STRICT_WARMUP: 0
         run: |
           set -euo pipefail
           

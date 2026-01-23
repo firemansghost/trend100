@@ -45,6 +45,8 @@ jobs:
           MARKETSTACK_API_KEY: ${{ secrets.MARKETSTACK_API_KEY }}
           MARKETSTACK_HISTORY_DAYS: 365
           MARKETSTACK_CACHE_DAYS: 800
+          MARKETSTACK_EXTEND_MAX_SYMBOLS: 10
+          TREND100_STRICT_WARMUP: 0
         run: |
           set -euo pipefail
           

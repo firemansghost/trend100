@@ -77,20 +77,30 @@ function printHealthHistoryStats(deckId: TrendDeckId): void {
 /**
  * Print EOD cache stats for a sample of symbols
  */
-function printEodCacheStats(sampleSize: number = 5): void {
+function printEodCacheStats(sampleSymbols?: string[]): void {
   if (!existsSync(EOD_CACHE_DIR)) {
     console.log('  EOD cache directory not found');
     return;
   }
   
-  const files = readdirSync(EOD_CACHE_DIR)
-    .filter((f) => f.endsWith('.json'))
-    .slice(0, sampleSize);
+  // If specific symbols requested, use those; otherwise sample from all files
+  let files: string[];
+  if (sampleSymbols && sampleSymbols.length > 0) {
+    files = sampleSymbols
+      .map((sym) => `${sym.replace(/\./g, '_')}.json`)
+      .filter((f) => existsSync(join(EOD_CACHE_DIR, f)));
+  } else {
+    files = readdirSync(EOD_CACHE_DIR)
+      .filter((f) => f.endsWith('.json'))
+      .slice(0, 5);
+  }
   
   if (files.length === 0) {
     console.log('  No EOD cache files found');
     return;
   }
+  
+  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
   
   for (const file of files) {
     const filePath = join(EOD_CACHE_DIR, file);
@@ -102,22 +112,25 @@ function printEodCacheStats(sampleSize: number = 5): void {
         continue;
       }
       
-      const symbol = file.replace('.json', '');
+      const symbol = file.replace('.json', '').replace(/_/g, '.');
       const earliest = bars[0]!.date;
       const latest = bars[bars.length - 1]!.date;
       const days = Math.ceil(
         (new Date(latest).getTime() - new Date(earliest).getTime()) / (1000 * 60 * 60 * 24)
       );
       
-      console.log(`  ${symbol}: ${bars.length} bars (${earliest} to ${latest}, ~${days} days)`);
+      const status = days < (cacheDays - 10) ? ' ⚠️  (needs extension)' : '';
+      console.log(`  ${symbol}: ${bars.length} bars (${earliest} to ${latest}, ~${days} days${status})`);
     } catch (error) {
       console.log(`  ${file}: Error reading file: ${error}`);
     }
   }
   
-  if (files.length < sampleSize) {
+  if (!sampleSymbols || sampleSymbols.length === 0) {
     const allFiles = readdirSync(EOD_CACHE_DIR).filter((f) => f.endsWith('.json'));
-    console.log(`  ... and ${allFiles.length - files.length} more files`);
+    if (allFiles.length > files.length) {
+      console.log(`  ... and ${allFiles.length - files.length} more files`);
+    }
   }
 }
 
@@ -133,8 +146,8 @@ function main() {
     printHealthHistoryStats(deckId);
   }
   
-  console.log('\nEOD Cache Files (sample):');
-  printEodCacheStats(5);
+  console.log('\nEOD Cache Files (sample: SPY, QQQ, TLT, GLDM, FBTC):');
+  printEodCacheStats(['SPY', 'QQQ', 'TLT', 'GLDM', 'FBTC']);
   
   console.log('');
 }

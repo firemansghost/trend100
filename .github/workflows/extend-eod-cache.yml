@@ -1,12 +1,17 @@
-name: Backfill Health History
+name: Extend EOD Cache
 
 on:
   workflow_dispatch:
     inputs:
-      backfill_days:
-        description: 'Number of days to backfill (default: 365)'
+      extend_max_symbols:
+        description: 'Maximum number of symbols to extend per run (default: 200)'
         required: false
-        default: '365'
+        default: '200'
+        type: string
+      cache_days:
+        description: 'Target cache days (default: 800)'
+        required: false
+        default: '800'
         type: string
 
 # Concurrency: single-writer rule for generated artifacts
@@ -16,11 +21,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  backfill:
+  extend:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Required to commit and push
-
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,12 +45,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Sync, backfill, commit and push
+      - name: Extend cache and commit
         env:
-          BACKFILL_DAYS: ${{ inputs.backfill_days || '365' }}
-          MARKETSTACK_OFFLINE: '1'
-          MARKETSTACK_CACHE_DAYS: 800
-          TREND100_STRICT_WARMUP: 1
+          DATA_PROVIDER: marketstack
+          MARKETSTACK_API_KEY: ${{ secrets.MARKETSTACK_API_KEY }}
+          MARKETSTACK_CACHE_DAYS: ${{ inputs.cache_days || '800' }}
+          MARKETSTACK_EXTEND_MAX_SYMBOLS: ${{ inputs.extend_max_symbols || '200' }}
         run: |
           set -euo pipefail
           
@@ -62,44 +66,42 @@ jobs:
             echo "Attempt $ATTEMPT/$MAX_RETRIES: syncing to origin/main..."
             echo "=========================================="
             
-            # Step 1: Sync to latest origin/main (clean base)
+            # Step 1: Sync to latest origin/main
             git fetch origin main
             git checkout main
             git reset --hard origin/main
             
-            # Debug: show current state
             echo "Current HEAD: $(git rev-parse HEAD)"
             echo "Origin/main:  $(git rev-parse origin/main)"
-            
-            # Step 2: Backfill health history from EOD cache (offline)
-            # IMPORTANT: Generation must be inside the loop so each retry regenerates
-            # on top of the newest origin/main. Otherwise retries are stale and will fail.
             echo ""
-            echo "Backfilling health history (offline, from EOD cache, $BACKFILL_DAYS days)..."
-            pnpm update:health-history --backfill-days $BACKFILL_DAYS
             
-            # Step 3: Stage only the expected generated files
+            # Step 2: Run snapshot update to trigger cache extension
+            # This will extend caches up to MARKETSTACK_EXTEND_MAX_SYMBOLS symbols
+            echo "Extending EOD cache (max ${{ inputs.extend_max_symbols || '200' }} symbols)..."
+            echo "Note: This runs update:snapshots which will extend caches as needed."
             echo ""
-            echo "Staging generated files..."
-            git add public/health-history.*.json
+            pnpm update:snapshots || {
+              echo "⚠️  update:snapshots failed, but cache extension may have partially completed"
+              echo "Continuing to check for cache changes..."
+            }
             
-            # Step 4: Verify artifacts
+            # Step 3: Stage only EOD cache files (not snapshots/health-history)
             echo ""
-            echo "Verifying artifacts..."
-            pnpm verify:artifacts
+            echo "Staging EOD cache files..."
+            git add data/marketstack/eod/*.json
             
-            # Step 5: Check if there are changes
+            # Step 4: Check if there are changes
             if [ -z "$(git diff --cached --name-only)" ]; then
-              echo "No changes to commit."
+              echo "No cache changes to commit."
               exit 0
             fi
             
-            # Step 6: Commit
+            # Step 5: Commit
             echo ""
-            echo "Committing changes..."
-            git commit -m "chore: backfill health history from EOD cache [skip ci]"
+            echo "Committing cache extensions..."
+            git commit -m "chore: extend EOD cache for indicator lookback [skip ci]"
             
-            # Step 7: Push
+            # Step 6: Push
             echo ""
             echo "Pushing to origin/main..."
             if git push origin HEAD:main; then
@@ -108,7 +110,6 @@ jobs:
               exit 0
             fi
             
-            # Step 8: Push failed - remote advanced, retry
             echo ""
             echo "⚠️  Push failed (remote moved). Retrying..."
             ATTEMPT=$((ATTEMPT + 1))

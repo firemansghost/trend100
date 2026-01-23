@@ -286,10 +286,15 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
   const result = new Map<string, EodBar[]>();
   const failures: string[] = [];
   
-  // First, load all cached data
+  // Get cache extension budget (default: 10 symbols per run to avoid blowing credits)
+  const extendMaxSymbols = parseInt(process.env.MARKETSTACK_EXTEND_MAX_SYMBOLS || '10', 10);
+  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
+  
+  // First, load all cached data and identify what needs to be done
   const cachedMap = new Map<string, EodBar[]>();
   const symbolsNeedingBackfill: string[] = [];
   const symbolsNeedingUpdate: string[] = [];
+  const symbolsNeedingExtension: string[] = [];
   
   for (const symbol of symbols) {
     const cached = loadCachedBars(symbol);
@@ -297,16 +302,84 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
       symbolsNeedingBackfill.push(symbol);
     } else {
       cachedMap.set(symbol, cached);
-      const lastDate = cached[cached.length - 1]!.date;
-      const today = new Date().toISOString().split('T')[0]!;
-      const daysSince = getTradingDaysBetween(lastDate, today);
       
-      if (daysSince <= 3) {
-        symbolsNeedingUpdate.push(symbol);
+      // Check if cache needs extension (span < CACHE_DAYS)
+      const earliestCachedDate = cached[0]!.date;
+      const latestCachedDate = cached[cached.length - 1]!.date;
+      const earliestDate = new Date(earliestCachedDate);
+      const latestDate = new Date(latestCachedDate);
+      const spanDays = Math.ceil((latestDate.getTime() - earliestDate.getTime()) / (1000 * 60 * 60 * 24));
+      const bufferDays = 10;
+      
+      if (spanDays < (cacheDays - bufferDays)) {
+        // Cache span is too short - needs extension
+        symbolsNeedingExtension.push(symbol);
       } else {
-        // Gap too large - will need individual fetch
-        symbolsNeedingUpdate.push(symbol);
+        // Cache span is sufficient - check if update needed
+        const lastDate = cached[cached.length - 1]!.date;
+        const today = new Date().toISOString().split('T')[0]!;
+        const daysSince = getTradingDaysBetween(lastDate, today);
+        
+        if (daysSince <= 3) {
+          symbolsNeedingUpdate.push(symbol);
+        } else {
+          // Gap too large - will need individual fetch
+          symbolsNeedingUpdate.push(symbol);
+        }
       }
+    }
+  }
+  
+  // Extend caches that need it (respect budget)
+  if (symbolsNeedingExtension.length > 0) {
+    const symbolsToExtend = symbolsNeedingExtension.slice(0, extendMaxSymbols);
+    console.log(`  📥 Extending cache for ${symbolsToExtend.length} symbol(s) (budget: ${extendMaxSymbols}, ${symbolsNeedingExtension.length} total need extension)...`);
+    
+    for (const symbol of symbolsToExtend) {
+      const cached = cachedMap.get(symbol)!;
+      const earliestCachedDate = cached[0]!.date;
+      const latestCachedDate = cached[cached.length - 1]!.date;
+      
+      const earliestDate = new Date(earliestCachedDate);
+      const latestDate = new Date(latestCachedDate);
+      const spanDays = Math.ceil((latestDate.getTime() - earliestDate.getTime()) / (1000 * 60 * 60 * 24));
+      const missingDays = cacheDays - spanDays;
+      const bufferDays = 10;
+      
+      const extendStartDate = new Date(earliestDate);
+      extendStartDate.setDate(extendStartDate.getDate() - missingDays - bufferDays);
+      const extendEndDate = new Date(earliestDate);
+      extendEndDate.setDate(extendEndDate.getDate() - 1);
+      
+      const extendStartStr = extendStartDate.toISOString().split('T')[0]!;
+      const extendEndStr = extendEndDate.toISOString().split('T')[0]!;
+      
+      console.log(`    Extending cache for ${symbol} back to ${extendStartStr}...`);
+      try {
+        const olderBars = await fetchEodSeries(symbol, {
+          startDate: extendStartStr,
+          endDate: extendEndStr,
+          limit: 1000,
+        });
+        
+        const merged = mergeBars(olderBars, cached);
+        saveCachedBars(symbol, merged);
+        
+        // Reload and update cachedMap
+        const extendedCache = loadCachedBars(symbol);
+        if (extendedCache) {
+          cachedMap.set(symbol, extendedCache);
+          console.log(`      ✓ Extended: ${olderBars.length} older bars, total: ${extendedCache.length} bars`);
+        }
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        console.warn(`      ⚠️  Failed to extend cache for ${symbol}: ${reason}`);
+        // Continue with existing cache - not fatal
+      }
+    }
+    
+    if (symbolsNeedingExtension.length > extendMaxSymbols) {
+      console.log(`    ℹ️  ${symbolsNeedingExtension.length - extendMaxSymbols} more symbol(s) need extension (budget exhausted). Run again or increase MARKETSTACK_EXTEND_MAX_SYMBOLS.`);
     }
   }
   

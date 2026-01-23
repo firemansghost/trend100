@@ -1,5 +1,49 @@
 # TASK LOG — Trend100
 
+### 2026-01-22 — Fix guardrail blocking workflow: make warm-up check env-gated + ensure cache extension runs
+**Completed:**
+- Made warm-up zero-point check env-gated (TREND100_STRICT_WARMUP)
+- Daily update-snapshots workflow: warm-up check is warning only (non-strict)
+- Backfill-health-history workflow: warm-up check is strict (fails if >30% zeros)
+- Added cache extension logic to ensureHistoryBatch (was only in ensureHistory)
+- Added budget limit: MARKETSTACK_EXTEND_MAX_SYMBOLS (default 10 per daily run, 200 for manual)
+- Enhanced verify-artifacts to show cache span for sample symbols (SPY, QQQ, TLT, GLDM, FBTC)
+- Created optional extend-eod-cache.yml workflow for manual cache extension
+
+**Changed:**
+- scripts/verify-history-retention.ts: Warm-up check now env-gated, warns in non-strict mode
+- scripts/marketstack-cache.ts: Added cache extension to ensureHistoryBatch with budget limit
+- scripts/verify-artifacts.ts: Enhanced to show cache span and extension status
+- .github/workflows/update-snapshots.yml: TREND100_STRICT_WARMUP=0, MARKETSTACK_EXTEND_MAX_SYMBOLS=10
+- .github/workflows/backfill-health-history.yml: TREND100_STRICT_WARMUP=1
+- .github/workflows/update-health-history.yml: TREND100_STRICT_WARMUP=0, MARKETSTACK_EXTEND_MAX_SYMBOLS=10
+- .github/workflows/extend-eod-cache.yml: New manual workflow for cache extension
+
+**Root Cause:**
+- Daily workflow was failing because guardrail detected ~92.9% zero points (warm-up issue)
+- Cache extension logic existed but wasn't running in ensureHistoryBatch (only in ensureHistory)
+- ensureHistoryBatch only called ensureHistory for symbols needing backfill, not extension
+- This blocked all future writes to main
+
+**Solution:**
+- Two-phase approach: extend cache first, then backfill health-history
+- Daily workflow: non-strict warm-up check (warns but doesn't fail), extends 10 symbols per run
+- Backfill workflow: strict warm-up check (fails if still mostly zeros after cache extension)
+- Cache extension now runs in ensureHistoryBatch with budget limit to avoid API credit blowout
+- Manual extend-eod-cache workflow allows extending all symbols at once (200 default)
+
+**How to Use:**
+1. Run extend-eod-cache workflow (or let daily runs extend 10 symbols/day) until caches reach 800 days
+2. Run backfill-health-history workflow to regenerate health-history with proper lookback
+3. Verify with pnpm verify:artifacts - should show cache spans ~800 days and earliest non-zero near start
+
+**Discovered:**
+- Cache extension wasn't running because ensureHistoryBatch didn't check for it
+- Need budget limit to avoid API credit exhaustion on scheduled runs
+- Warm-up zeros are expected until cache is extended, so daily workflow shouldn't fail on them
+
+---
+
 ### 2026-01-22 — Fix chart warm-up issue: extend EOD cache for indicator lookback
 **Completed:**
 - Introduced MARKETSTACK_CACHE_DAYS (default 800) vs MARKETSTACK_HISTORY_DAYS (365)

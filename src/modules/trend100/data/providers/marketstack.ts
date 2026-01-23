@@ -41,6 +41,14 @@ export async function fetchEodSeries(
   symbol: string,
   options: FetchEodSeriesOptions = {}
 ): Promise<EodBar[]> {
+  // Offline guard: prevent API calls when MARKETSTACK_OFFLINE=1
+  if (process.env.MARKETSTACK_OFFLINE === '1') {
+    throw new Error(
+      `Offline backfill requested but data missing for ticker ${symbol}${options.startDate ? `/date ${options.startDate}` : ''}. ` +
+      'Run cache backfill separately or set MARKETSTACK_OFFLINE=0 explicitly.'
+    );
+  }
+
   const { startDate, limit = 1000 } = options;
   const apiKey = process.env.MARKETSTACK_API_KEY;
 
@@ -175,6 +183,14 @@ export async function fetchEodSeries(
 export async function fetchEodLatestBatch(
   symbols: string[]
 ): Promise<Map<string, EodBar | null>> {
+  // Offline guard: prevent API calls when MARKETSTACK_OFFLINE=1
+  if (process.env.MARKETSTACK_OFFLINE === '1') {
+    throw new Error(
+      `Offline backfill requested but data missing for tickers: ${symbols.join(', ')}. ` +
+      'Run cache backfill separately or set MARKETSTACK_OFFLINE=0 explicitly.'
+    );
+  }
+
   const apiKey = process.env.MARKETSTACK_API_KEY;
 
   if (!apiKey) {

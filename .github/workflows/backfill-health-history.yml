@@ -1,0 +1,118 @@
+name: Backfill Health History
+
+on:
+  workflow_dispatch:
+    inputs:
+      backfill_days:
+        description: 'Number of days to backfill (default: 365)'
+        required: false
+        default: '365'
+        type: string
+
+# Concurrency: single-writer rule for generated artifacts
+# All workflows that commit generated JSON to main must share this group
+concurrency:
+  group: trend100-cache-writer
+  cancel-in-progress: true
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to commit and push
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Sync, backfill, commit and push
+        env:
+          BACKFILL_DAYS: ${{ inputs.backfill_days || '365' }}
+          MARKETSTACK_OFFLINE: '1'
+        run: |
+          set -euo pipefail
+          
+          # Configure git
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          MAX_RETRIES=3
+          ATTEMPT=1
+          
+          while [ $ATTEMPT -le $MAX_RETRIES ]; do
+            echo "=========================================="
+            echo "Attempt $ATTEMPT/$MAX_RETRIES: syncing to origin/main..."
+            echo "=========================================="
+            
+            # Step 1: Sync to latest origin/main (clean base)
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            
+            # Debug: show current state
+            echo "Current HEAD: $(git rev-parse HEAD)"
+            echo "Origin/main:  $(git rev-parse origin/main)"
+            
+            # Step 2: Backfill health history from EOD cache (offline)
+            # IMPORTANT: Generation must be inside the loop so each retry regenerates
+            # on top of the newest origin/main. Otherwise retries are stale and will fail.
+            echo ""
+            echo "Backfilling health history (offline, from EOD cache, $BACKFILL_DAYS days)..."
+            pnpm update:health-history --backfill-days $BACKFILL_DAYS
+            
+            # Step 3: Stage only the expected generated files
+            echo ""
+            echo "Staging generated files..."
+            git add public/health-history.*.json
+            
+            # Step 4: Verify artifacts
+            echo ""
+            echo "Verifying artifacts..."
+            pnpm verify:artifacts
+            
+            # Step 5: Check if there are changes
+            if [ -z "$(git diff --cached --name-only)" ]; then
+              echo "No changes to commit."
+              exit 0
+            fi
+            
+            # Step 6: Commit
+            echo ""
+            echo "Committing changes..."
+            git commit -m "chore: backfill health history from EOD cache [skip ci]"
+            
+            # Step 7: Push
+            echo ""
+            echo "Pushing to origin/main..."
+            if git push origin HEAD:main; then
+              echo ""
+              echo "✅ Push succeeded on attempt $ATTEMPT"
+              exit 0
+            fi
+            
+            # Step 8: Push failed - remote advanced, retry
+            echo ""
+            echo "⚠️  Push failed (remote moved). Retrying..."
+            ATTEMPT=$((ATTEMPT + 1))
+            echo ""
+          done
+          
+          echo ""
+          echo "❌ Push failed after $MAX_RETRIES attempts."
+          exit 1

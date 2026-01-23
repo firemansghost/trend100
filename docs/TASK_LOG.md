@@ -1,5 +1,42 @@
 # TASK LOG — Trend100
 
+### 2026-01-22 — Add offline backfill for health history from EOD cache
+**Completed:**
+- Added CLI args to update-health-history.ts: --backfill-days <N> and --start/--end date range
+- Implemented offline backfill mode that computes health history from local EOD cache files
+- Added offline guard to Marketstack provider (prevents API calls when MARKETSTACK_OFFLINE=1)
+- Created backfill logic that computes health for each trading day in range using existing snapshot computation
+- Added package.json script: update:health-history:backfill
+- Created optional workflow_dispatch workflow for manual backfill runs
+
+**Changed:**
+- scripts/update-health-history.ts: Added backfill mode with CLI args, offline EOD cache loading, date range computation
+- src/modules/trend100/data/providers/marketstack.ts: Added offline guards to fetchEodSeries and fetchEodLatestBatch
+- package.json: Added update:health-history:backfill script
+- .github/workflows/backfill-health-history.yml: New workflow for manual backfill (workflow_dispatch only)
+
+**Root Cause:**
+- Health history only had 3 days but EOD cache had ~253 bars (~1 year)
+- Needed one-time backfill to generate historical health points from existing EOD cache without hitting API
+
+**Solution:**
+- Backfill mode: Loads EOD cache files directly, computes health for each trading day in range
+- Uses same snapshot computation logic as update-snapshots.ts but filters EOD bars to <= target date
+- Offline guard: MARKETSTACK_OFFLINE=1 prevents accidental API calls (defaults to offline for backfill)
+- Merges backfilled points with existing history, applies retention (365 days)
+
+**How to Use:**
+- Local: `pnpm update:health-history:backfill` (defaults to 365 days, offline)
+- Custom range: `pnpm update:health-history --backfill-days 180` or `--start 2025-01-01 --end 2025-12-31`
+- Workflow: Manual dispatch via GitHub Actions UI with optional backfill_days input
+
+**Discovered:**
+- EOD cache files use symbol with periods replaced by underscores (e.g., BRK.B → BRK_B.json)
+- Trading days inferred from EOD cache availability (dates that have data for at least one ticker)
+- Backfill can generate ~200-260 points per deck from existing EOD cache
+
+---
+
 ### 2026-01-22 — Fix chart history truncation (add retention + guardrails)
 **Completed:**
 - Added retention logic to health history generation (keep last 365 calendar days)

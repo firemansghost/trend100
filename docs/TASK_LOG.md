@@ -1,5 +1,47 @@
 # TASK LOG — Trend100
 
+### 2026-01-22 — Fix chart history truncation (add retention + guardrails)
+**Completed:**
+- Added retention logic to health history generation (keep last 365 calendar days)
+- Added retention logic to EOD cache (keep last 365 calendar days, ~252 trading days)
+- Created time series merge/trim utilities for consistent retention across artifacts
+- Added guardrail check script to prevent silent history loss (>20% shrinkage or <30 points after running)
+- Added verification command to print file stats (point counts, date ranges)
+- Updated workflow to run guardrail check before committing
+
+**Changed:**
+- scripts/timeSeriesUtils.ts: New utility functions for merge and retention
+- scripts/update-snapshots.ts: Added retention logic to health history updates
+- scripts/update-health-history.ts: Added retention logic
+- scripts/marketstack-cache.ts: Added retention trimming to EOD cache saves
+- scripts/verify-history-retention.ts: New guardrail check script
+- scripts/verify-artifacts.ts: New verification command
+- .github/workflows/update-snapshots.yml: Added guardrail check before commit
+- package.json: Added verify:artifacts and verify:history-retention scripts
+
+**Root Cause:**
+- Health history files were being overwritten/reset, losing historical data
+- Scripts merged correctly but had no retention policy, and workflow resets could lose data
+- No guardrails to detect silent data loss
+
+**Solution:**
+- Merge existing history with new points (dedupe by date), then trim to retention window
+- Retention: 365 calendar days for health history, 365 calendar days (~252 trading days) for EOD cache
+- Guardrail: Fail workflow if history shrinks >20% or drops below 30 points after running for a while
+- Verification: Command to print file stats for debugging
+
+**How to Verify:**
+- Run `pnpm verify:artifacts` to see point counts and date ranges
+- Check charts in production - should show ~1 year of history after running for a year
+- Guardrail will fail workflow if history loss is detected
+
+**Discovered:**
+- Health history had only 3 days (Jan 21-23) while EOD cache had 252 points (1 year)
+- Chart component doesn't slice data - it uses all data passed to it
+- Retention logic prevents unbounded growth while preserving ~1 year of history
+
+---
+
 ### 2026-01-22 — Fix workflow scheduled run failures (replace rebase with sync->generate->commit->push)
 **Completed:**
 - Replaced commit-then-rebase strategy with sync->generate->commit->push retry loop

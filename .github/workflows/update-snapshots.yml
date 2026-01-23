@@ -90,18 +90,26 @@ jobs:
             echo "Staging generated files..."
             git add public/snapshot.*.json public/health-history.*.json data/marketstack/eod/*.json
             
-            # Step 4: Check if there are changes
+            # Step 4: Verify history retention (guardrail check)
+            echo ""
+            echo "Running history retention guardrail check..."
+            if ! pnpm verify:history-retention; then
+              echo "❌ History retention check failed - aborting commit"
+              exit 1
+            fi
+            
+            # Step 5: Check if there are changes
             if [ -z "$(git diff --cached --name-only)" ]; then
               echo "No changes to commit."
               exit 0
             fi
             
-            # Step 5: Commit
+            # Step 6: Commit
             echo ""
             echo "Committing changes..."
             git commit -m "chore: update snapshots, health history, and EOD cache [skip ci]"
             
-            # Step 6: Push
+            # Step 7: Push
             echo ""
             echo "Pushing to origin/main..."
             if git push origin HEAD:main; then
@@ -110,7 +118,7 @@ jobs:
               exit 0
             fi
             
-            # Step 7: Push failed - remote advanced, retry
+            # Step 8: Push failed - remote advanced, retry
             echo ""
             echo "⚠️  Push failed (remote moved). Retrying..."
             ATTEMPT=$((ATTEMPT + 1))

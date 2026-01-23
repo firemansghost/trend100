@@ -54,13 +54,39 @@ function loadCachedBars(symbol: string): EodBar[] | null {
 }
 
 /**
- * Save EOD bars to cache file
+ * Save EOD bars to cache file (with retention trimming)
  */
 function saveCachedBars(symbol: string, bars: EodBar[]): void {
   const filePath = getCacheFilePath(symbol);
   // Ensure sorted ascending
   const sorted = [...bars].sort((a, b) => a.date.localeCompare(b.date));
-  writeFileSync(filePath, JSON.stringify(sorted, null, 2) + '\n', 'utf-8');
+  
+  // Apply retention: keep last ~252 trading days (approximately 1 year)
+  // Using calendar days for simplicity: 252 trading days ≈ 365 calendar days
+  const retentionDays = 365;
+  const trimmed = trimCachedBars(sorted, retentionDays);
+  
+  writeFileSync(filePath, JSON.stringify(trimmed, null, 2) + '\n', 'utf-8');
+}
+
+/**
+ * Trim cached bars to retention window
+ */
+function trimCachedBars(bars: EodBar[], retentionDays: number): EodBar[] {
+  if (bars.length === 0) {
+    return bars;
+  }
+  
+  // Get latest date
+  const latestDate = new Date(bars[bars.length - 1]!.date);
+  
+  // Calculate cutoff date
+  const cutoffDate = new Date(latestDate);
+  cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
+  const cutoffDateStr = cutoffDate.toISOString().split('T')[0]!;
+  
+  // Filter to bars on or after cutoff date
+  return bars.filter((bar) => bar.date >= cutoffDateStr);
 }
 
 /**

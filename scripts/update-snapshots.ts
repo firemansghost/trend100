@@ -30,6 +30,7 @@ import { ensureHistoryBatch } from './marketstack-cache';
 import { calcSMA, calcEMA, resampleDailyToWeekly } from '../src/modules/trend100/engine/movingAverages';
 import { classifyTrend } from '../src/modules/trend100/engine/classifyTrend';
 import { computeHealthScore } from '../src/modules/trend100/engine/healthScore';
+import { mergeAndTrimTimeSeries } from './timeSeriesUtils';
 
 // Get today's date in YYYY-MM-DD format
 function getTodayDate(): string {
@@ -307,13 +308,16 @@ async function main() {
 
   // Step 5: Update health history files
   console.log('\n📈 Updating health history files...\n');
+  const retentionDays = 365; // Keep last 365 calendar days
+  
   for (const deckId of deckIds) {
     const snapshot = snapshots.get(deckId);
     if (!snapshot) continue;
 
-    const history = loadHistory(deckId);
-    const existingIndex = history.findIndex((point) => point.date === today);
+    // Load existing history
+    const existingHistory = loadHistory(deckId);
 
+    // Create today's entry
     const todayEntry: TrendHealthHistoryPoint = {
       date: today,
       greenPct: snapshot.health.greenPct,
@@ -322,14 +326,17 @@ async function main() {
       regimeLabel: snapshot.health.regimeLabel,
     };
 
-    if (existingIndex >= 0) {
-      history[existingIndex] = todayEntry;
-    } else {
-      history.push(todayEntry);
-    }
+    // Merge with existing (dedupe by date) and trim to retention window
+    const mergedHistory = mergeAndTrimTimeSeries(
+      existingHistory,
+      [todayEntry],
+      (point) => point.date,
+      retentionDays
+    );
 
-    saveHistory(deckId, history);
-    console.log(`  ✓ Updated health history for ${deckId}`);
+    // Save merged and trimmed history
+    saveHistory(deckId, mergedHistory);
+    console.log(`  ✓ Updated health history for ${deckId}: ${mergedHistory.length} points (retention: ${retentionDays} days)`);
   }
 
   console.log('\n✅ Snapshot update complete for all decks!');

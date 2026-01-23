@@ -11,6 +11,7 @@ import { join } from 'path';
 import type { TrendHealthHistoryPoint, TrendDeckId } from '../src/modules/trend100/types';
 import { getLatestSnapshot } from '../src/modules/trend100/data/getLatestSnapshot';
 import { getAllDeckIds } from '../src/modules/trend100/data/decks';
+import { mergeAndTrimTimeSeries } from './timeSeriesUtils';
 
 function getHistoryFilePath(deckId: TrendDeckId): string {
   return join(process.cwd(), 'public', `health-history.${deckId}.json`);
@@ -48,10 +49,7 @@ function updateDeckHistory(deckId: TrendDeckId): void {
   const today = snapshot.asOfDate; // Already in YYYY-MM-DD format
 
   // Load existing history
-  const history = loadHistory(deckId);
-
-  // Find existing entry for today
-  const existingIndex = history.findIndex((point) => point.date === today);
+  const existingHistory = loadHistory(deckId);
 
   // Create today's entry
   const todayEntry: TrendHealthHistoryPoint = {
@@ -62,19 +60,21 @@ function updateDeckHistory(deckId: TrendDeckId): void {
     regimeLabel: snapshot.health.regimeLabel,
   };
 
-  // Upsert: replace if exists, append if not
-  if (existingIndex >= 0) {
-    history[existingIndex] = todayEntry;
-    console.log(`  Updated entry for ${today}`);
-  } else {
-    history.push(todayEntry);
-    console.log(`  Added entry for ${today}`);
-  }
+  // Merge with existing (dedupe by date) and trim to retention window
+  const retentionDays = 365; // Keep last 365 calendar days
+  const mergedHistory = mergeAndTrimTimeSeries(
+    existingHistory,
+    [todayEntry],
+    (point) => point.date,
+    retentionDays
+  );
 
-  // Save back to file
-  saveHistory(deckId, history);
+  // Save merged and trimmed history
+  saveHistory(deckId, mergedHistory);
 
-  console.log(`  Total entries: ${history.length}`);
+  const wasNew = existingHistory.findIndex((p) => p.date === today) < 0;
+  console.log(`  ${wasNew ? 'Added' : 'Updated'} entry for ${today}`);
+  console.log(`  Total entries: ${mergedHistory.length} (retention: ${retentionDays} days)`);
 }
 
 function main() {

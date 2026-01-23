@@ -15,9 +15,9 @@
       "changePct": 0.52,
       "sma200": 636.04,
       "sma50w": 626.83,
-      "ema50w": 645.26,
+      "ema50w": 638.66,
       "distanceTo200dPct": 8.32,
-      "distanceToUpperBandPct": 6.78
+      "distanceToUpperBandPct": 7.88
     },
     {
       "ticker": "QQQ",
@@ -31,9 +31,9 @@
       "changePct": 0.73,
       "sma200": 568.1,
       "sma50w": 556.45,
-      "ema50w": 576,
+      "ema50w": 569.53,
       "distanceTo200dPct": 9.27,
-      "distanceToUpperBandPct": 7.77
+      "distanceToUpperBandPct": 9
     },
     {
       "ticker": "IWM",
@@ -47,9 +47,9 @@
       "changePct": 0.75,
       "sma200": 228.86,
       "sma50w": 226.07,
-      "ema50w": 235.87,
+      "ema50w": 234.15,
       "distanceTo200dPct": 17.88,
-      "distanceToUpperBandPct": 14.38
+      "distanceToUpperBandPct": 15.22
     },
     {
       "ticker": "DIA",
@@ -63,9 +63,9 @@
       "changePct": 0.59,
       "sma200": 450.5,
       "sma50w": 447.06,
-      "ema50w": 458.89,
+      "ema50w": 454.75,
       "distanceTo200dPct": 9.59,
-      "distanceToUpperBandPct": 7.58
+      "distanceToUpperBandPct": 8.56
     },
     {
       "ticker": "RSP",
@@ -79,9 +79,9 @@
       "changePct": 0.13,
       "sma200": 184.33,
       "sma50w": 183.15,
-      "ema50w": 186.76,
+      "ema50w": 185.45,
       "distanceTo200dPct": 8.32,
-      "distanceToUpperBandPct": 6.91
+      "distanceToUpperBandPct": 7.66
     },
     {
       "ticker": "XLK",
@@ -95,7 +95,7 @@
       "changePct": 0.74,
       "sma200": 239.11,
       "sma50w": 232.24,
-      "ema50w": 226.58,
+      "ema50w": 224.26,
       "distanceTo200dPct": -39.41,
       "distanceToUpperBandPct": -37.62
     },
@@ -111,9 +111,9 @@
       "changePct": 0.65,
       "sma200": 52.23,
       "sma50w": 51.87,
-      "ema50w": 52.6,
+      "ema50w": 51.85,
       "distanceTo200dPct": 3.03,
-      "distanceToUpperBandPct": 2.31
+      "distanceToUpperBandPct": 3.73
     },
     {
       "ticker": "XLE",
@@ -127,7 +127,7 @@
       "changePct": 0.33,
       "sma200": 79.82,
       "sma50w": 80.43,
-      "ema50w": 76.68,
+      "ema50w": 76.48,
       "distanceTo200dPct": -38.72,
       "distanceToUpperBandPct": -39.19
     },
@@ -143,9 +143,9 @@
       "changePct": 0.02,
       "sma200": 141.26,
       "sma50w": 142.25,
-      "ema50w": 145.47,
+      "ema50w": 145.46,
       "distanceTo200dPct": 12.06,
-      "distanceToUpperBandPct": 8.81
+      "distanceToUpperBandPct": 8.82
     },
     {
       "ticker": "XLI",
@@ -159,9 +159,9 @@
       "changePct": -0.52,
       "sma200": 148.86,
       "sma50w": 146.62,
-      "ema50w": 150.19,
+      "ema50w": 148.69,
       "distanceTo200dPct": 11.18,
-      "distanceToUpperBandPct": 10.2
+      "distanceToUpperBandPct": 11.3
     },
     {
       "ticker": "XLP",

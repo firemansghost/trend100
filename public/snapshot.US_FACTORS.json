@@ -79,9 +79,9 @@
       "changePct": 0.75,
       "sma200": 228.86,
       "sma50w": 226.07,
-      "ema50w": 235.87,
+      "ema50w": 234.15,
       "distanceTo200dPct": 17.88,
-      "distanceToUpperBandPct": 14.38
+      "distanceToUpperBandPct": 15.22
     },
     {
       "ticker": "IWR",
@@ -139,9 +139,9 @@
       "changePct": 0.73,
       "sma200": 568.1,
       "sma50w": 556.45,
-      "ema50w": 576,
+      "ema50w": 569.53,
       "distanceTo200dPct": 9.27,
-      "distanceToUpperBandPct": 7.77
+      "distanceToUpperBandPct": 9
     },
     {
       "ticker": "QUAL",

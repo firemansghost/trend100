@@ -12,5 +12,12 @@
     "yellowPct": 0,
     "redPct": 9.1,
     "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2026-01-23",
+    "greenPct": 9.1,
+    "yellowPct": 45.5,
+    "redPct": 45.5,
+    "regimeLabel": "RISK_OFF"
   }
 ]

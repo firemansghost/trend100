@@ -45,6 +45,7 @@ jobs:
         env:
           BACKFILL_DAYS: ${{ inputs.backfill_days || '365' }}
           MARKETSTACK_OFFLINE: '1'
+          MARKETSTACK_CACHE_DAYS: 800
         run: |
           set -euo pipefail
           

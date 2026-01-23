@@ -21,7 +21,8 @@ export function normalizeMarketstackSymbol(symbol: string): string {
 }
 
 export interface FetchEodSeriesOptions {
-  startDate?: string; // YYYY-MM-DD
+  startDate?: string; // YYYY-MM-DD (date_from)
+  endDate?: string; // YYYY-MM-DD (date_to)
   limit?: number; // Max number of bars (default: 1000)
 }
 
@@ -49,7 +50,7 @@ export async function fetchEodSeries(
     );
   }
 
-  const { startDate, limit = 1000 } = options;
+  const { startDate, endDate, limit = 1000 } = options;
   const apiKey = process.env.MARKETSTACK_API_KEY;
 
   if (!apiKey) {
@@ -75,6 +76,10 @@ export async function fetchEodSeries(
 
     if (startDate) {
       params.append('date_from', startDate);
+    }
+    
+    if (endDate) {
+      params.append('date_to', endDate);
     }
 
     const url = `https://api.marketstack.com/v1/eod?${params.toString()}`;

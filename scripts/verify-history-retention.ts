@@ -18,6 +18,8 @@ import { getAllDeckIds } from '../src/modules/trend100/data/decks';
 const HISTORY_DIR = join(process.cwd(), 'public');
 const MIN_POINTS_THRESHOLD = 30; // Minimum points after running for a while
 const MAX_SHRINKAGE_PCT = 20; // Fail if history shrinks by more than 20%
+const MAX_ZERO_PCT = 30; // Fail if more than 30% of points have zero health (warm-up issue)
+const EXPECTED_CACHE_DAYS = 730; // Expected cache days once extended (800 default - buffer)
 
 /**
  * Load history file
@@ -111,13 +113,48 @@ function verifyDeckHistory(deckId: TrendDeckId): { ok: boolean; message: string 
     }
   }
   
+  // Check for warm-up issues (points with zero health)
+  const zeroPoints = history.filter((p) => {
+    const totalPct = (p.greenPct || 0) + (p.yellowPct || 0) + (p.redPct || 0);
+    return totalPct === 0;
+  });
+  const zeroPct = currentCount > 0 ? (zeroPoints.length / currentCount) * 100 : 0;
+  
+  // Check if cache should be extended (if we expect >= 730 days but have many zero points)
+  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
+  if (cacheDays >= EXPECTED_CACHE_DAYS && zeroPct > MAX_ZERO_PCT) {
+    return {
+      ok: false,
+      message: `${deckId}: ${zeroPct.toFixed(1)}% zero points (${zeroPoints.length}/${currentCount}) - warm-up issue detected. Cache may need extension (expected ${cacheDays} days).`,
+    };
+  }
+  
   // Check date range
   if (history.length > 0) {
     const earliest = history[0]!.date;
     const latest = history[history.length - 1]!.date;
+    
+    // Find earliest non-zero date
+    let earliestNonZero: string | null = null;
+    for (const point of history) {
+      const totalPct = (point.greenPct || 0) + (point.yellowPct || 0) + (point.redPct || 0);
+      if (totalPct > 0) {
+        earliestNonZero = point.date;
+        break;
+      }
+    }
+    
+    let warmupInfo = '';
+    if (earliestNonZero && earliestNonZero !== earliest) {
+      const warmupDays = Math.ceil(
+        (new Date(earliestNonZero).getTime() - new Date(earliest).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      warmupInfo = `, warm-up: ${warmupDays} days`;
+    }
+    
     return {
       ok: true,
-      message: `${deckId}: ${currentCount} points (${earliest} to ${latest})`,
+      message: `${deckId}: ${currentCount} points (${earliest} to ${latest}${warmupInfo})`,
     };
   }
   

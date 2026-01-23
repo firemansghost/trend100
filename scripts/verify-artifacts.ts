@@ -37,7 +37,38 @@ function printHealthHistoryStats(deckId: TrendDeckId): void {
       (new Date(latest).getTime() - new Date(earliest).getTime()) / (1000 * 60 * 60 * 24)
     );
     
-    console.log(`  ${deckId}: ${history.length} points (${earliest} to ${latest}, ~${days} days)`);
+    // Check for warm-up issues (points with totalPct == 0)
+    const zeroPoints = history.filter((p) => {
+      const totalPct = (p.greenPct || 0) + (p.yellowPct || 0) + (p.redPct || 0);
+      return totalPct === 0;
+    });
+    
+    // Find earliest date with non-zero health
+    let earliestNonZeroDate: string | null = null;
+    for (const point of history) {
+      const totalPct = (point.greenPct || 0) + (point.yellowPct || 0) + (point.redPct || 0);
+      if (totalPct > 0) {
+        earliestNonZeroDate = point.date;
+        break;
+      }
+    }
+    
+    const zeroPct = history.length > 0 ? (zeroPoints.length / history.length) * 100 : 0;
+    
+    let status = '';
+    if (zeroPct > 30) {
+      status = ` ⚠️  ${zeroPct.toFixed(1)}% zero points (warm-up issue?)`;
+    } else if (earliestNonZeroDate && earliestNonZeroDate > earliest) {
+      const warmupDays = Math.ceil(
+        (new Date(earliestNonZeroDate).getTime() - new Date(earliest).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      status = ` (warm-up: ${warmupDays} days)`;
+    }
+    
+    console.log(`  ${deckId}: ${history.length} points (${earliest} to ${latest}, ~${days} days)${status}`);
+    if (earliestNonZeroDate && earliestNonZeroDate !== earliest) {
+      console.log(`    First non-zero: ${earliestNonZeroDate}`);
+    }
   } catch (error) {
     console.log(`  ${deckId}: Error reading file: ${error}`);
   }

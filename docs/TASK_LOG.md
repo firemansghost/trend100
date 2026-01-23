@@ -1,5 +1,48 @@
 # TASK LOG — Trend100
 
+### 2026-01-22 — Fix chart warm-up issue: extend EOD cache for indicator lookback
+**Completed:**
+- Introduced MARKETSTACK_CACHE_DAYS (default 800) vs MARKETSTACK_HISTORY_DAYS (365)
+- Updated EOD cache retention to use CACHE_DAYS (800) instead of 365
+- Added cache extension logic: automatically extends existing cache backwards when span < CACHE_DAYS
+- Updated provider to support date_from/date_to for fetching older slices
+- Enhanced verification scripts to detect warm-up issues (zero health points)
+- Added guardrail to fail if >30% zero points when CACHE_DAYS >= 730
+- Updated all workflows to set MARKETSTACK_CACHE_DAYS=800
+
+**Changed:**
+- src/modules/trend100/data/providers/marketstack.ts: Added endDate support to FetchEodSeriesOptions
+- scripts/marketstack-cache.ts: Use MARKETSTACK_CACHE_DAYS (800) for retention, added cache extension logic
+- scripts/verify-artifacts.ts: Added warm-up detection (zero points, earliest non-zero date)
+- scripts/verify-history-retention.ts: Added guardrail for warm-up issues (>30% zero points)
+- .github/workflows/update-snapshots.yml: Set MARKETSTACK_CACHE_DAYS=800
+- .github/workflows/backfill-health-history.yml: Set MARKETSTACK_CACHE_DAYS=800
+- .github/workflows/update-health-history.yml: Set MARKETSTACK_CACHE_DAYS=800
+
+**Root Cause:**
+- Health-history charts were flat for most of the year because early dates lacked lookback history
+- Model uses long lookbacks (SMA200 + 50-week SMA/EMA) requiring ~2 years of data
+- EOD cache was trimmed to 365 days, same as chart window, leaving no lookback buffer
+- Backfill computed points for early dates but indicators couldn't compute (insufficient prior bars)
+
+**Solution:**
+- Separate cache window (800 days) from chart window (365 days)
+- Cache extension: one-time fetch of older data when cache span < CACHE_DAYS
+- Provider supports date_from/date_to for fetching specific date ranges
+- Verification detects warm-up issues and warns/fails appropriately
+
+**How to Verify:**
+- Run `pnpm verify:artifacts` - should show earliest non-zero date near start of 365-day window
+- After cache extension + backfill, charts should show meaningful data across full year
+- Guardrail will fail if >30% zero points when cache should be extended
+
+**Discovered:**
+- Indicator warm-up requires ~2 years of data (200d SMA + 50w MAs)
+- Cache window must be longer than chart window to provide lookback buffer
+- One-time cache extension is acceptable cost to fix warm-up issue
+
+---
+
 ### 2026-01-22 — Add offline backfill for health history from EOD cache
 **Completed:**
 - Added CLI args to update-health-history.ts: --backfill-days <N> and --start/--end date range

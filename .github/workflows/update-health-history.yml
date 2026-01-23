@@ -39,6 +39,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Sync, generate, commit and push
+        env:
+          MARKETSTACK_CACHE_DAYS: 800
         run: |
           set -euo pipefail
           

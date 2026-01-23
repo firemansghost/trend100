@@ -61,10 +61,10 @@ function saveCachedBars(symbol: string, bars: EodBar[]): void {
   // Ensure sorted ascending
   const sorted = [...bars].sort((a, b) => a.date.localeCompare(b.date));
   
-  // Apply retention: keep last ~252 trading days (approximately 1 year)
-  // Using calendar days for simplicity: 252 trading days ≈ 365 calendar days
-  const retentionDays = 365;
-  const trimmed = trimCachedBars(sorted, retentionDays);
+  // Apply retention: keep last MARKETSTACK_CACHE_DAYS (default 800 for lookback buffer)
+  // This is longer than MARKETSTACK_HISTORY_DAYS (365) to provide lookback for indicators
+  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
+  const trimmed = trimCachedBars(sorted, cacheDays);
   
   writeFileSync(filePath, JSON.stringify(trimmed, null, 2) + '\n', 'utf-8');
 }
@@ -131,7 +131,7 @@ export interface EnsureHistoryResult {
 }
 
 /**
- * Ensure history exists for a symbol (backfill if needed, update if stale)
+ * Ensure history exists for a symbol (backfill if needed, extend if short, update if stale)
  * 
  * Returns structured result instead of throwing on unavailable symbols.
  * 
@@ -142,15 +142,19 @@ export async function ensureHistory(symbol: string): Promise<EnsureHistoryResult
   const cached = loadCachedBars(symbol);
   const today = new Date().toISOString().split('T')[0]!;
 
-  // Get history days from env (default 365)
+  // Get cache days from env (default 800 for lookback buffer)
+  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
+  
+  // Get history days from env (default 365 for primary window)
   const historyDays = parseInt(process.env.MARKETSTACK_HISTORY_DAYS || '365', 10);
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - historyDays);
-  const startDateStr = startDate.toISOString().split('T')[0]!;
 
   if (!cached || cached.length === 0) {
-    // No cache - backfill full history
-    console.log(`  📥 Backfilling ${symbol} (${historyDays} days)...`);
+    // No cache - backfill full cache window
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - cacheDays);
+    const startDateStr = startDate.toISOString().split('T')[0]!;
+    
+    console.log(`  📥 Backfilling ${symbol} (${cacheDays} days)...`);
     try {
       const bars = await fetchEodSeries(symbol, {
         startDate: startDateStr,
@@ -163,6 +167,52 @@ export async function ensureHistory(symbol: string): Promise<EnsureHistoryResult
       const reason = error instanceof Error ? error.message : String(error);
       console.warn(`    ⚠️  Failed to backfill ${symbol}: ${reason}`);
       return { ok: false, symbol, reason };
+    }
+  }
+
+  // Cache exists - check if we need to extend backwards (one-time cost)
+  const earliestCachedDate = cached[0]!.date;
+  const latestCachedDate = cached[cached.length - 1]!.date;
+  
+  // Calculate span in calendar days
+  const earliestDate = new Date(earliestCachedDate);
+  const latestDate = new Date(latestCachedDate);
+  const spanDays = Math.ceil((latestDate.getTime() - earliestDate.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // If cache span is shorter than CACHE_DAYS (minus small buffer), extend backwards
+  const bufferDays = 10; // Small buffer to avoid frequent extensions
+  if (spanDays < (cacheDays - bufferDays)) {
+    const missingDays = cacheDays - spanDays;
+    const extendStartDate = new Date(earliestDate);
+    extendStartDate.setDate(extendStartDate.getDate() - missingDays - bufferDays);
+    const extendEndDate = new Date(earliestDate);
+    extendEndDate.setDate(extendEndDate.getDate() - 1); // One day before existing cache
+    
+    const extendStartStr = extendStartDate.toISOString().split('T')[0]!;
+    const extendEndStr = extendEndDate.toISOString().split('T')[0]!;
+    
+    console.log(`  📥 Extending ${symbol} cache backwards (${missingDays} days, ${extendStartStr} to ${extendEndStr})...`);
+    try {
+      const olderBars = await fetchEodSeries(symbol, {
+        startDate: extendStartStr,
+        endDate: extendEndStr,
+        limit: 1000,
+      });
+      
+      // Merge with existing (older bars first, then existing)
+      const merged = mergeBars(olderBars, cached);
+      saveCachedBars(symbol, merged);
+      console.log(`    ✓ Extended cache: ${olderBars.length} older bars, total: ${merged.length} bars`);
+      
+      // Reload cached data after extension
+      const extendedCache = loadCachedBars(symbol);
+      if (extendedCache) {
+        cached = extendedCache;
+      }
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      console.warn(`    ⚠️  Failed to extend cache for ${symbol}, using existing: ${reason}`);
+      // Continue with existing cache - not fatal
     }
   }
 

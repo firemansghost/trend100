@@ -1,5 +1,33 @@
 # TASK LOG — Trend100
 
+### 2026-01-22 — Fix workflow scheduled run failures (replace rebase with sync->generate->commit->push)
+**Completed:**
+- Replaced commit-then-rebase strategy with sync->generate->commit->push retry loop
+- Moved generation step inside retry loop so each retry regenerates from latest origin/main
+- Updated concurrency group to `trend100-cache-writer` (shared across all cache-writing workflows)
+- Added same fix to both update-snapshots.yml and update-health-history.yml workflows
+
+**Changed:**
+- .github/workflows/update-snapshots.yml: Replaced rebase logic with sync->generate->commit->push loop
+- .github/workflows/update-health-history.yml: Added concurrency group, fetch-depth: 0, and sync->generate->commit->push loop
+
+**Root Cause:**
+- Scheduled runs collide with other writes to main (overlapping workflow runs, manual dispatch, bot/user commits)
+- When origin/main advances during run, push is rejected
+- Rebasing commits that modify generated JSON causes conflicts because JSON changes in overlapping regions cannot auto-merge cleanly
+
+**Solution:**
+- On each retry: sync to latest origin/main (hard reset), regenerate artifacts from scratch, commit, push
+- This avoids JSON merge conflicts entirely by never attempting to merge generated files
+- Generation inside loop ensures retries are always based on latest origin/main, not stale state
+
+**Discovered:**
+- Previous rebase approach was brittle for generated JSON files
+- Moving generation inside retry loop is critical - otherwise retries use stale artifacts and continue failing
+- Shared concurrency group prevents multiple workflows from writing to main simultaneously
+
+---
+
 ### 2026-01-22 — Fix update-snapshots workflow push race condition
 **Completed:**
 - Added concurrency group to prevent overlapping workflow runs

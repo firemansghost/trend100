@@ -23,6 +23,7 @@ import { getLatestSnapshot } from '../src/modules/trend100/data/getLatestSnapsho
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
 import { mergeAndTrimTimeSeries } from './timeSeriesUtils';
 import { buildTickerMetaIndex, enrichUniverseItemMeta } from '../src/modules/trend100/data/tickerMeta';
+import { getMinKnownPctForDeck } from '../src/modules/trend100/data/deckConfig';
 import { calcSMA, calcEMA, resampleDailyToWeekly } from '../src/modules/trend100/engine/movingAverages';
 import { classifyTrend } from '../src/modules/trend100/engine/classifyTrend';
 import { computeHealthScore } from '../src/modules/trend100/engine/healthScore';
@@ -205,6 +206,7 @@ function computeTickerSnapshotForDate(
 
 /**
  * Get minimum known percentage threshold (default 0.9 = 90%)
+ * This is the global default; per-deck overrides are applied via getMinKnownPctForDeck.
  */
 function getMinKnownPct(): number {
   const raw = process.env.TREND100_MIN_KNOWN_PCT;
@@ -262,7 +264,9 @@ function computeHealthForDate(
   const unknownCount = totalTickers - knownCount;
 
   // Validity check: if knownCount / totalTickers < MIN_KNOWN_PCT, mark as UNKNOWN
-  const minKnownPct = getMinKnownPct();
+  // Use per-deck override (MACRO uses lower threshold)
+  const envDefault = getMinKnownPct();
+  const minKnownPct = getMinKnownPctForDeck(deckId, envDefault);
   const knownPct = knownCount / totalTickers;
 
   if (knownPct < minKnownPct) {
@@ -417,6 +421,11 @@ function backfillDeckHistory(
   // Get trading days in range
   const tradingDays = getTradingDaysInRange(startDate, endDate, deckId);
   console.log(`  Found ${tradingDays.length} trading days with EOD data`);
+
+  // Log per-deck MIN_KNOWN_PCT setting
+  const envDefault = getMinKnownPct();
+  const deckMinKnownPct = getMinKnownPctForDeck(deckId, envDefault);
+  console.log(`  Deck MIN_KNOWN_PCT: ${deckMinKnownPct.toFixed(2)} (envDefault=${envDefault.toFixed(2)})`);
 
   if (tradingDays.length === 0) {
     console.warn(`  ⚠️  No trading days found in range - check EOD cache files`);

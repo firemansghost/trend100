@@ -32,6 +32,7 @@ import { classifyTrend } from '../src/modules/trend100/engine/classifyTrend';
 import { computeHealthScore } from '../src/modules/trend100/engine/healthScore';
 import { mergeAndTrimTimeSeries } from './timeSeriesUtils';
 import { buildTickerMetaIndex, enrichUniverseItemMeta } from '../src/modules/trend100/data/tickerMeta';
+import { getMinKnownPctForDeck } from '../src/modules/trend100/data/deckConfig';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
 
 /**
@@ -58,6 +59,7 @@ function getHealthHistoryRetentionDays(): number {
 
 /**
  * Get minimum known percentage threshold (default 0.9 = 90%)
+ * This is the global default; per-deck overrides are applied via getMinKnownPctForDeck.
  */
 function getMinKnownPct(): number {
   const raw = process.env.TREND100_MIN_KNOWN_PCT;
@@ -218,7 +220,9 @@ function computeHealthForDate(
   const unknownCount = totalTickers - knownCount;
 
   // Validity check: if knownCount / totalTickers < MIN_KNOWN_PCT, mark as UNKNOWN
-  const minKnownPct = getMinKnownPct();
+  // Use per-deck override (MACRO uses lower threshold)
+  const envDefault = getMinKnownPct();
+  const minKnownPct = getMinKnownPctForDeck(deckId, envDefault);
   const knownPct = knownCount / totalTickers;
 
   if (knownPct < minKnownPct) {

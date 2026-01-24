@@ -9,6 +9,7 @@ import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join } from 'path';
 import type { TrendHealthHistoryPoint, TrendDeckId } from '../src/modules/trend100/types';
 import { getAllDeckIds } from '../src/modules/trend100/data/decks';
+import { getMinKnownPctForDeck } from '../src/modules/trend100/data/deckConfig';
 
 const PUBLIC_DIR = join(process.cwd(), 'public');
 const EOD_CACHE_DIR = join(process.cwd(), 'data', 'marketstack', 'eod');
@@ -86,8 +87,12 @@ function printHealthHistoryStats(deckId: TrendDeckId): void {
       status = ` (warm-up: ${warmupDays} days)`;
     }
     
+    // Get per-deck minKnownPct
+    const envDefault = parseFloat(process.env.TREND100_MIN_KNOWN_PCT || '0.9');
+    const deckMinKnownPct = getMinKnownPctForDeck(deckId, envDefault);
+    
     console.log(`  ${deckId}: ${history.length} points (${earliest} to ${latest}, ~${days} days)${status}`);
-    console.log(`    Valid: ${validPoints.length}, UNKNOWN: ${unknownPoints.length}`);
+    console.log(`    Valid: ${validPoints.length}, UNKNOWN: ${unknownPoints.length}, MinKnownPct: ${deckMinKnownPct.toFixed(2)}`);
     if (firstValidDate && firstValidDate !== earliest) {
       console.log(`    First valid: ${firstValidDate}`);
     }

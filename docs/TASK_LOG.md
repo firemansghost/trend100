@@ -1,5 +1,39 @@
 # TASK LOG — Trend100
 
+### 2026-01-22 — Per-deck min known pct (MACRO override)
+**Completed:**
+- Added per-deck MIN_KNOWN_PCT override system via src/modules/trend100/data/deckConfig.ts
+- MACRO deck uses lower threshold (0.7 default) via TREND100_MACRO_MIN_KNOWN_PCT env var
+- Updated both update-health-history.ts and update-snapshots.ts to use per-deck thresholds
+- Updated verify-artifacts.ts to display minKnownPct per deck
+
+**Changed:**
+- src/modules/trend100/data/deckConfig.ts: New file with getMinKnownPctForDeck() function
+- scripts/update-health-history.ts: Uses per-deck minKnownPct, logs setting during backfill
+- scripts/update-snapshots.ts: Uses per-deck minKnownPct for validity checks
+- scripts/verify-artifacts.ts: Displays minKnownPct per deck in health history stats
+
+**Root Cause:**
+- MACRO deck includes inception-limited components (FBTC/FETH) that reduce known coverage in earlier years
+- Global threshold (0.9 = 90%) caused MACRO to be mostly UNKNOWN in historical periods
+- Other decks (US_SECTORS, LEADERSHIP, etc.) have full history and can use stricter threshold
+
+**Solution:**
+- Per-deck configuration: MACRO uses 0.7 (70%) threshold, all others use global default (0.9)
+- MACRO threshold configurable via TREND100_MACRO_MIN_KNOWN_PCT (default 0.7)
+- Global threshold still configurable via TREND100_MIN_KNOWN_PCT (default 0.9)
+- Validation: thresholds clamped to [0, 1] range
+
+**Environment Variables:**
+- TREND100_MIN_KNOWN_PCT: Global default (default 0.9 = 90%)
+- TREND100_MACRO_MIN_KNOWN_PCT: MACRO deck override (default 0.7 = 70%)
+
+**Verification:**
+- Run pnpm verify:artifacts - should show "MinKnownPct: 0.70" for MACRO, "MinKnownPct: 0.90" for others
+- MACRO should have fewer UNKNOWN points in earlier years after backfill
+
+---
+
 ### 2026-01-22 — Add diffusion layer and omit insufficient-history points
 **Completed:**
 - Added diffusion computation: % of tickers that changed status vs previous trading day

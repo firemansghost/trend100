@@ -1,1634 +1,1634 @@
 [
   {
     "date": "2025-01-24",
-    "greenPct": 0,
+    "greenPct": 36.4,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 63.6,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-01-27",
-    "greenPct": 0,
+    "greenPct": 27.3,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 72.7,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-01-28",
-    "greenPct": 0,
+    "greenPct": 27.3,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 72.7,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-01-29",
-    "greenPct": 0,
+    "greenPct": 27.3,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 72.7,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-01-30",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-01-31",
-    "greenPct": 0,
+    "greenPct": 27.3,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 72.7,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-02-03",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
+    "greenPct": 18.2,
+    "yellowPct": 9.1,
+    "redPct": 72.7,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-02-04",
-    "greenPct": 0,
+    "greenPct": 45.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 54.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-02-05",
-    "greenPct": 0,
+    "greenPct": 54.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-02-06",
-    "greenPct": 0,
+    "greenPct": 72.7,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-02-07",
-    "greenPct": 0,
+    "greenPct": 45.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 54.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-02-10",
-    "greenPct": 0,
+    "greenPct": 54.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-02-11",
-    "greenPct": 0,
+    "greenPct": 54.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-02-12",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-02-13",
-    "greenPct": 0,
+    "greenPct": 72.7,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-02-14",
-    "greenPct": 0,
+    "greenPct": 72.7,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-02-18",
-    "greenPct": 0,
+    "greenPct": 72.7,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-02-19",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-02-20",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-02-21",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-02-24",
-    "greenPct": 0,
+    "greenPct": 54.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-02-25",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-02-26",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-02-27",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-02-28",
-    "greenPct": 0,
+    "greenPct": 45.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 54.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-03",
-    "greenPct": 0,
+    "greenPct": 54.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-04",
-    "greenPct": 0,
+    "greenPct": 36.4,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 63.6,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-03-05",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-06",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-07",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-10",
-    "greenPct": 0,
+    "greenPct": 36.4,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 63.6,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-03-11",
-    "greenPct": 0,
+    "greenPct": 45.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 54.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-12",
-    "greenPct": 0,
+    "greenPct": 54.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-13",
-    "greenPct": 0,
+    "greenPct": 54.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-14",
-    "greenPct": 0,
+    "greenPct": 54.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-17",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-18",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-19",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-20",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-21",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-24",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-25",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-26",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-27",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-28",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-03-31",
-    "greenPct": 0,
+    "greenPct": 54.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-04-01",
-    "greenPct": 0,
+    "greenPct": 54.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-04-02",
-    "greenPct": 0,
+    "greenPct": 54.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-04-03",
-    "greenPct": 0,
+    "greenPct": 45.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 54.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-04-04",
-    "greenPct": 0,
+    "greenPct": 9.1,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 90.9,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-04-07",
     "greenPct": 0,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 100,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-04-08",
     "greenPct": 0,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 100,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-04-09",
-    "greenPct": 0,
+    "greenPct": 18.2,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 81.8,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-04-10",
-    "greenPct": 0,
+    "greenPct": 18.2,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 81.8,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-04-11",
-    "greenPct": 0,
+    "greenPct": 18.2,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 81.8,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-04-14",
-    "greenPct": 0,
+    "greenPct": 27.3,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 72.7,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-04-15",
-    "greenPct": 0,
+    "greenPct": 27.3,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 72.7,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-04-16",
-    "greenPct": 0,
+    "greenPct": 36.4,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 63.6,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-04-17",
-    "greenPct": 0,
+    "greenPct": 45.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 54.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-04-21",
-    "greenPct": 0,
+    "greenPct": 36.4,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 63.6,
     "regimeLabel": "RISK_OFF"
   },
   {
     "date": "2025-04-22",
-    "greenPct": 0,
+    "greenPct": 54.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-04-23",
-    "greenPct": 0,
+    "greenPct": 54.5,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-04-24",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-04-25",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 54.5,
+    "yellowPct": 9.1,
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-04-28",
-    "greenPct": 0,
+    "greenPct": 72.7,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-04-29",
-    "greenPct": 0,
+    "greenPct": 72.7,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-04-30",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 63.6,
+    "yellowPct": 9.1,
+    "redPct": 27.3,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-05-01",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 63.6,
+    "yellowPct": 9.1,
+    "redPct": 27.3,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-05-02",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 81.8,
+    "yellowPct": 9.1,
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-05",
-    "greenPct": 0,
+    "greenPct": 81.8,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 18.2,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-06",
-    "greenPct": 0,
+    "greenPct": 72.7,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-07",
-    "greenPct": 0,
+    "greenPct": 63.6,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
   },
   {
     "date": "2025-05-08",
-    "greenPct": 0,
+    "greenPct": 72.7,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-09",
-    "greenPct": 0,
+    "greenPct": 81.8,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 18.2,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-12",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-13",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-14",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-15",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-16",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-19",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-20",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-21",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-22",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 81.8,
+    "yellowPct": 9.1,
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-23",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-27",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-28",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-29",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-05-30",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-02",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-03",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-04",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 81.8,
+    "yellowPct": 9.1,
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-05",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-06",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-09",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-10",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-11",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-12",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-13",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-16",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-17",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-18",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-20",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-23",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-24",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-25",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-26",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-27",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-06-30",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-01",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-02",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-03",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-07",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-08",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-09",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-10",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-11",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-14",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-15",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-16",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-17",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-18",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-21",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-22",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-23",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-24",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-25",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-28",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 81.8,
+    "yellowPct": 18.2,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-29",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 81.8,
+    "yellowPct": 18.2,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-30",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 81.8,
+    "yellowPct": 9.1,
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-07-31",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 81.8,
+    "yellowPct": 9.1,
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-01",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 81.8,
+    "yellowPct": 9.1,
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-04",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 81.8,
+    "yellowPct": 9.1,
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-05",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 81.8,
+    "yellowPct": 9.1,
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-06",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-07",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-08",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-11",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-12",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-13",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-14",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-15",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-18",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-19",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-20",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-21",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-22",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-25",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-26",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-27",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-28",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-08-29",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-02",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-03",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-04",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-05",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-08",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-09",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-10",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-11",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-12",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-15",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-16",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-17",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-18",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-19",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-22",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-23",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-24",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-25",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-26",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-29",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-09-30",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-01",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-02",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-03",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-06",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-07",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-08",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-09",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-10",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-13",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-14",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-15",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-16",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-17",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-20",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-21",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-22",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-23",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-24",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-27",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-28",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-29",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-30",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-10-31",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-03",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-04",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-05",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-06",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-07",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-10",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-11",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-12",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-13",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-14",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-17",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-18",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-19",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-20",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-21",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-24",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-25",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-26",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-11-28",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-01",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-02",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-03",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-04",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-05",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-08",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-09",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 90.9,
+    "yellowPct": 9.1,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-10",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-11",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-12",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-15",
-    "greenPct": 0,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-16",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "greenPct": 81.8,
+    "yellowPct": 9.1,
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-17",
-    "greenPct": 0,
+    "greenPct": 81.8,
     "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "redPct": 18.2,
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-18",
-    "greenPct": 0,
-    "yellowPct": 0,
+    "greenPct": 81.8,
+    "yellowPct": 18.2,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-19",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-22",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-23",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-24",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-26",
-    "greenPct": 0,
+    "greenPct": 100,
     "yellowPct": 0,
     "redPct": 0,
-    "regimeLabel": "RISK_OFF"
+    "regimeLabel": "RISK_ON"
   },
   {
     "date": "2025-12-29",

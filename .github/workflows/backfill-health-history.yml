@@ -45,7 +45,7 @@ jobs:
         env:
           BACKFILL_DAYS: ${{ inputs.backfill_days || '365' }}
           MARKETSTACK_OFFLINE: '1'
-          MARKETSTACK_CACHE_DAYS: 800
+          MARKETSTACK_CACHE_DAYS: 1600
           TREND100_STRICT_WARMUP: 1
           HEALTH_HISTORY_RETENTION_DAYS: 0
         run: |

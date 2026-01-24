@@ -19,7 +19,7 @@ const HISTORY_DIR = join(process.cwd(), 'public');
 const MIN_POINTS_THRESHOLD = 30; // Minimum points after running for a while
 const MAX_SHRINKAGE_PCT = 20; // Fail if history shrinks by more than 20%
 const MAX_ZERO_PCT = 30; // Fail if more than 30% of points have zero health (warm-up issue)
-const EXPECTED_CACHE_DAYS = 730; // Expected cache days once extended (800 default - buffer)
+const EXPECTED_CACHE_DAYS = 1530; // Expected cache days once extended (1600 default - buffer)
 const WARMUP_CHECK_DAYS = 365; // Only evaluate warm-up zeros over the most recent window
 
 /**

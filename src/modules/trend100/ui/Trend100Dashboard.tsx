@@ -102,23 +102,44 @@ export function Trend100Dashboard({
   // Then apply sorting
   const sortedTickers = sortTickers(filteredTickers, sortKey);
 
-  // Filter history by timeframe
+  // Filter history by timeframe and apply data-side hardening
   const filteredHistory = useMemo(() => {
-    let points: number;
+    // Step 1: Filter to points <= snapshot.asOfDate (effective trading day)
+    // This prevents weekend/invalid trailing points
+    let filtered = history.filter((point) => point.date <= snapshot.asOfDate);
+
+    // Step 2: Drop trailing all-zero points (belt-and-suspenders)
+    while (
+      filtered.length > 0 &&
+      (filtered[filtered.length - 1]!.greenPct || 0) +
+        (filtered[filtered.length - 1]!.yellowPct || 0) +
+        (filtered[filtered.length - 1]!.redPct || 0) ===
+        0
+    ) {
+      filtered = filtered.slice(0, -1);
+    }
+
+    // Step 3: Apply timeframe filter (by date range, not point count)
+    const today = new Date(snapshot.asOfDate);
+    let cutoffDate: Date;
     switch (timeframe) {
       case '3M':
-        points = 90;
+        cutoffDate = new Date(today);
+        cutoffDate.setMonth(cutoffDate.getMonth() - 3);
         break;
       case '1Y':
-        points = 365;
+        cutoffDate = new Date(today);
+        cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
         break;
       case 'ALL':
-        return history;
+        return filtered; // Return all filtered points
       default:
-        points = 365;
+        cutoffDate = new Date(today);
+        cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
     }
-    return history.slice(-points);
-  }, [history, timeframe]);
+    const cutoffDateStr = cutoffDate.toISOString().split('T')[0]!;
+    return filtered.filter((point) => point.date >= cutoffDateStr);
+  }, [history, timeframe, snapshot.asOfDate]);
 
   const handleTileClick = (ticker: TrendTickerSnapshot) => {
     setSelectedTicker(ticker);

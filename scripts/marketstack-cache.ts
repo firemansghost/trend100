@@ -61,9 +61,9 @@ function saveCachedBars(symbol: string, bars: EodBar[]): void {
   // Ensure sorted ascending
   const sorted = [...bars].sort((a, b) => a.date.localeCompare(b.date));
   
-  // Apply retention: keep last MARKETSTACK_CACHE_DAYS (default 800 for lookback buffer)
+  // Apply retention: keep last MARKETSTACK_CACHE_DAYS (default 1600 for lookback buffer)
   // This is longer than MARKETSTACK_HISTORY_DAYS (365) to provide lookback for indicators
-  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
+  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '1600', 10);
   const trimmed = trimCachedBars(sorted, cacheDays);
   
   writeFileSync(filePath, JSON.stringify(trimmed, null, 2) + '\n', 'utf-8');
@@ -142,8 +142,8 @@ export async function ensureHistory(symbol: string): Promise<EnsureHistoryResult
   const cached = loadCachedBars(symbol);
   const today = new Date().toISOString().split('T')[0]!;
 
-  // Get cache days from env (default 800 for lookback buffer)
-  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
+  // Get cache days from env (default 1600 for lookback buffer)
+  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '1600', 10);
   
   // Get history days from env (default 365 for primary window)
   const historyDays = parseInt(process.env.MARKETSTACK_HISTORY_DAYS || '365', 10);
@@ -288,7 +288,7 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
   
   // Get cache extension budget (default: 10 symbols per run to avoid blowing credits)
   const extendMaxSymbols = parseInt(process.env.MARKETSTACK_EXTEND_MAX_SYMBOLS || '10', 10);
-  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
+  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '1600', 10);
   
   // First, load all cached data and identify what needs to be done
   const cachedMap = new Map<string, EodBar[]>();

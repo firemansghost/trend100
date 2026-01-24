@@ -79,6 +79,7 @@ export function HealthHistoryChart({ data }: HealthHistoryChartProps) {
             stroke="#71717a"
             tick={{ fill: '#71717a', fontSize: 12 }}
             interval="preserveStartEnd"
+            minTickGap={30}
           />
           <YAxis
             stroke="#71717a"

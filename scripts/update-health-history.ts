@@ -319,6 +319,12 @@ function backfillDeckHistory(
   for (const date of tradingDays) {
     const point = computeHealthForDate(deckId, date, metaIndex);
     if (point) {
+      // Skip all-zero or UNKNOWN points to prevent cliff-drops
+      const totalPct = (point.greenPct || 0) + (point.yellowPct || 0) + (point.redPct || 0);
+      if (totalPct === 0 || point.regimeLabel === 'UNKNOWN') {
+        skipped++;
+        continue;
+      }
       newPoints.push(point);
       computed++;
     } else {
@@ -352,14 +358,21 @@ function updateDeckHistory(deckId: TrendDeckId): void {
 
   // Get today's snapshot for this deck
   const snapshot = getLatestSnapshot(deckId);
-  const today = snapshot.asOfDate; // Already in YYYY-MM-DD format
+  const asOfDate = snapshot.asOfDate; // Already in YYYY-MM-DD format (effective trading day)
 
   // Load existing history
   const existingHistory = loadHistory(deckId);
 
-  // Create today's entry
-  const todayEntry: TrendHealthHistoryPoint = {
-    date: today,
+  // Skip if all zeros or UNKNOWN to prevent cliff-drops
+  const totalPct = snapshot.health.greenPct + snapshot.health.yellowPct + snapshot.health.redPct;
+  if (totalPct === 0 || snapshot.health.regimeLabel === 'UNKNOWN') {
+    console.log(`  ⚠️  Skipping health history entry for ${deckId}: all zeros or UNKNOWN (date: ${asOfDate})`);
+    return;
+  }
+
+  // Create entry using snapshot.asOfDate (not "today") to avoid weekend/invalid dates
+  const entry: TrendHealthHistoryPoint = {
+    date: asOfDate,
     greenPct: snapshot.health.greenPct,
     yellowPct: snapshot.health.yellowPct,
     redPct: snapshot.health.redPct,
@@ -370,7 +383,7 @@ function updateDeckHistory(deckId: TrendDeckId): void {
   const retentionDays = getHealthHistoryRetentionDays();
   const mergedHistory = mergeAndTrimTimeSeries(
     existingHistory,
-    [todayEntry],
+    [entry],
     (point) => point.date,
     retentionDays
   );

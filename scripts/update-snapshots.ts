@@ -339,9 +339,16 @@ async function main() {
     // Load existing history
     const existingHistory = loadHistory(deckId);
 
-    // Create today's entry
-    const todayEntry: TrendHealthHistoryPoint = {
-      date: today,
+    // Create entry using snapshot.asOfDate (not "today") to avoid weekend/invalid dates
+    // Skip if all zeros or UNKNOWN to prevent cliff-drops
+    const totalPct = snapshot.health.greenPct + snapshot.health.yellowPct + snapshot.health.redPct;
+    if (totalPct === 0 || snapshot.health.regimeLabel === 'UNKNOWN') {
+      console.log(`  ⚠️  Skipping health history entry for ${deckId}: all zeros or UNKNOWN (date: ${snapshot.asOfDate})`);
+      return;
+    }
+
+    const entry: TrendHealthHistoryPoint = {
+      date: snapshot.asOfDate, // Use asOfDate (effective trading day), not "today"
       greenPct: snapshot.health.greenPct,
       yellowPct: snapshot.health.yellowPct,
       redPct: snapshot.health.redPct,
@@ -351,7 +358,7 @@ async function main() {
     // Merge with existing (dedupe by date) and trim to retention window
     const mergedHistory = mergeAndTrimTimeSeries(
       existingHistory,
-      [todayEntry],
+      [entry],
       (point) => point.date,
       retentionDays
     );

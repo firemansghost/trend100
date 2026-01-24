@@ -116,7 +116,7 @@ function printEodCacheStats(sampleSymbols?: string[]): void {
     return;
   }
   
-  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
+  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '1600', 10);
   const limitedHistoryAllowlist = new Set<string>(['FBTC', 'FETH']);
   
   for (const file of files) {

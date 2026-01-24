@@ -1,5 +1,43 @@
 # TASK LOG — Trend100
 
+### 2026-01-22 — Increase cache depth to 1600 days, fix weekend dip, ensure daily tooltip precision
+**Completed:**
+- Increased MARKETSTACK_CACHE_DAYS default from 800 to 1600 days everywhere
+- Updated all workflows to set MARKETSTACK_CACHE_DAYS=1600
+- Improved extend-eod-cache.yml with better input naming (max_symbols instead of extend_max_symbols)
+- Added data-side guards: skip writing all-zero or UNKNOWN health points to prevent cliff-drops
+- Added UI-side hardening: filter history to <= snapshot.asOfDate and drop trailing zeros
+- Verified tooltip uses daily points (Recharts payload already provides actual data point)
+
+**Changed:**
+- scripts/marketstack-cache.ts: Default CACHE_DAYS changed from 800 to 1600
+- scripts/update-snapshots.ts: Use snapshot.asOfDate (not "today"), skip all-zero/UNKNOWN points
+- scripts/update-health-history.ts: Use snapshot.asOfDate, skip all-zero/UNKNOWN in incremental and backfill
+- src/modules/trend100/ui/Trend100Dashboard.tsx: Filter to <= snapshot.asOfDate, drop trailing zeros, timeframe by date range
+- src/modules/trend100/ui/HealthHistoryChart.tsx: Added minTickGap for better label spacing
+- .github/workflows/*.yml: All set MARKETSTACK_CACHE_DAYS=1600
+- .github/workflows/extend-eod-cache.yml: Updated defaults and input names
+- scripts/verify-artifacts.ts: Updated default cache days to 1600
+- scripts/verify-history-retention.ts: Updated EXPECTED_CACHE_DAYS to 1530
+
+**Root Cause:**
+- Cache depth was 800 days, limiting lookback for indicators
+- Weekend/invalid dates were being appended as "today" causing right-edge cliff-drops
+- All-zero or UNKNOWN points were being written, creating visual artifacts
+
+**Solution:**
+- Cache depth increased to 1600 days for better indicator lookback
+- Data-side: Use snapshot.asOfDate (effective trading day) and skip invalid points
+- UI-side: Filter to <= snapshot.asOfDate and drop trailing zeros (belt-and-suspenders)
+- Tooltip already uses daily points via Recharts payload (no changes needed)
+
+**How to Verify:**
+- Run pnpm verify:artifacts - should show ~1600-day cache spans once extended
+- Chart should not show cliff-drop on weekends
+- Tooltip should show daily dates for all timeframes (3M, 1Y, ALL)
+
+---
+
 ### 2026-01-22 — Fix guardrail blocking workflow: make warm-up check env-gated + ensure cache extension runs
 **Completed:**
 - Made warm-up zero-point check env-gated (TREND100_STRICT_WARMUP)

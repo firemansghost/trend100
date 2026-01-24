@@ -1,12 +1,5 @@
 [
   {
-    "date": "2025-01-23",
-    "greenPct": 0,
-    "yellowPct": 0,
-    "redPct": 0,
-    "regimeLabel": "RISK_OFF"
-  },
-  {
     "date": "2025-01-24",
     "greenPct": 0,
     "yellowPct": 0,
@@ -1762,5 +1755,12 @@
     "yellowPct": 3,
     "redPct": 32,
     "regimeLabel": "TRANSITION"
+  },
+  {
+    "date": "2026-01-24",
+    "greenPct": 6,
+    "yellowPct": 41,
+    "redPct": 53,
+    "regimeLabel": "RISK_OFF"
   }
 ]

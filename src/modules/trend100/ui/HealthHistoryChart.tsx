@@ -22,9 +22,9 @@ interface HealthHistoryChartProps {
 }
 
 /**
- * Format date for display (MM/DD or MM/YY for longer ranges)
+ * Format date for X-axis tick labels (MM/DD or MM/YY for longer ranges)
  */
-function formatDate(dateStr: string, isLongRange: boolean): string {
+function formatTickLabel(dateStr: string, isLongRange: boolean): string {
   const date = new Date(dateStr);
   if (isLongRange) {
     return `${date.getMonth() + 1}/${date.getFullYear().toString().slice(-2)}`;
@@ -33,7 +33,7 @@ function formatDate(dateStr: string, isLongRange: boolean): string {
 }
 
 /**
- * Custom tooltip for the chart
+ * Custom tooltip for the chart - always shows full daily date
  */
 function CustomTooltip({ active, payload }: any) {
   if (active && payload && payload.length) {
@@ -57,13 +57,14 @@ function CustomTooltip({ active, payload }: any) {
 }
 
 export function HealthHistoryChart({ data }: HealthHistoryChartProps) {
-  // Determine if we should use compact date format (for longer ranges)
+  // Determine if we should use compact date format for labels (for longer ranges)
   const isLongRange = data.length > 180;
 
-  // Format data for Recharts
+  // Format data for Recharts: use timestamp for X-axis (unique per day), keep date for tooltip
+  // Using timestamp ensures each daily point has a unique X value, preventing monthly bucketing
   const chartData = data.map((point) => ({
     ...point,
-    dateLabel: formatDate(point.date, isLongRange),
+    dateTs: new Date(point.date).getTime(), // Numeric timestamp for X-axis (unique per day)
   }));
 
   return (
@@ -75,9 +76,17 @@ export function HealthHistoryChart({ data }: HealthHistoryChartProps) {
         <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
           <XAxis
-            dataKey="dateLabel"
+            dataKey="dateTs"
+            type="number"
+            scale="time"
+            domain={['dataMin', 'dataMax']}
             stroke="#71717a"
             tick={{ fill: '#71717a', fontSize: 12 }}
+            tickFormatter={(value) => {
+              // Format timestamp back to date string for label
+              const dateStr = new Date(value).toISOString().split('T')[0]!;
+              return formatTickLabel(dateStr, isLongRange);
+            }}
             interval="preserveStartEnd"
             minTickGap={30}
           />

@@ -1,5 +1,2091 @@
 [
   {
+    "date": "2023-11-16",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-11-17",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-11-20",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-11-21",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-11-22",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-11-23",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-11-24",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-11-27",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-11-28",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-11-29",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-11-30",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-01",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-04",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-05",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-06",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-07",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-08",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-11",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-12",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-13",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-14",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-15",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-18",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-19",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-20",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-21",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-22",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-26",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-27",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-28",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2023-12-29",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-02",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-03",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-04",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-05",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-08",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-09",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-10",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-11",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-12",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-16",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-17",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-18",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-19",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-22",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-23",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-24",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-25",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-26",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-29",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-30",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-01-31",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-01",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-02",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-05",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-06",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-07",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-08",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-09",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-12",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-13",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-14",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-15",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-16",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-20",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-21",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-22",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-23",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-26",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-27",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-28",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-02-29",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-01",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-04",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-05",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-06",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-07",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-08",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-11",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-12",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-13",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-14",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-15",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-18",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-19",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-20",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-21",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-22",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-25",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-26",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-27",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-28",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-03-29",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-01",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-02",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-03",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-04",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-05",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-08",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-09",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-10",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-11",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-12",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-15",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-16",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-17",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-18",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-19",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-22",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-23",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-24",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-25",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-26",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-29",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-04-30",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-01",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-02",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-03",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-06",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-07",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-08",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-09",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-10",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-13",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-14",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-15",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-16",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-17",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-20",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-21",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-22",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-23",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-24",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-28",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-29",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-30",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-05-31",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-03",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-04",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-05",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-06",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-07",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-10",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-11",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-12",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-13",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-14",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-17",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-18",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-20",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-21",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-24",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-25",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-26",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-27",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-06-28",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-01",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-02",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-03",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-05",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-08",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-09",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-10",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-11",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-12",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-15",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-16",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-17",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-18",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-19",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-22",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-23",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-24",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-25",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-26",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-29",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-30",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-07-31",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-01",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-02",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-05",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-06",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-07",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-08",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-09",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-12",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-13",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-14",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-15",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-16",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-19",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-20",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-21",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-22",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-23",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-26",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-27",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-28",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-29",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-08-30",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-03",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-04",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-05",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-06",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-09",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-10",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-11",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-12",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-13",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-16",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-17",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-18",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-19",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-20",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-23",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-24",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-25",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-26",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-27",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-09-30",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-01",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-02",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-03",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-04",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-07",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-08",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-09",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-10",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-11",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-14",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-15",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-16",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-17",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-18",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-10-21",
+    "greenPct": 90.9,
+    "yellowPct": 0,
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-10-22",
+    "greenPct": 81.8,
+    "yellowPct": 0,
+    "redPct": 18.2,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-10-23",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-10-24",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-10-25",
+    "greenPct": 63.6,
+    "yellowPct": 0,
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
+  },
+  {
+    "date": "2024-10-28",
+    "greenPct": 72.7,
+    "yellowPct": 9.1,
+    "redPct": 18.2,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-10-29",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-10-30",
+    "greenPct": 63.6,
+    "yellowPct": 0,
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
+  },
+  {
+    "date": "2024-10-31",
+    "greenPct": 63.6,
+    "yellowPct": 0,
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
+  },
+  {
+    "date": "2024-11-01",
+    "greenPct": 63.6,
+    "yellowPct": 0,
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
+  },
+  {
+    "date": "2024-11-04",
+    "greenPct": 63.6,
+    "yellowPct": 0,
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
+  },
+  {
+    "date": "2024-11-05",
+    "greenPct": 81.8,
+    "yellowPct": 0,
+    "redPct": 18.2,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-11-06",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-11-07",
+    "greenPct": 81.8,
+    "yellowPct": 0,
+    "redPct": 18.2,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-11-08",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-11-11",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-11-12",
+    "greenPct": 45.5,
+    "yellowPct": 0,
+    "redPct": 54.5,
+    "regimeLabel": "TRANSITION"
+  },
+  {
+    "date": "2024-11-13",
+    "greenPct": 36.4,
+    "yellowPct": 0,
+    "redPct": 63.6,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-11-14",
+    "greenPct": 36.4,
+    "yellowPct": 0,
+    "redPct": 63.6,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-11-15",
+    "greenPct": 36.4,
+    "yellowPct": 0,
+    "redPct": 63.6,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-11-18",
+    "greenPct": 36.4,
+    "yellowPct": 0,
+    "redPct": 63.6,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-11-19",
+    "greenPct": 36.4,
+    "yellowPct": 0,
+    "redPct": 63.6,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-11-20",
+    "greenPct": 36.4,
+    "yellowPct": 0,
+    "redPct": 63.6,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-11-21",
+    "greenPct": 36.4,
+    "yellowPct": 0,
+    "redPct": 63.6,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-11-22",
+    "greenPct": 36.4,
+    "yellowPct": 0,
+    "redPct": 63.6,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-11-25",
+    "greenPct": 54.5,
+    "yellowPct": 0,
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
+  },
+  {
+    "date": "2024-11-26",
+    "greenPct": 45.5,
+    "yellowPct": 0,
+    "redPct": 54.5,
+    "regimeLabel": "TRANSITION"
+  },
+  {
+    "date": "2024-11-27",
+    "greenPct": 54.5,
+    "yellowPct": 0,
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
+  },
+  {
+    "date": "2024-11-29",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-12-02",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-12-03",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-12-04",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-12-05",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-12-06",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-12-09",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-12-10",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-12-11",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-12-12",
+    "greenPct": 72.7,
+    "yellowPct": 0,
+    "redPct": 27.3,
+    "regimeLabel": "RISK_ON"
+  },
+  {
+    "date": "2024-12-13",
+    "greenPct": 63.6,
+    "yellowPct": 0,
+    "redPct": 36.4,
+    "regimeLabel": "TRANSITION"
+  },
+  {
+    "date": "2024-12-16",
+    "greenPct": 54.5,
+    "yellowPct": 0,
+    "redPct": 45.5,
+    "regimeLabel": "TRANSITION"
+  },
+  {
+    "date": "2024-12-17",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-12-18",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-12-19",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-12-20",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-12-23",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-12-24",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-12-26",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-12-27",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-12-30",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2024-12-31",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-02",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-03",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-06",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-07",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-08",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-10",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-13",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-14",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-15",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-16",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-17",
+    "greenPct": 18.2,
+    "yellowPct": 0,
+    "redPct": 81.8,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-21",
+    "greenPct": 27.3,
+    "yellowPct": 0,
+    "redPct": 72.7,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-22",
+    "greenPct": 27.3,
+    "yellowPct": 0,
+    "redPct": 72.7,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2025-01-23",
+    "greenPct": 27.3,
+    "yellowPct": 0,
+    "redPct": 72.7,
+    "regimeLabel": "RISK_OFF"
+  },
+  {
     "date": "2025-01-24",
     "greenPct": 36.4,
     "yellowPct": 0,

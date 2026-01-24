@@ -32,6 +32,28 @@ import { classifyTrend } from '../src/modules/trend100/engine/classifyTrend';
 import { computeHealthScore } from '../src/modules/trend100/engine/healthScore';
 import { mergeAndTrimTimeSeries } from './timeSeriesUtils';
 
+/**
+ * Health-history retention policy (calendar days).
+ *
+ * - If unset: default to 0 (no trimming; retain all points)
+ * - If set to 0: no trimming
+ * - If set to N>0: keep last N calendar days
+ */
+function getHealthHistoryRetentionDays(): number {
+  const raw = process.env.HEALTH_HISTORY_RETENTION_DAYS;
+  if (raw === undefined || raw === null || raw.trim() === '') {
+    return 0;
+  }
+  const parsed = parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || Number.isNaN(parsed)) {
+    console.warn(
+      `⚠️  Invalid HEALTH_HISTORY_RETENTION_DAYS="${raw}". Defaulting to 0 (no trim).`
+    );
+    return 0;
+  }
+  return Math.max(0, parsed);
+}
+
 // Get today's date in YYYY-MM-DD format
 function getTodayDate(): string {
   return new Date().toISOString().split('T')[0]!;
@@ -308,7 +330,7 @@ async function main() {
 
   // Step 5: Update health history files
   console.log('\n📈 Updating health history files...\n');
-  const retentionDays = 365; // Keep last 365 calendar days
+  const retentionDays = getHealthHistoryRetentionDays();
   
   for (const deckId of deckIds) {
     const snapshot = snapshots.get(deckId);
@@ -336,7 +358,9 @@ async function main() {
 
     // Save merged and trimmed history
     saveHistory(deckId, mergedHistory);
-    console.log(`  ✓ Updated health history for ${deckId}: ${mergedHistory.length} points (retention: ${retentionDays} days)`);
+    console.log(
+      `  ✓ Updated health history for ${deckId}: ${mergedHistory.length} points (retention: ${retentionDays === 0 ? 'none' : `${retentionDays} days`})`
+    );
   }
 
   console.log('\n✅ Snapshot update complete for all decks!');

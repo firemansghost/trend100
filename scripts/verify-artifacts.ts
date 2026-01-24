@@ -13,6 +13,14 @@ import { getAllDeckIds } from '../src/modules/trend100/data/decks';
 const PUBLIC_DIR = join(process.cwd(), 'public');
 const EOD_CACHE_DIR = join(process.cwd(), 'data', 'marketstack', 'eod');
 
+function getHealthHistoryRetentionDays(): number {
+  const raw = process.env.HEALTH_HISTORY_RETENTION_DAYS;
+  if (!raw || raw.trim() === '') return 0;
+  const parsed = parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || Number.isNaN(parsed)) return 0;
+  return Math.max(0, parsed);
+}
+
 /**
  * Print health history stats for a deck
  */
@@ -37,8 +45,16 @@ function printHealthHistoryStats(deckId: TrendDeckId): void {
       (new Date(latest).getTime() - new Date(earliest).getTime()) / (1000 * 60 * 60 * 24)
     );
     
-    // Check for warm-up issues (points with totalPct == 0)
-    const zeroPoints = history.filter((p) => {
+    // Check for warm-up issues (points with totalPct == 0) in a recent window.
+    // With long-run retention, early "warm-up" zeros are expected and should not dominate the signal.
+    const latestDateStr = history[history.length - 1]!.date;
+    const windowDays = Math.max(1, parseInt(process.env.TREND100_WARMUP_CHECK_DAYS || '365', 10));
+    const windowStart = new Date(latestDateStr);
+    windowStart.setDate(windowStart.getDate() - windowDays);
+    const windowStartStr = windowStart.toISOString().split('T')[0]!;
+    const windowHistory = history.filter((p) => p.date >= windowStartStr);
+
+    const zeroPoints = windowHistory.filter((p) => {
       const totalPct = (p.greenPct || 0) + (p.yellowPct || 0) + (p.redPct || 0);
       return totalPct === 0;
     });
@@ -53,11 +69,11 @@ function printHealthHistoryStats(deckId: TrendDeckId): void {
       }
     }
     
-    const zeroPct = history.length > 0 ? (zeroPoints.length / history.length) * 100 : 0;
+    const zeroPct = windowHistory.length > 0 ? (zeroPoints.length / windowHistory.length) * 100 : 0;
     
     let status = '';
     if (zeroPct > 30) {
-      status = ` ⚠️  ${zeroPct.toFixed(1)}% zero points (warm-up issue?)`;
+      status = ` ⚠️  ${zeroPct.toFixed(1)}% zero points (last ${windowDays}d)`;
     } else if (earliestNonZeroDate && earliestNonZeroDate > earliest) {
       const warmupDays = Math.ceil(
         (new Date(earliestNonZeroDate).getTime() - new Date(earliest).getTime()) / (1000 * 60 * 60 * 24)
@@ -101,6 +117,7 @@ function printEodCacheStats(sampleSymbols?: string[]): void {
   }
   
   const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
+  const limitedHistoryAllowlist = new Set<string>(['FBTC', 'FETH']);
   
   for (const file of files) {
     const filePath = join(EOD_CACHE_DIR, file);
@@ -119,7 +136,28 @@ function printEodCacheStats(sampleSymbols?: string[]): void {
         (new Date(latest).getTime() - new Date(earliest).getTime()) / (1000 * 60 * 60 * 24)
       );
       
-      const status = days < (cacheDays - 10) ? ' ⚠️  (needs extension)' : '';
+      const bufferDays = 10;
+      const needsExtension = days < (cacheDays - bufferDays);
+
+      // Heuristic: treat some symbols as legitimately limited history (inception),
+      // so we don't warn forever.
+      //
+      // Rules:
+      // - Explicit allowlist (FBTC, FETH)
+      // - OR if it has "enough" bars already (>=250) and earliest is within ~15 months of today,
+      //   assume inception-limited (extension likely won't go earlier).
+      const today = new Date();
+      const earliestDate = new Date(earliest);
+      const inceptionLikely =
+        limitedHistoryAllowlist.has(symbol) ||
+        (bars.length >= 250 &&
+          Math.ceil((today.getTime() - earliestDate.getTime()) / (1000 * 60 * 60 * 24)) <= 460);
+
+      const status = needsExtension
+        ? inceptionLikely
+          ? ' ℹ️  (limited history: inception)'
+          : ' ⚠️  (needs extension)'
+        : '';
       console.log(`  ${symbol}: ${bars.length} bars (${earliest} to ${latest}, ~${days} days${status})`);
     } catch (error) {
       console.log(`  ${file}: Error reading file: ${error}`);
@@ -140,6 +178,11 @@ function printEodCacheStats(sampleSymbols?: string[]): void {
 function main() {
   console.log('📊 Artifact Verification Report\n');
   
+  const hhRetentionDays = getHealthHistoryRetentionDays();
+  console.log(
+    `Health-history retention: ${hhRetentionDays === 0 ? 'none (retain all)' : `${hhRetentionDays} days`}\n`
+  );
+
   console.log('Health History Files:');
   const deckIds = getAllDeckIds();
   for (const deckId of deckIds) {

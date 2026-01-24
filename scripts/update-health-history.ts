@@ -28,6 +28,28 @@ import { classifyTrend } from '../src/modules/trend100/engine/classifyTrend';
 import { computeHealthScore } from '../src/modules/trend100/engine/healthScore';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
 
+/**
+ * Health-history retention policy (calendar days).
+ *
+ * - If unset: default to 0 (no trimming; retain all points)
+ * - If set to 0: no trimming
+ * - If set to N>0: keep last N calendar days
+ */
+function getHealthHistoryRetentionDays(): number {
+  const raw = process.env.HEALTH_HISTORY_RETENTION_DAYS;
+  if (raw === undefined || raw === null || raw.trim() === '') {
+    return 0;
+  }
+  const parsed = parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || Number.isNaN(parsed)) {
+    console.warn(
+      `⚠️  Invalid HEALTH_HISTORY_RETENTION_DAYS="${raw}". Defaulting to 0 (no trim).`
+    );
+    return 0;
+  }
+  return Math.max(0, parsed);
+}
+
 function getHistoryFilePath(deckId: TrendDeckId): string {
   return join(process.cwd(), 'public', `health-history.${deckId}.json`);
 }
@@ -308,7 +330,7 @@ function backfillDeckHistory(
 
   // Load existing history and merge
   const existingHistory = loadHistory(deckId);
-  const retentionDays = 365;
+  const retentionDays = getHealthHistoryRetentionDays();
   const mergedHistory = mergeAndTrimTimeSeries(
     existingHistory,
     newPoints,
@@ -318,7 +340,9 @@ function backfillDeckHistory(
 
   // Save
   saveHistory(deckId, mergedHistory);
-  console.log(`  ✓ Backfilled: ${newPoints.length} new points, total: ${mergedHistory.length} (retention: ${retentionDays} days)`);
+  console.log(
+    `  ✓ Backfilled: ${newPoints.length} new points, total: ${mergedHistory.length} (retention: ${retentionDays === 0 ? 'none' : `${retentionDays} days`})`
+  );
 
   return mergedHistory;
 }
@@ -343,7 +367,7 @@ function updateDeckHistory(deckId: TrendDeckId): void {
   };
 
   // Merge with existing (dedupe by date) and trim to retention window
-  const retentionDays = 365; // Keep last 365 calendar days
+  const retentionDays = getHealthHistoryRetentionDays();
   const mergedHistory = mergeAndTrimTimeSeries(
     existingHistory,
     [todayEntry],
@@ -356,7 +380,9 @@ function updateDeckHistory(deckId: TrendDeckId): void {
 
   const wasNew = existingHistory.findIndex((p) => p.date === today) < 0;
   console.log(`  ${wasNew ? 'Added' : 'Updated'} entry for ${today}`);
-  console.log(`  Total entries: ${mergedHistory.length} (retention: ${retentionDays} days)`);
+  console.log(
+    `  Total entries: ${mergedHistory.length} (retention: ${retentionDays === 0 ? 'none' : `${retentionDays} days`})`
+  );
 }
 
 /**

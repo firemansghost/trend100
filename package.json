@@ -9,6 +9,7 @@
     "lint": "eslint",
     "update:health-history": "tsx scripts/update-health-history.ts",
     "update:health-history:backfill": "tsx scripts/update-health-history.ts --backfill-days 365",
+    "update:health-history:backfill:cache": "tsx scripts/update-health-history.ts --backfill-days 800",
     "update:snapshots": "tsx scripts/update-snapshots.ts",
     "verify:artifacts": "tsx scripts/verify-artifacts.ts",
     "verify:history-retention": "tsx scripts/verify-history-retention.ts"

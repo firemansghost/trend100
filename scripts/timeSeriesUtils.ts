@@ -53,6 +53,11 @@ export function trimTimeSeries<T>(
   if (points.length === 0) {
     return points;
   }
+
+  // retentionDays <= 0 means "no trimming" (retain all points)
+  if (!Number.isFinite(retentionDays) || retentionDays <= 0) {
+    return points;
+  }
   
   // Get latest date
   const latestDate = new Date(dateKey(points[points.length - 1]!));

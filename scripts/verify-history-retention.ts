@@ -20,6 +20,7 @@ const MIN_POINTS_THRESHOLD = 30; // Minimum points after running for a while
 const MAX_SHRINKAGE_PCT = 20; // Fail if history shrinks by more than 20%
 const MAX_ZERO_PCT = 30; // Fail if more than 30% of points have zero health (warm-up issue)
 const EXPECTED_CACHE_DAYS = 730; // Expected cache days once extended (800 default - buffer)
+const WARMUP_CHECK_DAYS = 365; // Only evaluate warm-up zeros over the most recent window
 
 /**
  * Load history file
@@ -113,19 +114,40 @@ function verifyDeckHistory(deckId: TrendDeckId): { ok: boolean; message: string 
     }
   }
   
-  // Check for warm-up issues (points with zero health)
-  const zeroPoints = history.filter((p) => {
+  // Check for warm-up issues (points with zero health), but only in the recent window.
+  // With long-run retention, early "warm-up" zeros are expected and should not fail forever.
+  const latestDateStr = history.length > 0 ? history[history.length - 1]!.date : null;
+  const windowDays = Math.max(
+    1,
+    parseInt(process.env.TREND100_WARMUP_CHECK_DAYS || `${WARMUP_CHECK_DAYS}`, 10)
+  );
+  const windowStartStr = (() => {
+    if (!latestDateStr) return null;
+    const latestDate = new Date(latestDateStr);
+    const start = new Date(latestDate);
+    start.setDate(start.getDate() - windowDays);
+    return start.toISOString().split('T')[0]!;
+  })();
+
+  const windowHistory = windowStartStr
+    ? history.filter((p) => p.date >= windowStartStr)
+    : history;
+
+  const zeroPoints = windowHistory.filter((p) => {
     const totalPct = (p.greenPct || 0) + (p.yellowPct || 0) + (p.redPct || 0);
     return totalPct === 0;
   });
-  const zeroPct = currentCount > 0 ? (zeroPoints.length / currentCount) * 100 : 0;
+  const zeroPct =
+    windowHistory.length > 0 ? (zeroPoints.length / windowHistory.length) * 100 : 0;
   
   // Check if cache should be extended (if we expect >= 730 days but have many zero points)
   const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
   const strictWarmup = process.env.TREND100_STRICT_WARMUP === '1';
   
   if (cacheDays >= EXPECTED_CACHE_DAYS && zeroPct > MAX_ZERO_PCT) {
-    const message = `${deckId}: ${zeroPct.toFixed(1)}% zero points (${zeroPoints.length}/${currentCount}) - warm-up issue detected. Cache may need extension (expected ${cacheDays} days).`;
+    const message =
+      `${deckId}: ${zeroPct.toFixed(1)}% zero points (${zeroPoints.length}/${windowHistory.length}) ` +
+      `in last ${windowDays} days - warm-up issue detected. Cache may need extension (expected ${cacheDays} days).`;
     
     if (strictWarmup) {
       // Strict mode: fail (used in backfill workflow)

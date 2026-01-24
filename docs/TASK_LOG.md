@@ -9,6 +9,7 @@
 - Added budget limit: MARKETSTACK_EXTEND_MAX_SYMBOLS (default 10 per daily run, 200 for manual)
 - Enhanced verify-artifacts to show cache span for sample symbols (SPY, QQQ, TLT, GLDM, FBTC)
 - Created optional extend-eod-cache.yml workflow for manual cache extension
+ - Changed health-history retention to long-run by default (HEALTH_HISTORY_RETENTION_DAYS=0 = no trim)
 
 **Changed:**
 - scripts/verify-history-retention.ts: Warm-up check now env-gated, warns in non-strict mode
@@ -31,6 +32,8 @@
 - Backfill workflow: strict warm-up check (fails if still mostly zeros after cache extension)
 - Cache extension now runs in ensureHistoryBatch with budget limit to avoid API credit blowout
 - Manual extend-eod-cache workflow allows extending all symbols at once (200 default)
+ - Health-history is retained long-term (no trim by default) so UI “ALL” can show multi-year history as it accumulates
+ - EOD cache remains windowed via MARKETSTACK_CACHE_DAYS (extend manually as needed)
 
 **How to Use:**
 1. Run extend-eod-cache workflow (or let daily runs extend 10 symbols/day) until caches reach 800 days

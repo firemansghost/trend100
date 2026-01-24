@@ -1,5 +1,41 @@
 # TASK LOG — Trend100
 
+### 2026-01-22 — Add plateau analysis script to diagnose health history flatlines
+**Completed:**
+- Created scripts/analyze-health-plateaus.ts to detect and explain consecutive identical health points
+- Added package.json script: analyze:plateaus
+- Plateau detection: finds runs where greenPct/yellowPct/redPct/regimeLabel are all identical
+- Explanation mode: recomputes ticker statuses for start/end dates using offline EOD cache
+- EOD integrity check: validates bars exist for both dates, flags missing data
+- Classification: legitimate (no churn), offsetting churn (net % same), or bug suspicion (missing bars)
+
+**Changed:**
+- scripts/analyze-health-plateaus.ts: New script for plateau analysis
+- package.json: Added analyze:plateaus script
+
+**Root Cause:**
+- Health history can show "flatlines" (consecutive identical points) due to:
+  - Legitimate: No status flips (rules are slow-moving, discrete % rounding)
+  - Offset churn: Statuses change but net counts stay constant
+  - Bug: Missing EOD bars causing carry-forward/last-known behavior
+
+**Solution:**
+- Plateau detection identifies suspicious runs
+- Explanation mode recomputes statuses to validate legitimacy
+- EOD integrity check flags missing data that could cause bugs
+
+**How to Use:**
+- Basic: `pnpm analyze:plateaus -- --deck US_SECTORS --min-run 5`
+- With date range: `pnpm analyze:plateaus -- --deck US_SECTORS --start 2025-12-01 --end 2026-01-15 --min-run 5`
+- With explanation: `pnpm analyze:plateaus -- --deck US_SECTORS --start 2025-12-01 --end 2026-01-15 --min-run 5 --explain`
+
+**Interpretation:**
+- "Likely legitimate": No status changes, rules are slow-moving (expected)
+- "Offsetting churn": Statuses changed but net % same (expected)
+- "BUG SUSPICION": Missing EOD bars detected (investigate cache/data pipeline)
+
+---
+
 ### 2026-01-22 — Increase cache depth to 1600 days, fix weekend dip, ensure daily tooltip precision
 **Completed:**
 - Increased MARKETSTACK_CACHE_DAYS default from 800 to 1600 days everywhere

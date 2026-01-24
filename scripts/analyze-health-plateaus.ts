@@ -224,6 +224,31 @@ function detectPlateaus(
 
   for (let i = 1; i < history.length; i++) {
     const point = history[i]!;
+    
+    // Skip UNKNOWN points when detecting plateaus
+    if (point.regimeLabel === 'UNKNOWN' || point.greenPct === null) {
+      // If we were in a plateau, end it
+      const length = i - currentStart;
+      if (length >= minRun) {
+        plateaus.push({
+          startDate: history[currentStart]!.date,
+          endDate: history[i - 1]!.date,
+          length,
+          value: currentValue,
+        });
+      }
+      currentStart = i;
+      currentValue = point;
+      continue;
+    }
+    
+    // Also skip if current value is UNKNOWN
+    if (currentValue.regimeLabel === 'UNKNOWN' || currentValue.greenPct === null) {
+      currentStart = i;
+      currentValue = point;
+      continue;
+    }
+    
     const isIdentical =
       point.greenPct === currentValue.greenPct &&
       (point.yellowPct || 0) === (currentValue.yellowPct || 0) &&
@@ -452,36 +477,41 @@ function main() {
     );
 
     if (explain) {
-      console.log(`\n  Analyzing...`);
-      const explanation = explainPlateau(deckId, plateau.startDate, plateau.endDate, metaIndex);
-
-      console.log(`  Total tickers: ${explanation.totalTickers}`);
-      console.log(`  Tickers with status changes: ${explanation.changedCount}`);
-
-      if (explanation.missingBars.length > 0) {
-        console.log(`\n  ⚠️  BUG SUSPICION: Missing EOD bars detected:`);
-        for (const missing of explanation.missingBars.slice(0, 10)) {
-          console.log(`    - ${missing.ticker} missing bar for ${missing.date}`);
-        }
-        if (explanation.missingBars.length > 10) {
-          console.log(`    ... and ${explanation.missingBars.length - 10} more`);
-        }
-        console.log(`\n  ⚠️  Missing EOD bars may cause carry-forward/last-known behavior.`);
-      } else if (explanation.changedCount === 0) {
-        console.log(`\n  ✅ Likely legitimate: no status flips in this window (rules are slow-moving).`);
+      // Skip explanation if plateau is UNKNOWN
+      if (plateau.value.regimeLabel === 'UNKNOWN' || plateau.value.greenPct === null) {
+        console.log(`\n  ⚠️  Plateau contains UNKNOWN points (insufficient history) - skipping explanation`);
       } else {
-        console.log(`\n  ℹ️  Offset churn: statuses changed but counts stayed constant (flatline is expected).`);
-        if (explanation.changes.length > 0 && explanation.changes.length <= 20) {
-          console.log(`\n  Status changes:`);
-          for (const change of explanation.changes) {
-            console.log(`    - ${change.ticker}: ${change.startStatus} → ${change.endStatus}`);
+        console.log(`\n  Analyzing...`);
+        const explanation = explainPlateau(deckId, plateau.startDate, plateau.endDate, metaIndex);
+
+        console.log(`  Total tickers: ${explanation.totalTickers}`);
+        console.log(`  Tickers with status changes: ${explanation.changedCount}`);
+
+        if (explanation.missingBars.length > 0) {
+          console.log(`\n  ⚠️  BUG SUSPICION: Missing EOD bars detected:`);
+          for (const missing of explanation.missingBars.slice(0, 10)) {
+            console.log(`    - ${missing.ticker} missing bar for ${missing.date}`);
           }
-        } else if (explanation.changes.length > 20) {
-          console.log(`\n  Status changes (showing first 20):`);
-          for (const change of explanation.changes.slice(0, 20)) {
-            console.log(`    - ${change.ticker}: ${change.startStatus} → ${change.endStatus}`);
+          if (explanation.missingBars.length > 10) {
+            console.log(`    ... and ${explanation.missingBars.length - 10} more`);
           }
-          console.log(`    ... and ${explanation.changes.length - 20} more`);
+          console.log(`\n  ⚠️  Missing EOD bars may cause carry-forward/last-known behavior.`);
+        } else if (explanation.changedCount === 0) {
+          console.log(`\n  ✅ Likely legitimate: no status flips in this window (rules are slow-moving).`);
+        } else {
+          console.log(`\n  ℹ️  Offset churn: statuses changed but counts stayed constant (flatline is expected).`);
+          if (explanation.changes.length > 0 && explanation.changes.length <= 20) {
+            console.log(`\n  Status changes:`);
+            for (const change of explanation.changes) {
+              console.log(`    - ${change.ticker}: ${change.startStatus} → ${change.endStatus}`);
+            }
+          } else if (explanation.changes.length > 20) {
+            console.log(`\n  Status changes (showing first 20):`);
+            for (const change of explanation.changes.slice(0, 20)) {
+              console.log(`    - ${change.ticker}: ${change.startStatus} → ${change.endStatus}`);
+            }
+            console.log(`    ... and ${explanation.changes.length - 20} more`);
+          }
         }
       }
     }

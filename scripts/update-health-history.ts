@@ -204,13 +204,25 @@ function computeTickerSnapshotForDate(
 }
 
 /**
+ * Get minimum known percentage threshold (default 0.9 = 90%)
+ */
+function getMinKnownPct(): number {
+  const raw = process.env.TREND100_MIN_KNOWN_PCT;
+  if (!raw || raw.trim() === '') return 0.9;
+  const parsed = parseFloat(raw);
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1) return 0.9;
+  return parsed;
+}
+
+/**
  * Compute health history point for a specific date (offline, from EOD cache)
+ * Returns null if insufficient data, or a point (possibly UNKNOWN if validity check fails)
  */
 function computeHealthForDate(
   deckId: TrendDeckId,
   targetDate: string,
   metaIndex: Record<string, { subtitle?: string; name?: string }>
-): TrendHealthHistoryPoint | null {
+): { point: TrendHealthHistoryPoint; tickers: TrendTickerSnapshot[] } | null {
   const deck = getDeck(deckId);
   const tickers: TrendTickerSnapshot[] = [];
 
@@ -243,16 +255,116 @@ function computeHealthForDate(
     return null;
   }
 
-  // Compute health summary
+  const totalTickers = deck.universe.length;
   const statuses = tickers.map((t) => t.status);
-  const health = computeHealthScore({ statuses });
+  const knownStatuses = statuses.filter((s) => s !== 'UNKNOWN');
+  const knownCount = knownStatuses.length;
+  const unknownCount = totalTickers - knownCount;
+
+  // Validity check: if knownCount / totalTickers < MIN_KNOWN_PCT, mark as UNKNOWN
+  const minKnownPct = getMinKnownPct();
+  const knownPct = knownCount / totalTickers;
+
+  if (knownPct < minKnownPct) {
+    // Insufficient data - return UNKNOWN point
+    return {
+      point: {
+        date: targetDate,
+        greenPct: null,
+        yellowPct: null,
+        redPct: null,
+        regimeLabel: 'UNKNOWN',
+        diffusionPct: null,
+        knownCount,
+        unknownCount,
+        totalTickers,
+      },
+      tickers,
+    };
+  }
+
+  // Compute health summary from known statuses only
+  const health = computeHealthScore({ statuses: knownStatuses });
 
   return {
-    date: targetDate,
-    greenPct: health.greenPct,
-    yellowPct: health.yellowPct,
-    redPct: health.redPct,
-    regimeLabel: health.regimeLabel,
+    point: {
+      date: targetDate,
+      greenPct: health.greenPct,
+      yellowPct: health.yellowPct,
+      redPct: health.redPct,
+      regimeLabel: health.regimeLabel,
+      knownCount,
+      unknownCount,
+      totalTickers,
+    },
+    tickers,
+  };
+}
+
+/**
+ * Compute diffusion (status flip percentage) between two dates
+ */
+function computeDiffusion(
+  deckId: TrendDeckId,
+  date1: string,
+  date2: string,
+  metaIndex: Record<string, { subtitle?: string; name?: string }>
+): { diffusionPct: number | null; diffusionCount: number; diffusionTotalCompared: number } {
+  const result1 = computeHealthForDate(deckId, date1, metaIndex);
+  const result2 = computeHealthForDate(deckId, date2, metaIndex);
+
+  if (!result1 || !result2) {
+    return { diffusionPct: null, diffusionCount: 0, diffusionTotalCompared: 0 };
+  }
+
+  // If either date is UNKNOWN, diffusion is unavailable
+  if (result1.point.regimeLabel === 'UNKNOWN' || result2.point.regimeLabel === 'UNKNOWN') {
+    return { diffusionPct: null, diffusionCount: 0, diffusionTotalCompared: 0 };
+  }
+
+  // Build maps of ticker -> status for both dates
+  const statusMap1 = new Map<string, string>();
+  const statusMap2 = new Map<string, string>();
+
+  for (const ticker of result1.tickers) {
+    if (ticker.status !== 'UNKNOWN') {
+      statusMap1.set(ticker.ticker, ticker.status);
+    }
+  }
+  for (const ticker of result2.tickers) {
+    if (ticker.status !== 'UNKNOWN') {
+      statusMap2.set(ticker.ticker, ticker.status);
+    }
+  }
+
+  // Find tickers that are known on both dates
+  const comparedTickers = new Set<string>();
+  for (const ticker of statusMap1.keys()) {
+    if (statusMap2.has(ticker)) {
+      comparedTickers.add(ticker);
+    }
+  }
+
+  if (comparedTickers.size === 0) {
+    return { diffusionPct: null, diffusionCount: 0, diffusionTotalCompared: 0 };
+  }
+
+  // Count flips
+  let flips = 0;
+  for (const ticker of comparedTickers) {
+    const status1 = statusMap1.get(ticker)!;
+    const status2 = statusMap2.get(ticker)!;
+    if (status1 !== status2) {
+      flips++;
+    }
+  }
+
+  const diffusionPct = Math.round((flips / comparedTickers.size) * 1000) / 10;
+
+  return {
+    diffusionPct,
+    diffusionCount: flips,
+    diffusionTotalCompared: comparedTickers.size,
   };
 }
 
@@ -311,28 +423,52 @@ function backfillDeckHistory(
     return [];
   }
 
-  // Compute health for each trading day
+  // Compute health for each trading day with diffusion
   const newPoints: TrendHealthHistoryPoint[] = [];
   let computed = 0;
-  let skipped = 0;
+  let unknown = 0;
+  let prevDate: string | null = null;
+  let prevTickers: TrendTickerSnapshot[] | null = null;
 
   for (const date of tradingDays) {
-    const point = computeHealthForDate(deckId, date, metaIndex);
-    if (point) {
-      // Skip all-zero or UNKNOWN points to prevent cliff-drops
-      const totalPct = (point.greenPct || 0) + (point.yellowPct || 0) + (point.redPct || 0);
-      if (totalPct === 0 || point.regimeLabel === 'UNKNOWN') {
-        skipped++;
-        continue;
-      }
-      newPoints.push(point);
-      computed++;
-    } else {
-      skipped++;
+    const result = computeHealthForDate(deckId, date, metaIndex);
+    if (!result) {
+      unknown++;
+      continue;
     }
+
+    let point = result.point;
+
+    // Compute diffusion if we have previous day
+    if (prevDate && prevTickers && point.regimeLabel !== 'UNKNOWN') {
+      const diffusion = computeDiffusion(deckId, prevDate, date, metaIndex);
+      point = {
+        ...point,
+        diffusionPct: diffusion.diffusionPct,
+        diffusionCount: diffusion.diffusionCount,
+        diffusionTotalCompared: diffusion.diffusionTotalCompared,
+      };
+    } else {
+      point = {
+        ...point,
+        diffusionPct: null,
+      };
+    }
+
+    // Include UNKNOWN points (they won't be plotted but preserve timeline)
+    newPoints.push(point);
+    if (point.regimeLabel === 'UNKNOWN') {
+      unknown++;
+    } else {
+      computed++;
+    }
+
+    // Update previous for next iteration
+    prevDate = date;
+    prevTickers = result.tickers;
   }
 
-  console.log(`  Computed ${computed} points, skipped ${skipped} (insufficient data)`);
+  console.log(`  Computed ${computed} valid points, ${unknown} UNKNOWN (insufficient history)`);
 
   // Load existing history and merge
   const existingHistory = loadHistory(deckId);
@@ -363,22 +499,47 @@ function updateDeckHistory(deckId: TrendDeckId): void {
   // Load existing history
   const existingHistory = loadHistory(deckId);
 
-  // Skip if all zeros or UNKNOWN to prevent cliff-drops
-  const totalPct = snapshot.health.greenPct + snapshot.health.yellowPct + snapshot.health.redPct;
-  if (totalPct === 0 || snapshot.health.regimeLabel === 'UNKNOWN') {
-    console.log(`  ⚠️  Skipping health history entry for ${deckId}: all zeros or UNKNOWN (date: ${asOfDate})`);
+  // Build metadata index for recomputing previous day
+  const metaIndex = buildTickerMetaIndex();
+
+  // Recompute today's health with validity check
+  const todayResult = computeHealthForDate(deckId, asOfDate, metaIndex);
+  if (!todayResult) {
+    console.log(`  ⚠️  Skipping health history entry for ${deckId}: no data available (date: ${asOfDate})`);
     return;
   }
 
-  // Create entry using snapshot.asOfDate (not "today") to avoid weekend/invalid dates
-  const entry: TrendHealthHistoryPoint = {
-    date: asOfDate,
-    greenPct: snapshot.health.greenPct,
-    yellowPct: snapshot.health.yellowPct,
-    redPct: snapshot.health.redPct,
-    regimeLabel: snapshot.health.regimeLabel,
-  };
+  let entry = todayResult.point;
 
+  // Compute diffusion: find previous trading day and compare
+  let prevTradingDate: string | null = null;
+  if (existingHistory.length > 0) {
+    // Find most recent valid point (or just latest if we want to compare even with UNKNOWN)
+    for (let i = existingHistory.length - 1; i >= 0; i--) {
+      const prev = existingHistory[i]!;
+      if (prev.date < asOfDate) {
+        prevTradingDate = prev.date;
+        break;
+      }
+    }
+  }
+
+  if (prevTradingDate && entry.regimeLabel !== 'UNKNOWN') {
+    const diffusion = computeDiffusion(deckId, prevTradingDate, asOfDate, metaIndex);
+    entry = {
+      ...entry,
+      diffusionPct: diffusion.diffusionPct,
+      diffusionCount: diffusion.diffusionCount,
+      diffusionTotalCompared: diffusion.diffusionTotalCompared,
+    };
+  } else {
+    entry = {
+      ...entry,
+      diffusionPct: null,
+    };
+  }
+
+  // Include UNKNOWN points (they won't be plotted but preserve timeline)
   // Merge with existing (dedupe by date) and trim to retention window
   const retentionDays = getHealthHistoryRetentionDays();
   const mergedHistory = mergeAndTrimTimeSeries(
@@ -391,8 +552,12 @@ function updateDeckHistory(deckId: TrendDeckId): void {
   // Save merged and trimmed history
   saveHistory(deckId, mergedHistory);
 
-  const wasNew = existingHistory.findIndex((p) => p.date === today) < 0;
-  console.log(`  ${wasNew ? 'Added' : 'Updated'} entry for ${today}`);
+  const wasNew = existingHistory.findIndex((p) => p.date === asOfDate) < 0;
+  const statusLabel = entry.regimeLabel === 'UNKNOWN' ? 'UNKNOWN' : 'valid';
+  console.log(`  ${wasNew ? 'Added' : 'Updated'} entry for ${asOfDate} (${statusLabel})`);
+  if (entry.diffusionPct !== null) {
+    console.log(`  Diffusion: ${entry.diffusionPct}% (${entry.diffusionCount}/${entry.diffusionTotalCompared} flips)`);
+  }
   console.log(
     `  Total entries: ${mergedHistory.length} (retention: ${retentionDays === 0 ? 'none' : `${retentionDays} days`})`
   );

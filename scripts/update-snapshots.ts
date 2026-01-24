@@ -31,6 +31,8 @@ import { calcSMA, calcEMA, resampleDailyToWeekly } from '../src/modules/trend100
 import { classifyTrend } from '../src/modules/trend100/engine/classifyTrend';
 import { computeHealthScore } from '../src/modules/trend100/engine/healthScore';
 import { mergeAndTrimTimeSeries } from './timeSeriesUtils';
+import { buildTickerMetaIndex, enrichUniverseItemMeta } from '../src/modules/trend100/data/tickerMeta';
+import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
 
 /**
  * Health-history retention policy (calendar days).
@@ -52,6 +54,268 @@ function getHealthHistoryRetentionDays(): number {
     return 0;
   }
   return Math.max(0, parsed);
+}
+
+/**
+ * Get minimum known percentage threshold (default 0.9 = 90%)
+ */
+function getMinKnownPct(): number {
+  const raw = process.env.TREND100_MIN_KNOWN_PCT;
+  if (!raw || raw.trim() === '') return 0.9;
+  const parsed = parseFloat(raw);
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1) return 0.9;
+  return parsed;
+}
+
+/**
+ * Load EOD cache file for a symbol (offline, no API calls)
+ */
+function loadEodCache(symbol: string): EodBar[] | null {
+  const cacheDir = join(process.cwd(), 'data', 'marketstack', 'eod');
+  const fileName = `${symbol.replace(/\./g, '_')}.json`;
+  const filePath = join(cacheDir, fileName);
+
+  if (!existsSync(filePath)) {
+    return null;
+  }
+
+  try {
+    const content = readFileSync(filePath, 'utf-8');
+    const bars = JSON.parse(content) as EodBar[];
+    if (!Array.isArray(bars)) {
+      return null;
+    }
+    return bars.sort((a, b) => a.date.localeCompare(b.date));
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Compute ticker snapshot for a specific date from EOD bars (reused from update-health-history.ts)
+ */
+function computeTickerSnapshotForDate(
+  item: { ticker: string; tags: string[]; section?: string; subtitle?: string; name?: string },
+  eodBars: EodBar[],
+  targetDate: string
+): TrendTickerSnapshot | null {
+  const barsUpToDate = eodBars.filter((bar) => bar.date <= targetDate);
+
+  if (barsUpToDate.length === 0) {
+    return null;
+  }
+
+  const latestBar = barsUpToDate[barsUpToDate.length - 1]!;
+  const latestClose = latestBar.close;
+  const prevBar = barsUpToDate.length > 1 ? barsUpToDate[barsUpToDate.length - 2] : null;
+  const changePct = prevBar
+    ? ((latestClose - prevBar.close) / prevBar.close) * 100
+    : undefined;
+
+  const dailyCloses = barsUpToDate.map((bar) => bar.close);
+  const sma200Daily = calcSMA(dailyCloses, 200);
+  const sma200Latest = sma200Daily[sma200Daily.length - 1];
+
+  const weeklyBars = resampleDailyToWeekly(barsUpToDate);
+  if (weeklyBars.length < 50) {
+    return {
+      ticker: item.ticker,
+      tags: item.tags,
+      section: item.section,
+      subtitle: item.subtitle,
+      name: item.name,
+      status: 'UNKNOWN',
+      price: latestClose,
+      changePct: changePct ? Math.round(changePct * 100) / 100 : undefined,
+      sma200: sma200Latest ? Math.round(sma200Latest * 100) / 100 : undefined,
+    };
+  }
+
+  const weeklyCloses = weeklyBars.map((bar) => bar.close);
+  const sma50wWeekly = calcSMA(weeklyCloses, 50);
+  const ema50wWeekly = calcEMA(weeklyCloses, 50);
+  const sma50wLatest = sma50wWeekly[sma50wWeekly.length - 1];
+  const ema50wLatest = ema50wWeekly[ema50wWeekly.length - 1];
+
+  const status = classifyTrend({
+    price: latestClose,
+    sma200: sma200Latest,
+    sma50w: sma50wLatest,
+    ema50w: ema50wLatest,
+  });
+
+  const distanceTo200dPct =
+    sma200Latest !== undefined
+      ? Math.round(((latestClose - sma200Latest) / sma200Latest) * 10000) / 100
+      : undefined;
+
+  const upperBand =
+    sma50wLatest !== undefined && ema50wLatest !== undefined
+      ? Math.max(sma50wLatest, ema50wLatest)
+      : undefined;
+  const distanceToUpperBandPct =
+    upperBand !== undefined
+      ? Math.round(((latestClose - upperBand) / upperBand) * 10000) / 100
+      : undefined;
+
+  return {
+    ticker: item.ticker,
+    tags: item.tags,
+    section: item.section,
+    subtitle: item.subtitle,
+    name: item.name,
+    status,
+    price: Math.round(latestClose * 100) / 100,
+    changePct: changePct ? Math.round(changePct * 100) / 100 : undefined,
+    sma200: sma200Latest ? Math.round(sma200Latest * 100) / 100 : undefined,
+    sma50w: sma50wLatest ? Math.round(sma50wLatest * 100) / 100 : undefined,
+    ema50w: ema50wLatest ? Math.round(ema50wLatest * 100) / 100 : undefined,
+    distanceTo200dPct,
+    distanceToUpperBandPct,
+  };
+}
+
+/**
+ * Compute health for a specific date (offline, from EOD cache)
+ */
+function computeHealthForDate(
+  deckId: TrendDeckId,
+  targetDate: string,
+  metaIndex: Record<string, { subtitle?: string; name?: string }>
+): { point: TrendHealthHistoryPoint; tickers: TrendTickerSnapshot[] } | null {
+  const deck = getDeck(deckId);
+  const tickers: TrendTickerSnapshot[] = [];
+
+  for (const item of deck.universe) {
+    const providerSymbol = item.providerTicker ?? item.ticker;
+    const eodBars = loadEodCache(providerSymbol);
+
+    if (!eodBars || eodBars.length === 0) {
+      continue;
+    }
+
+    const enrichedMeta = enrichUniverseItemMeta(item, metaIndex);
+    const enrichedItem = {
+      ...item,
+      subtitle: enrichedMeta.subtitle,
+      name: enrichedMeta.name,
+    };
+
+    const snapshot = computeTickerSnapshotForDate(enrichedItem, eodBars, targetDate);
+    if (snapshot) {
+      tickers.push(snapshot);
+    }
+  }
+
+  if (tickers.length === 0) {
+    return null;
+  }
+
+  const totalTickers = deck.universe.length;
+  const statuses = tickers.map((t) => t.status);
+  const knownStatuses = statuses.filter((s) => s !== 'UNKNOWN');
+  const knownCount = knownStatuses.length;
+  const unknownCount = totalTickers - knownCount;
+
+  // Validity check: if knownCount / totalTickers < MIN_KNOWN_PCT, mark as UNKNOWN
+  const minKnownPct = getMinKnownPct();
+  const knownPct = knownCount / totalTickers;
+
+  if (knownPct < minKnownPct) {
+    return {
+      point: {
+        date: targetDate,
+        greenPct: null,
+        yellowPct: null,
+        redPct: null,
+        regimeLabel: 'UNKNOWN',
+        diffusionPct: null,
+        knownCount,
+        unknownCount,
+        totalTickers,
+      },
+      tickers,
+    };
+  }
+
+  const health = computeHealthScore({ statuses: knownStatuses });
+
+  return {
+    point: {
+      date: targetDate,
+      greenPct: health.greenPct,
+      yellowPct: health.yellowPct,
+      redPct: health.redPct,
+      regimeLabel: health.regimeLabel,
+      knownCount,
+      unknownCount,
+      totalTickers,
+    },
+    tickers,
+  };
+}
+
+/**
+ * Compute diffusion (status flip percentage) between two dates
+ */
+function computeDiffusion(
+  deckId: TrendDeckId,
+  date1: string,
+  date2: string,
+  metaIndex: Record<string, { subtitle?: string; name?: string }>
+): { diffusionPct: number | null; diffusionCount: number; diffusionTotalCompared: number } {
+  const result1 = computeHealthForDate(deckId, date1, metaIndex);
+  const result2 = computeHealthForDate(deckId, date2, metaIndex);
+
+  if (!result1 || !result2) {
+    return { diffusionPct: null, diffusionCount: 0, diffusionTotalCompared: 0 };
+  }
+
+  if (result1.point.regimeLabel === 'UNKNOWN' || result2.point.regimeLabel === 'UNKNOWN') {
+    return { diffusionPct: null, diffusionCount: 0, diffusionTotalCompared: 0 };
+  }
+
+  const statusMap1 = new Map<string, string>();
+  const statusMap2 = new Map<string, string>();
+
+  for (const ticker of result1.tickers) {
+    if (ticker.status !== 'UNKNOWN') {
+      statusMap1.set(ticker.ticker, ticker.status);
+    }
+  }
+  for (const ticker of result2.tickers) {
+    if (ticker.status !== 'UNKNOWN') {
+      statusMap2.set(ticker.ticker, ticker.status);
+    }
+  }
+
+  const comparedTickers = new Set<string>();
+  for (const ticker of statusMap1.keys()) {
+    if (statusMap2.has(ticker)) {
+      comparedTickers.add(ticker);
+    }
+  }
+
+  if (comparedTickers.size === 0) {
+    return { diffusionPct: null, diffusionCount: 0, diffusionTotalCompared: 0 };
+  }
+
+  let flips = 0;
+  for (const ticker of comparedTickers) {
+    const status1 = statusMap1.get(ticker)!;
+    const status2 = statusMap2.get(ticker)!;
+    if (status1 !== status2) {
+      flips++;
+    }
+  }
+
+  const diffusionPct = Math.round((flips / comparedTickers.size) * 1000) / 10;
+
+  return {
+    diffusionPct,
+    diffusionCount: flips,
+    diffusionTotalCompared: comparedTickers.size,
+  };
 }
 
 // Get today's date in YYYY-MM-DD format
@@ -331,6 +595,7 @@ async function main() {
   // Step 5: Update health history files
   console.log('\n📈 Updating health history files...\n');
   const retentionDays = getHealthHistoryRetentionDays();
+  const metaIndex = buildTickerMetaIndex();
   
   for (const deckId of deckIds) {
     const snapshot = snapshots.get(deckId);
@@ -339,22 +604,43 @@ async function main() {
     // Load existing history
     const existingHistory = loadHistory(deckId);
 
-    // Create entry using snapshot.asOfDate (not "today") to avoid weekend/invalid dates
-    // Skip if all zeros or UNKNOWN to prevent cliff-drops
-    const totalPct = snapshot.health.greenPct + snapshot.health.yellowPct + snapshot.health.redPct;
-    if (totalPct === 0 || snapshot.health.regimeLabel === 'UNKNOWN') {
-      console.log(`  ⚠️  Skipping health history entry for ${deckId}: all zeros or UNKNOWN (date: ${snapshot.asOfDate})`);
-      return;
+    // Recompute today's health with validity check (to get knownCount/unknownCount)
+    const todayResult = computeHealthForDate(deckId, snapshot.asOfDate, metaIndex);
+    if (!todayResult) {
+      console.log(`  ⚠️  Skipping health history entry for ${deckId}: no data available (date: ${snapshot.asOfDate})`);
+      continue;
     }
 
-    const entry: TrendHealthHistoryPoint = {
-      date: snapshot.asOfDate, // Use asOfDate (effective trading day), not "today"
-      greenPct: snapshot.health.greenPct,
-      yellowPct: snapshot.health.yellowPct,
-      redPct: snapshot.health.redPct,
-      regimeLabel: snapshot.health.regimeLabel,
-    };
+    let entry = todayResult.point;
 
+    // Compute diffusion: find previous trading day and compare
+    let prevTradingDate: string | null = null;
+    if (existingHistory.length > 0) {
+      for (let i = existingHistory.length - 1; i >= 0; i--) {
+        const prev = existingHistory[i]!;
+        if (prev.date < snapshot.asOfDate) {
+          prevTradingDate = prev.date;
+          break;
+        }
+      }
+    }
+
+    if (prevTradingDate && entry.regimeLabel !== 'UNKNOWN') {
+      const diffusion = computeDiffusion(deckId, prevTradingDate, snapshot.asOfDate, metaIndex);
+      entry = {
+        ...entry,
+        diffusionPct: diffusion.diffusionPct,
+        diffusionCount: diffusion.diffusionCount,
+        diffusionTotalCompared: diffusion.diffusionTotalCompared,
+      };
+    } else {
+      entry = {
+        ...entry,
+        diffusionPct: null,
+      };
+    }
+
+    // Include UNKNOWN points (they won't be plotted but preserve timeline)
     // Merge with existing (dedupe by date) and trim to retention window
     const mergedHistory = mergeAndTrimTimeSeries(
       existingHistory,
@@ -365,9 +651,13 @@ async function main() {
 
     // Save merged and trimmed history
     saveHistory(deckId, mergedHistory);
+    const statusLabel = entry.regimeLabel === 'UNKNOWN' ? 'UNKNOWN' : 'valid';
     console.log(
-      `  ✓ Updated health history for ${deckId}: ${mergedHistory.length} points (retention: ${retentionDays === 0 ? 'none' : `${retentionDays} days`})`
+      `  ✓ Updated health history for ${deckId}: ${mergedHistory.length} points (${statusLabel}, retention: ${retentionDays === 0 ? 'none' : `${retentionDays} days`})`
     );
+    if (entry.diffusionPct !== null) {
+      console.log(`    Diffusion: ${entry.diffusionPct}% (${entry.diffusionCount}/${entry.diffusionTotalCompared} flips)`);
+    }
   }
 
   console.log('\n✅ Snapshot update complete for all decks!');

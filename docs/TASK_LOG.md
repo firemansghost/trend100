@@ -1,5 +1,46 @@
 # TASK LOG — Trend100
 
+### 2026-01-22 — Add diffusion layer and omit insufficient-history points
+**Completed:**
+- Added diffusion computation: % of tickers that changed status vs previous trading day
+- Added validity check (TREND100_MIN_KNOWN_PCT, default 0.9): marks points as UNKNOWN if <90% tickers have known status
+- Updated TrendHealthHistoryPoint type to support null greenPct/yellowPct/redPct and diffusion fields
+- Updated both update-health-history.ts and update-snapshots.ts to compute diffusion and handle UNKNOWN
+- Updated UI: added diffusion toggle, chart handles nulls (connectNulls={false}), tooltip shows diffusion and UNKNOWN status
+- Updated verification scripts to handle UNKNOWN points (ignore in warm-up checks, count valid vs UNKNOWN)
+
+**Changed:**
+- src/modules/trend100/types.ts: TrendHealthHistoryPoint now supports null values and diffusion fields
+- scripts/update-health-history.ts: Added validity check, diffusion computation, UNKNOWN handling
+- scripts/update-snapshots.ts: Added validity check, diffusion computation, UNKNOWN handling
+- src/modules/trend100/ui/HealthHistoryChart.tsx: Added diffusion series, null handling, updated tooltip
+- src/modules/trend100/ui/Trend100Dashboard.tsx: Added diffusion toggle, first valid point notice
+- scripts/verify-artifacts.ts: Counts valid vs UNKNOWN, shows firstValidDate
+- scripts/verify-history-retention.ts: Ignores UNKNOWN in warm-up checks
+- scripts/analyze-health-plateaus.ts: Ignores UNKNOWN when detecting plateaus
+
+**Root Cause:**
+- Early warm-up periods showed fake "0%" lines because points were computed with insufficient lookback
+- No visibility into status churn (diffusion) to understand why plateaus occur
+- Discrete % rounding + slow-moving rules can create legitimate flatlines
+
+**Solution:**
+- Validity check: if <90% tickers have known status, mark point as UNKNOWN (omit from plot)
+- Diffusion: compute % of tickers that flipped status vs previous day (helps explain plateaus)
+- UI: show gaps for UNKNOWN points, optional diffusion overlay, tooltip shows both metrics
+
+**How to Use:**
+- Toggle "Diffusion" button to see status flip percentage over time
+- UNKNOWN points are automatically omitted from chart (gaps shown)
+- Tune TREND100_MIN_KNOWN_PCT (0-1) to adjust validity threshold
+
+**Verification:**
+- Run pnpm verify:artifacts - should show valid/UNKNOWN counts and firstValidDate
+- Early history should show gaps instead of fake 0% lines
+- Diffusion should show non-zero values on days with status changes
+
+---
+
 ### 2026-01-22 — Add plateau analysis script to diagnose health history flatlines
 **Completed:**
 - Created scripts/analyze-health-plateaus.ts to detect and explain consecutive identical health points

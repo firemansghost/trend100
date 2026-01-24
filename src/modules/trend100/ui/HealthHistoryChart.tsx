@@ -19,6 +19,7 @@ import type { TrendHealthHistoryPoint } from '../types';
 
 interface HealthHistoryChartProps {
   data: TrendHealthHistoryPoint[];
+  showDiffusion?: boolean;
 }
 
 /**
@@ -35,20 +36,36 @@ function formatTickLabel(dateStr: string, isLongRange: boolean): string {
 /**
  * Custom tooltip for the chart - always shows full daily date
  */
-function CustomTooltip({ active, payload }: any) {
+function CustomTooltip({ active, payload, showDiffusion }: any) {
   if (active && payload && payload.length) {
     const data = payload[0].payload as TrendHealthHistoryPoint;
+    
+    // Handle UNKNOWN points
+    if (data.regimeLabel === 'UNKNOWN' || data.greenPct === null) {
+      return (
+        <div className="bg-zinc-800 border border-zinc-700 rounded p-2 shadow-lg">
+          <p className="text-xs text-zinc-400 mb-1">{data.date}</p>
+          <p className="text-xs text-zinc-500">Unavailable (insufficient history)</p>
+        </div>
+      );
+    }
+    
     return (
       <div className="bg-zinc-800 border border-zinc-700 rounded p-2 shadow-lg">
         <p className="text-xs text-zinc-400 mb-1">{data.date}</p>
         <p className="text-sm font-semibold text-green-400">
           Green: {data.greenPct}%
         </p>
-        {data.yellowPct !== undefined && (
+        {data.yellowPct !== undefined && data.yellowPct !== null && (
           <p className="text-xs text-yellow-400">Yellow: {data.yellowPct}%</p>
         )}
-        {data.redPct !== undefined && (
+        {data.redPct !== undefined && data.redPct !== null && (
           <p className="text-xs text-red-400">Red: {data.redPct}%</p>
+        )}
+        {showDiffusion && data.diffusionPct !== null && data.diffusionPct !== undefined && (
+          <p className="text-xs text-blue-400 mt-1">
+            Diffusion: {data.diffusionPct}%
+          </p>
         )}
       </div>
     );
@@ -56,7 +73,7 @@ function CustomTooltip({ active, payload }: any) {
   return null;
 }
 
-export function HealthHistoryChart({ data }: HealthHistoryChartProps) {
+export function HealthHistoryChart({ data, showDiffusion = false }: HealthHistoryChartProps) {
   // Determine if we should use compact date format for labels (for longer ranges)
   const isLongRange = data.length > 180;
 
@@ -96,7 +113,7 @@ export function HealthHistoryChart({ data }: HealthHistoryChartProps) {
             domain={[0, 100]}
             label={{ value: '%', position: 'insideLeft', fill: '#71717a' }}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={(props) => <CustomTooltip {...props} showDiffusion={showDiffusion} />} />
           <Line
             type="monotone"
             dataKey="greenPct"
@@ -104,7 +121,20 @@ export function HealthHistoryChart({ data }: HealthHistoryChartProps) {
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 4, fill: '#22c55e' }}
+            connectNulls={false}
           />
+          {showDiffusion && (
+            <Line
+              type="monotone"
+              dataKey="diffusionPct"
+              stroke="#3b82f6"
+              strokeWidth={1.5}
+              strokeDasharray="3 3"
+              dot={false}
+              activeDot={{ r: 3, fill: '#3b82f6' }}
+              connectNulls={false}
+            />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </div>

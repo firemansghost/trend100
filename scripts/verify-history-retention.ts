@@ -116,6 +116,7 @@ function verifyDeckHistory(deckId: TrendDeckId): { ok: boolean; message: string 
   
   // Check for warm-up issues (points with zero health), but only in the recent window.
   // With long-run retention, early "warm-up" zeros are expected and should not fail forever.
+  // Ignore UNKNOWN points when evaluating warm-up (they're expected early in history).
   const latestDateStr = history.length > 0 ? history[history.length - 1]!.date : null;
   const windowDays = Math.max(
     1,
@@ -133,12 +134,17 @@ function verifyDeckHistory(deckId: TrendDeckId): { ok: boolean; message: string 
     ? history.filter((p) => p.date >= windowStartStr)
     : history;
 
-  const zeroPoints = windowHistory.filter((p) => {
+  // Filter to valid points only (exclude UNKNOWN)
+  const validWindowHistory = windowHistory.filter(
+    (p) => p.greenPct !== null && p.regimeLabel !== 'UNKNOWN'
+  );
+
+  const zeroPoints = validWindowHistory.filter((p) => {
     const totalPct = (p.greenPct || 0) + (p.yellowPct || 0) + (p.redPct || 0);
     return totalPct === 0;
   });
   const zeroPct =
-    windowHistory.length > 0 ? (zeroPoints.length / windowHistory.length) * 100 : 0;
+    validWindowHistory.length > 0 ? (zeroPoints.length / validWindowHistory.length) * 100 : 0;
   
   // Check if cache should be extended (if we expect >= 730 days but have many zero points)
   const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
@@ -146,7 +152,7 @@ function verifyDeckHistory(deckId: TrendDeckId): { ok: boolean; message: string 
   
   if (cacheDays >= EXPECTED_CACHE_DAYS && zeroPct > MAX_ZERO_PCT) {
     const message =
-      `${deckId}: ${zeroPct.toFixed(1)}% zero points (${zeroPoints.length}/${windowHistory.length}) ` +
+      `${deckId}: ${zeroPct.toFixed(1)}% zero points (${zeroPoints.length}/${validWindowHistory.length} valid) ` +
       `in last ${windowDays} days - warm-up issue detected. Cache may need extension (expected ${cacheDays} days).`;
     
     if (strictWarmup) {

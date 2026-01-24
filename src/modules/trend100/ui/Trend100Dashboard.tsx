@@ -51,6 +51,7 @@ export function Trend100Dashboard({
   const [selectedTicker, setSelectedTicker] =
     useState<TrendTickerSnapshot | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showDiffusion, setShowDiffusion] = useState(false);
 
   // Compute deck-specific tags and counts from current deck's tickers
   const availableTags = useMemo(
@@ -108,15 +109,15 @@ export function Trend100Dashboard({
     // This prevents weekend/invalid trailing points
     let filtered = history.filter((point) => point.date <= snapshot.asOfDate);
 
-    // Step 2: Drop trailing all-zero points (belt-and-suspenders)
-    while (
-      filtered.length > 0 &&
-      (filtered[filtered.length - 1]!.greenPct || 0) +
-        (filtered[filtered.length - 1]!.yellowPct || 0) +
-        (filtered[filtered.length - 1]!.redPct || 0) ===
-        0
-    ) {
-      filtered = filtered.slice(0, -1);
+    // Step 2: Drop trailing all-zero or UNKNOWN points (belt-and-suspenders)
+    while (filtered.length > 0) {
+      const last = filtered[filtered.length - 1]!;
+      const totalPct = (last.greenPct ?? 0) + (last.yellowPct ?? 0) + (last.redPct ?? 0);
+      if (totalPct === 0 || last.regimeLabel === 'UNKNOWN') {
+        filtered = filtered.slice(0, -1);
+      } else {
+        break;
+      }
     }
 
     // Step 3: Apply timeframe filter (by date range, not point count)
@@ -140,6 +141,16 @@ export function Trend100Dashboard({
     const cutoffDateStr = cutoffDate.toISOString().split('T')[0]!;
     return filtered.filter((point) => point.date >= cutoffDateStr);
   }, [history, timeframe, snapshot.asOfDate]);
+
+  // Find first valid point in displayed range (for notice)
+  const firstValidPoint = useMemo(() => {
+    for (const point of filteredHistory) {
+      if (point.greenPct !== null && point.regimeLabel !== 'UNKNOWN') {
+        return point;
+      }
+    }
+    return null;
+  }, [filteredHistory]);
 
   const handleTileClick = (ticker: TrendTickerSnapshot) => {
     setSelectedTicker(ticker);
@@ -197,7 +208,7 @@ export function Trend100Dashboard({
                 )}
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               {(['3M', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
                 <button
                   key={tf}
@@ -211,9 +222,24 @@ export function Trend100Dashboard({
                   {tf}
                 </button>
               ))}
+              <button
+                onClick={() => setShowDiffusion(!showDiffusion)}
+                className={`px-3 py-1 text-xs rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 ${
+                  showDiffusion
+                    ? 'bg-zinc-700 text-zinc-100 border-zinc-600'
+                    : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'
+                }`}
+              >
+                Diffusion
+              </button>
             </div>
           </div>
-          <HealthHistoryChart data={filteredHistory} />
+          {firstValidPoint && filteredHistory.length > 0 && filteredHistory[0]!.date < firstValidPoint.date && (
+            <p className="text-xs text-zinc-500 mb-2">
+              Data unavailable before {firstValidPoint.date} (insufficient history)
+            </p>
+          )}
+          <HealthHistoryChart data={filteredHistory} showDiffusion={showDiffusion} />
         </div>
 
         {/* Heatmap Grid */}

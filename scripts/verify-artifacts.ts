@@ -54,36 +54,42 @@ function printHealthHistoryStats(deckId: TrendDeckId): void {
     const windowStartStr = windowStart.toISOString().split('T')[0]!;
     const windowHistory = history.filter((p) => p.date >= windowStartStr);
 
-    const zeroPoints = windowHistory.filter((p) => {
-      const totalPct = (p.greenPct || 0) + (p.yellowPct || 0) + (p.redPct || 0);
-      return totalPct === 0;
-    });
+    // Separate valid and UNKNOWN points
+    const validPoints = history.filter((p) => p.greenPct !== null && p.regimeLabel !== 'UNKNOWN');
+    const unknownPoints = history.filter((p) => p.regimeLabel === 'UNKNOWN' || p.greenPct === null);
     
-    // Find earliest date with non-zero health
-    let earliestNonZeroDate: string | null = null;
+    // Find earliest valid date
+    let firstValidDate: string | null = null;
     for (const point of history) {
-      const totalPct = (point.greenPct || 0) + (point.yellowPct || 0) + (point.redPct || 0);
-      if (totalPct > 0) {
-        earliestNonZeroDate = point.date;
+      if (point.greenPct !== null && point.regimeLabel !== 'UNKNOWN') {
+        firstValidDate = point.date;
         break;
       }
     }
     
-    const zeroPct = windowHistory.length > 0 ? (zeroPoints.length / windowHistory.length) * 100 : 0;
+    // Check for warm-up issues in valid points only (recent window)
+    const validWindowHistory = windowHistory.filter((p) => p.greenPct !== null && p.regimeLabel !== 'UNKNOWN');
+    const zeroPoints = validWindowHistory.filter((p) => {
+      const totalPct = (p.greenPct || 0) + (p.yellowPct || 0) + (p.redPct || 0);
+      return totalPct === 0;
+    });
+    
+    const zeroPct = validWindowHistory.length > 0 ? (zeroPoints.length / validWindowHistory.length) * 100 : 0;
     
     let status = '';
-    if (zeroPct > 30) {
-      status = ` ⚠️  ${zeroPct.toFixed(1)}% zero points (last ${windowDays}d)`;
-    } else if (earliestNonZeroDate && earliestNonZeroDate > earliest) {
+    if (zeroPct > 30 && validWindowHistory.length > 0) {
+      status = ` ⚠️  ${zeroPct.toFixed(1)}% zero points (last ${windowDays}d, valid only)`;
+    } else if (firstValidDate && firstValidDate > earliest) {
       const warmupDays = Math.ceil(
-        (new Date(earliestNonZeroDate).getTime() - new Date(earliest).getTime()) / (1000 * 60 * 60 * 24)
+        (new Date(firstValidDate).getTime() - new Date(earliest).getTime()) / (1000 * 60 * 60 * 24)
       );
       status = ` (warm-up: ${warmupDays} days)`;
     }
     
     console.log(`  ${deckId}: ${history.length} points (${earliest} to ${latest}, ~${days} days)${status}`);
-    if (earliestNonZeroDate && earliestNonZeroDate !== earliest) {
-      console.log(`    First non-zero: ${earliestNonZeroDate}`);
+    console.log(`    Valid: ${validPoints.length}, UNKNOWN: ${unknownPoints.length}`);
+    if (firstValidDate && firstValidDate !== earliest) {
+      console.log(`    First valid: ${firstValidDate}`);
     }
   } catch (error) {
     console.log(`  ${deckId}: Error reading file: ${error}`);

@@ -100,10 +100,18 @@ export interface TrendSnapshot {
 // Health history types
 export interface TrendHealthHistoryPoint {
   date: string; // YYYY-MM-DD
-  greenPct: number; // 0-100 (can be 1 decimal)
-  yellowPct?: number;
-  redPct?: number;
-  regimeLabel?: 'RISK_ON' | 'TRANSITION' | 'RISK_OFF';
+  greenPct: number | null; // 0-100 (can be 1 decimal), null if UNKNOWN
+  yellowPct?: number | null;
+  redPct?: number | null;
+  regimeLabel?: 'RISK_ON' | 'TRANSITION' | 'RISK_OFF' | 'UNKNOWN';
+  // Diffusion: % of tickers that changed status vs previous trading day
+  diffusionPct?: number | null; // 0-100 (1 decimal), null if unavailable
+  diffusionCount?: number; // Number of tickers that flipped
+  diffusionTotalCompared?: number; // Total tickers compared (both days known)
+  // Validity metadata (for UNKNOWN points)
+  knownCount?: number; // Number of tickers with known status (GREEN/YELLOW/RED)
+  unknownCount?: number; // Number of tickers with UNKNOWN status
+  totalTickers?: number; // Total tickers in deck
 }
 
 // Deck types

@@ -20116,5 +20116,18 @@
     "yellowPct": 41,
     "redPct": 53,
     "regimeLabel": "RISK_OFF"
+  },
+  {
+    "date": "2026-01-25",
+    "greenPct": 64,
+    "yellowPct": 4,
+    "redPct": 32,
+    "regimeLabel": "TRANSITION",
+    "knownCount": 100,
+    "unknownCount": 0,
+    "totalTickers": 100,
+    "diffusionPct": 0,
+    "diffusionCount": 0,
+    "diffusionTotalCompared": 100
   }
 ]

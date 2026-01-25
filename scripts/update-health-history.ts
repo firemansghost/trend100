@@ -23,7 +23,7 @@ import { getLatestSnapshot } from '../src/modules/trend100/data/getLatestSnapsho
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
 import { mergeAndTrimTimeSeries } from './timeSeriesUtils';
 import { buildTickerMetaIndex, enrichUniverseItemMeta } from '../src/modules/trend100/data/tickerMeta';
-import { getMinKnownPctForDeck } from '../src/modules/trend100/data/deckConfig';
+import { getMinKnownPctForDeck, getKnownDenominatorMode, getMinEligibleCountForDeck } from '../src/modules/trend100/data/deckConfig';
 import { calcSMA, calcEMA, resampleDailyToWeekly } from '../src/modules/trend100/engine/movingAverages';
 import { classifyTrend } from '../src/modules/trend100/engine/classifyTrend';
 import { computeHealthScore } from '../src/modules/trend100/engine/healthScore';
@@ -258,16 +258,75 @@ function computeHealthForDate(
   }
 
   const totalTickers = deck.universe.length;
+  
+  // Track eligible/ineligible/missing counts
+  // Eligible = has bars (known or ineligible due to insufficient lookback)
+  // Ineligible = has bars but status is UNKNOWN due to insufficient lookback
+  // Missing = no bars <= targetDate
   const statuses = tickers.map((t) => t.status);
   const knownStatuses = statuses.filter((s) => s !== 'UNKNOWN');
   const knownCount = knownStatuses.length;
-  const unknownCount = totalTickers - knownCount;
+  
+  // Count eligible (tickers with bars, even if ineligible)
+  const eligibleCount = tickers.length;
+  const ineligibleCount = statuses.filter((s) => s === 'UNKNOWN').length;
+  const missingCount = totalTickers - eligibleCount;
+  const unknownCount = ineligibleCount; // Eligible but UNKNOWN = ineligible
+  
+  // Determine denominator mode (MACRO uses eligible, others use total)
+  const denominatorMode = getKnownDenominatorMode(deckId);
+  const denominator = denominatorMode === 'eligible' ? eligibleCount : totalTickers;
+  
+  // Check minEligibleCount threshold (MACRO only)
+  const minEligibleCount = getMinEligibleCountForDeck(deckId);
+  if (denominatorMode === 'eligible') {
+    if (eligibleCount === 0) {
+      // No eligible tickers - return UNKNOWN
+      return {
+        point: {
+          date: targetDate,
+          greenPct: null,
+          yellowPct: null,
+          redPct: null,
+          regimeLabel: 'UNKNOWN',
+          diffusionPct: null,
+          knownCount,
+          unknownCount,
+          totalTickers,
+          eligibleCount: 0,
+          ineligibleCount: 0,
+          missingCount,
+        },
+        tickers,
+      };
+    }
+    if (eligibleCount < minEligibleCount) {
+      // Too few eligible tickers - return UNKNOWN
+      return {
+        point: {
+          date: targetDate,
+          greenPct: null,
+          yellowPct: null,
+          redPct: null,
+          regimeLabel: 'UNKNOWN',
+          diffusionPct: null,
+          knownCount,
+          unknownCount,
+          totalTickers,
+          eligibleCount,
+          ineligibleCount,
+          missingCount,
+        },
+        tickers,
+      };
+    }
+  }
 
-  // Validity check: if knownCount / totalTickers < MIN_KNOWN_PCT, mark as UNKNOWN
+  // Validity check: if knownCount / denominator < MIN_KNOWN_PCT, mark as UNKNOWN
   // Use per-deck override (MACRO uses lower threshold)
   const envDefault = getMinKnownPct();
   const minKnownPct = getMinKnownPctForDeck(deckId, envDefault);
-  const knownPct = knownCount / totalTickers;
+  const knownPct = denominator > 0 ? knownCount / denominator : 0;
 
   if (knownPct < minKnownPct) {
     // Insufficient data - return UNKNOWN point
@@ -282,6 +341,9 @@ function computeHealthForDate(
         knownCount,
         unknownCount,
         totalTickers,
+        eligibleCount: denominatorMode === 'eligible' ? eligibleCount : undefined,
+        ineligibleCount: denominatorMode === 'eligible' ? ineligibleCount : undefined,
+        missingCount: denominatorMode === 'eligible' ? missingCount : undefined,
       },
       tickers,
     };
@@ -300,6 +362,9 @@ function computeHealthForDate(
       knownCount,
       unknownCount,
       totalTickers,
+      eligibleCount: denominatorMode === 'eligible' ? eligibleCount : undefined,
+      ineligibleCount: denominatorMode === 'eligible' ? ineligibleCount : undefined,
+      missingCount: denominatorMode === 'eligible' ? missingCount : undefined,
     },
     tickers,
   };

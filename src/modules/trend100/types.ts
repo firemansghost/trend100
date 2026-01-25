@@ -108,10 +108,14 @@ export interface TrendHealthHistoryPoint {
   diffusionPct?: number | null; // 0-100 (1 decimal), null if unavailable
   diffusionCount?: number; // Number of tickers that flipped
   diffusionTotalCompared?: number; // Total tickers compared (both days known)
-  // Validity metadata (for UNKNOWN points)
+  // Validity metadata
   knownCount?: number; // Number of tickers with known status (GREEN/YELLOW/RED)
-  unknownCount?: number; // Number of tickers with UNKNOWN status
+  unknownCount?: number; // Number of tickers with UNKNOWN status (eligibleCount - knownCount)
   totalTickers?: number; // Total tickers in deck
+  // Eligible denominator metadata (for MACRO and similar decks)
+  eligibleCount?: number; // Number of tickers with bars (computable or ineligible)
+  ineligibleCount?: number; // Number of tickers with bars but insufficient lookback
+  missingCount?: number; // Number of tickers with no bars <= date
 }
 
 // Deck types

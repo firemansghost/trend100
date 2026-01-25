@@ -50,6 +50,18 @@ function CustomTooltip({ active, payload, showDiffusion }: any) {
       );
     }
     
+    // Show eligible context if available (MACRO deck)
+    const hasEligibleInfo = data.eligibleCount !== undefined && data.totalTickers !== undefined;
+    const eligibleInfo = hasEligibleInfo && data.eligibleCount !== data.totalTickers
+      ? `Eligible: ${data.eligibleCount} / Total: ${data.totalTickers}`
+      : null;
+    const missingInfo = data.missingCount !== undefined && data.missingCount > 0
+      ? `Missing: ${data.missingCount}`
+      : null;
+    const ineligibleInfo = data.ineligibleCount !== undefined && data.ineligibleCount > 0
+      ? `Ineligible: ${data.ineligibleCount}`
+      : null;
+
     return (
       <div className="bg-zinc-800 border border-zinc-700 rounded p-2 shadow-lg">
         <p className="text-xs text-zinc-400 mb-1">{data.date}</p>
@@ -66,6 +78,15 @@ function CustomTooltip({ active, payload, showDiffusion }: any) {
           <p className="text-xs text-blue-400 mt-1">
             Diffusion: {data.diffusionPct}%
           </p>
+        )}
+        {eligibleInfo && (
+          <p className="text-xs text-zinc-500 mt-1">{eligibleInfo}</p>
+        )}
+        {missingInfo && (
+          <p className="text-xs text-zinc-500">{missingInfo}</p>
+        )}
+        {ineligibleInfo && (
+          <p className="text-xs text-zinc-500">{ineligibleInfo}</p>
         )}
       </div>
     );

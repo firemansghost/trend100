@@ -1,5 +1,47 @@
 # TASK LOG — Trend100
 
+### 2026-01-22 — Eligible denominator for MACRO health validity
+**Completed:**
+- Added diagnostic script: scripts/analyze-known-coverage.ts to show which tickers are KNOWN/INELIGIBLE/MISSING on a given date
+- Implemented eligible denominator mode for MACRO: health % and validity computed against tickers with bars (eligible), not static deck size
+- Added eligibleCount, ineligibleCount, missingCount fields to TrendHealthHistoryPoint
+- Updated both update-health-history.ts and update-snapshots.ts to compute eligible counts and use eligible denominator for MACRO
+- Updated UI tooltip to show eligible context (Eligible: X / Total: Y) when available
+- Updated verify-artifacts.ts to show average eligible count for MACRO
+
+**Changed:**
+- scripts/analyze-known-coverage.ts: New diagnostic script
+- src/modules/trend100/types.ts: Added eligibleCount, ineligibleCount, missingCount fields
+- src/modules/trend100/data/deckConfig.ts: Added getKnownDenominatorMode() and getMinEligibleCountForDeck()
+- scripts/update-health-history.ts: Eligible denominator logic for MACRO
+- scripts/update-snapshots.ts: Eligible denominator logic for MACRO
+- src/modules/trend100/ui/HealthHistoryChart.tsx: Tooltip shows eligible context
+- scripts/verify-artifacts.ts: Shows average eligible count for MACRO
+- package.json: Added analyze:coverage script
+
+**Root Cause:**
+- MACRO deck includes inception-limited components (FBTC/FETH) that don't have data in earlier years
+- Static denominator (totalTickers) caused health points to be UNKNOWN even when most available tickers were known
+- Example: 20 tickers total, 2 missing (FBTC/FETH), 18 eligible, 15 known → 15/20 = 75% (below 90% threshold) vs 15/18 = 83% (above 70% threshold)
+
+**Solution:**
+- Eligible denominator mode (MACRO only): compute health % against eligibleCount (tickers with bars), not totalTickers
+- Validity checks:
+  - If eligibleCount === 0 → UNKNOWN
+  - If eligibleCount < minEligibleCount (default 10 for MACRO) → UNKNOWN
+  - Otherwise: knownPct = knownCount / eligibleCount, compare against minKnownPct
+- Diagnostic script helps understand coverage breakdown per date
+
+**Environment Variables:**
+- TREND100_MACRO_MIN_ELIGIBLE: Minimum eligible count for MACRO (default 10)
+
+**Verification:**
+- Run pnpm analyze:coverage -- --deck MACRO --date 2022-09-01 to see coverage breakdown
+- MACRO first valid date should move earlier after backfill with eligible denominator
+- verify-artifacts shows average eligible count for MACRO
+
+---
+
 ### 2026-01-22 — Per-deck min known pct (MACRO override)
 **Completed:**
 - Added per-deck MIN_KNOWN_PCT override system via src/modules/trend100/data/deckConfig.ts

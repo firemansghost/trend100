@@ -13,7 +13,8 @@
     "update:snapshots": "tsx scripts/update-snapshots.ts",
     "verify:artifacts": "tsx scripts/verify-artifacts.ts",
     "verify:history-retention": "tsx scripts/verify-history-retention.ts",
-    "analyze:plateaus": "tsx scripts/analyze-health-plateaus.ts"
+    "analyze:plateaus": "tsx scripts/analyze-health-plateaus.ts",
+    "analyze:coverage": "tsx scripts/analyze-known-coverage.ts"
   },
   "dependencies": {
     "next": "16.1.4",

@@ -32,7 +32,7 @@ import { classifyTrend } from '../src/modules/trend100/engine/classifyTrend';
 import { computeHealthScore } from '../src/modules/trend100/engine/healthScore';
 import { mergeAndTrimTimeSeries } from './timeSeriesUtils';
 import { buildTickerMetaIndex, enrichUniverseItemMeta } from '../src/modules/trend100/data/tickerMeta';
-import { getMinKnownPctForDeck } from '../src/modules/trend100/data/deckConfig';
+import { getMinKnownPctForDeck, getKnownDenominatorMode, getMinEligibleCountForDeck } from '../src/modules/trend100/data/deckConfig';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
 
 /**
@@ -214,16 +214,68 @@ function computeHealthForDate(
   }
 
   const totalTickers = deck.universe.length;
+  
+  // Track eligible/ineligible/missing counts
   const statuses = tickers.map((t) => t.status);
   const knownStatuses = statuses.filter((s) => s !== 'UNKNOWN');
   const knownCount = knownStatuses.length;
-  const unknownCount = totalTickers - knownCount;
+  
+  const eligibleCount = tickers.length;
+  const ineligibleCount = statuses.filter((s) => s === 'UNKNOWN').length;
+  const missingCount = totalTickers - eligibleCount;
+  const unknownCount = ineligibleCount;
+  
+  // Determine denominator mode (MACRO uses eligible, others use total)
+  const denominatorMode = getKnownDenominatorMode(deckId);
+  const denominator = denominatorMode === 'eligible' ? eligibleCount : totalTickers;
+  
+  // Check minEligibleCount threshold (MACRO only)
+  const minEligibleCount = getMinEligibleCountForDeck(deckId);
+  if (denominatorMode === 'eligible') {
+    if (eligibleCount === 0) {
+      return {
+        point: {
+          date: targetDate,
+          greenPct: null,
+          yellowPct: null,
+          redPct: null,
+          regimeLabel: 'UNKNOWN',
+          diffusionPct: null,
+          knownCount,
+          unknownCount,
+          totalTickers,
+          eligibleCount: 0,
+          ineligibleCount: 0,
+          missingCount,
+        },
+        tickers,
+      };
+    }
+    if (eligibleCount < minEligibleCount) {
+      return {
+        point: {
+          date: targetDate,
+          greenPct: null,
+          yellowPct: null,
+          redPct: null,
+          regimeLabel: 'UNKNOWN',
+          diffusionPct: null,
+          knownCount,
+          unknownCount,
+          totalTickers,
+          eligibleCount,
+          ineligibleCount,
+          missingCount,
+        },
+        tickers,
+      };
+    }
+  }
 
-  // Validity check: if knownCount / totalTickers < MIN_KNOWN_PCT, mark as UNKNOWN
-  // Use per-deck override (MACRO uses lower threshold)
+  // Validity check: if knownCount / denominator < MIN_KNOWN_PCT, mark as UNKNOWN
   const envDefault = getMinKnownPct();
   const minKnownPct = getMinKnownPctForDeck(deckId, envDefault);
-  const knownPct = knownCount / totalTickers;
+  const knownPct = denominator > 0 ? knownCount / denominator : 0;
 
   if (knownPct < minKnownPct) {
     return {
@@ -237,6 +289,9 @@ function computeHealthForDate(
         knownCount,
         unknownCount,
         totalTickers,
+        eligibleCount: denominatorMode === 'eligible' ? eligibleCount : undefined,
+        ineligibleCount: denominatorMode === 'eligible' ? ineligibleCount : undefined,
+        missingCount: denominatorMode === 'eligible' ? missingCount : undefined,
       },
       tickers,
     };
@@ -254,6 +309,9 @@ function computeHealthForDate(
       knownCount,
       unknownCount,
       totalTickers,
+      eligibleCount: denominatorMode === 'eligible' ? eligibleCount : undefined,
+      ineligibleCount: denominatorMode === 'eligible' ? ineligibleCount : undefined,
+      missingCount: denominatorMode === 'eligible' ? missingCount : undefined,
     },
     tickers,
   };

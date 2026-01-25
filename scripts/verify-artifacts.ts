@@ -91,8 +91,21 @@ function printHealthHistoryStats(deckId: TrendDeckId): void {
     const envDefault = parseFloat(process.env.TREND100_MIN_KNOWN_PCT || '0.9');
     const deckMinKnownPct = getMinKnownPctForDeck(deckId, envDefault);
     
+    // For MACRO, show eligible stats
+    let eligibleStats = '';
+    if (deckId === 'MACRO' && validPoints.length > 0) {
+      const recentValid = validPoints.slice(-365); // Last 365 valid points
+      const eligibleCounts = recentValid
+        .map((p) => p.eligibleCount ?? p.totalTickers ?? 0)
+        .filter((c) => c > 0);
+      if (eligibleCounts.length > 0) {
+        const avgEligible = eligibleCounts.reduce((a, b) => a + b, 0) / eligibleCounts.length;
+        eligibleStats = `, Avg eligible (last 365d): ${avgEligible.toFixed(1)}`;
+      }
+    }
+    
     console.log(`  ${deckId}: ${history.length} points (${earliest} to ${latest}, ~${days} days)${status}`);
-    console.log(`    Valid: ${validPoints.length}, UNKNOWN: ${unknownPoints.length}, MinKnownPct: ${deckMinKnownPct.toFixed(2)}`);
+    console.log(`    Valid: ${validPoints.length}, UNKNOWN: ${unknownPoints.length}, MinKnownPct: ${deckMinKnownPct.toFixed(2)}${eligibleStats}`);
     if (firstValidDate && firstValidDate !== earliest) {
       console.log(`    First valid: ${firstValidDate}`);
     }

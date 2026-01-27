@@ -40,6 +40,8 @@ yarn-error.log*
 .vercel
 
 # Note: data/marketstack/ is committed to persist cache between GitHub Actions runs
+# Metadata about inception-limited symbols (can be regenerated)
+data/marketstack/eod/.meta/
 
 # typescript
 *.tsbuildinfo

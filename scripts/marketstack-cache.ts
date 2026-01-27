@@ -12,6 +12,16 @@ import type { EodBar } from '../src/modules/trend100/data/providers/marketstack'
 import { fetchEodSeries, fetchEodLatestBatch } from '../src/modules/trend100/data/providers/marketstack';
 
 const CACHE_DIR = join(process.cwd(), 'data', 'marketstack', 'eod');
+const META_DIR = join(CACHE_DIR, '.meta');
+
+/**
+ * Metadata for inception-limited symbols
+ */
+interface CacheMetadata {
+  inceptionLimited: boolean;
+  oldestCachedDate: string;
+  checkedAt: string;
+}
 
 /**
  * Get safe filename for symbol (replace special chars)
@@ -30,6 +40,54 @@ function getCacheFilePath(symbol: string): string {
     mkdirSync(CACHE_DIR, { recursive: true });
   }
   return join(CACHE_DIR, getCacheFileName(symbol));
+}
+
+/**
+ * Get metadata file path for symbol
+ */
+function getMetadataFilePath(symbol: string): string {
+  // Ensure metadata directory exists
+  if (!existsSync(META_DIR)) {
+    mkdirSync(META_DIR, { recursive: true });
+  }
+  return join(META_DIR, getCacheFileName(symbol));
+}
+
+/**
+ * Load metadata for a symbol
+ */
+function loadMetadata(symbol: string): CacheMetadata | null {
+  const filePath = getMetadataFilePath(symbol);
+  if (!existsSync(filePath)) {
+    return null;
+  }
+  
+  try {
+    const content = readFileSync(filePath, 'utf-8');
+    const metadata = JSON.parse(content) as CacheMetadata;
+    return metadata;
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Save metadata for a symbol
+ */
+function saveMetadata(symbol: string, metadata: CacheMetadata): void {
+  const filePath = getMetadataFilePath(symbol);
+  writeFileSync(filePath, JSON.stringify(metadata, null, 2) + '\n', 'utf-8');
+}
+
+/**
+ * Check if symbol is marked as inception-limited
+ */
+function isInceptionLimited(symbol: string, forceExtend: boolean): boolean {
+  if (forceExtend) {
+    return false;
+  }
+  const metadata = loadMetadata(symbol);
+  return metadata?.inceptionLimited === true;
 }
 
 /**
@@ -173,48 +231,63 @@ export async function ensureHistory(symbol: string): Promise<EnsureHistoryResult
   }
 
   // Cache exists - check if we need to extend backwards (one-time cost)
-  const earliestCachedDate = cached[0]!.date;
-  const latestCachedDate = cached[cached.length - 1]!.date;
-  
-  // Calculate span in calendar days
-  const earliestDate = new Date(earliestCachedDate);
-  const latestDate = new Date(latestCachedDate);
-  const spanDays = Math.ceil((latestDate.getTime() - earliestDate.getTime()) / (1000 * 60 * 60 * 24));
-  
-  // If cache span is shorter than CACHE_DAYS (minus small buffer), extend backwards
-  const bufferDays = 10; // Small buffer to avoid frequent extensions
-  if (spanDays < (cacheDays - bufferDays)) {
-    const missingDays = cacheDays - spanDays;
-    const extendStartDate = new Date(earliestDate);
-    extendStartDate.setDate(extendStartDate.getDate() - missingDays - bufferDays);
-    const extendEndDate = new Date(earliestDate);
-    extendEndDate.setDate(extendEndDate.getDate() - 1); // One day before existing cache
+  // Skip if marked as inception-limited (unless force extend)
+  const forceExtend = process.env.MARKETSTACK_FORCE_EXTEND === '1';
+  if (!isInceptionLimited(symbol, forceExtend)) {
+    const earliestCachedDate = cached[0]!.date;
+    const latestCachedDate = cached[cached.length - 1]!.date;
     
-    const extendStartStr = extendStartDate.toISOString().split('T')[0]!;
-    const extendEndStr = extendEndDate.toISOString().split('T')[0]!;
+    // Calculate span in calendar days
+    const earliestDate = new Date(earliestCachedDate);
+    const latestDate = new Date(latestCachedDate);
+    const spanDays = Math.ceil((latestDate.getTime() - earliestDate.getTime()) / (1000 * 60 * 60 * 24));
     
-    console.log(`  📥 Extending ${symbol} cache backwards (${missingDays} days, ${extendStartStr} to ${extendEndStr})...`);
-    try {
-      const olderBars = await fetchEodSeries(symbol, {
-        startDate: extendStartStr,
-        endDate: extendEndStr,
-        limit: 1000,
-      });
+    // If cache span is shorter than CACHE_DAYS (minus small buffer), extend backwards
+    const bufferDays = 10; // Small buffer to avoid frequent extensions
+    if (spanDays < (cacheDays - bufferDays)) {
+      const missingDays = cacheDays - spanDays;
+      const extendStartDate = new Date(earliestDate);
+      extendStartDate.setDate(extendStartDate.getDate() - missingDays - bufferDays);
+      const extendEndDate = new Date(earliestDate);
+      extendEndDate.setDate(extendEndDate.getDate() - 1); // One day before existing cache
       
-      // Merge with existing (older bars first, then existing)
-      const merged = mergeBars(olderBars, cached);
-      saveCachedBars(symbol, merged);
-      console.log(`    ✓ Extended cache: ${olderBars.length} older bars, total: ${merged.length} bars`);
+      const extendStartStr = extendStartDate.toISOString().split('T')[0]!;
+      const extendEndStr = extendEndDate.toISOString().split('T')[0]!;
       
-      // Reload cached data after extension
-      const extendedCache = loadCachedBars(symbol);
-      if (extendedCache) {
-        cached = extendedCache;
+      console.log(`  📥 Extending ${symbol} cache backwards (${missingDays} days, ${extendStartStr} to ${extendEndStr})...`);
+      try {
+        const olderBars = await fetchEodSeries(symbol, {
+          startDate: extendStartStr,
+          endDate: extendEndStr,
+          limit: 1000,
+        });
+        
+        if (olderBars.length === 0) {
+          // API returned 0 bars - symbol is inception-limited
+          const today = new Date().toISOString().split('T')[0]!;
+          saveMetadata(symbol, {
+            inceptionLimited: true,
+            oldestCachedDate: earliestCachedDate,
+            checkedAt: today,
+          });
+          console.log(`    ℹ️  ${symbol} cannot extend earlier than ${earliestCachedDate} (provider limit/inception)`);
+        } else {
+          // Successfully extended
+          const merged = mergeBars(olderBars, cached);
+          saveCachedBars(symbol, merged);
+          console.log(`    ✓ Extended cache: ${olderBars.length} older bars, total: ${merged.length} bars`);
+          
+          // Reload cached data after extension
+          const extendedCache = loadCachedBars(symbol);
+          if (extendedCache) {
+            cached = extendedCache;
+          }
+        }
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        console.warn(`    ⚠️  Failed to extend cache for ${symbol}, using existing: ${reason}`);
+        // Continue with existing cache - not fatal
       }
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      console.warn(`    ⚠️  Failed to extend cache for ${symbol}, using existing: ${reason}`);
-      // Continue with existing cache - not fatal
     }
   }
 
@@ -297,6 +370,7 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
   const symbolsNeedingBackfill: string[] = [];
   const symbolsNeedingUpdate: string[] = [];
   const symbolsNeedingExtension: string[] = [];
+  const forceExtend = process.env.MARKETSTACK_FORCE_EXTEND === '1';
   
   for (const symbol of symbols) {
     const cached = loadCachedBars(symbol);
@@ -306,27 +380,36 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
       cachedMap.set(symbol, cached);
       
       // Check if cache needs extension (span < CACHE_DAYS)
-      const earliestCachedDate = cached[0]!.date;
-      const latestCachedDate = cached[cached.length - 1]!.date;
-      const earliestDate = new Date(earliestCachedDate);
-      const latestDate = new Date(latestCachedDate);
-      const spanDays = Math.ceil((latestDate.getTime() - earliestDate.getTime()) / (1000 * 60 * 60 * 24));
-      const bufferDays = 10;
-      
-      if (spanDays < (cacheDays - bufferDays)) {
-        // Cache span is too short - needs extension
-        symbolsNeedingExtension.push(symbol);
-      } else {
-        // Cache span is sufficient - check if update needed
+      // Skip if marked as inception-limited (unless force extend)
+      if (isInceptionLimited(symbol, forceExtend)) {
+        // Symbol is inception-limited - skip extension, just update if needed
         const lastDate = cached[cached.length - 1]!.date;
         const today = new Date().toISOString().split('T')[0]!;
         const daysSince = getTradingDaysBetween(lastDate, today);
+        symbolsNeedingUpdate.push(symbol);
+      } else {
+        const earliestCachedDate = cached[0]!.date;
+        const latestCachedDate = cached[cached.length - 1]!.date;
+        const earliestDate = new Date(earliestCachedDate);
+        const latestDate = new Date(latestCachedDate);
+        const spanDays = Math.ceil((latestDate.getTime() - earliestDate.getTime()) / (1000 * 60 * 60 * 24));
+        const bufferDays = 10;
         
-        if (daysSince <= 3) {
-          symbolsNeedingUpdate.push(symbol);
+        if (spanDays < (cacheDays - bufferDays)) {
+          // Cache span is too short - needs extension
+          symbolsNeedingExtension.push(symbol);
         } else {
-          // Gap too large - will need individual fetch
-          symbolsNeedingUpdate.push(symbol);
+          // Cache span is sufficient - check if update needed
+          const lastDate = cached[cached.length - 1]!.date;
+          const today = new Date().toISOString().split('T')[0]!;
+          const daysSince = getTradingDaysBetween(lastDate, today);
+          
+          if (daysSince <= 3) {
+            symbolsNeedingUpdate.push(symbol);
+          } else {
+            // Gap too large - will need individual fetch
+            symbolsNeedingUpdate.push(symbol);
+          }
         }
       }
     }
@@ -364,14 +447,28 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
           limit: 1000,
         });
         
-        const merged = mergeBars(olderBars, cached);
-        saveCachedBars(symbol, merged);
-        
-        // Reload and update cachedMap
-        const extendedCache = loadCachedBars(symbol);
-        if (extendedCache) {
-          cachedMap.set(symbol, extendedCache);
-          console.log(`      ✓ Extended: ${olderBars.length} older bars, total: ${extendedCache.length} bars`);
+        if (olderBars.length === 0) {
+          // API returned 0 bars - symbol is inception-limited
+          const today = new Date().toISOString().split('T')[0]!;
+          saveMetadata(symbol, {
+            inceptionLimited: true,
+            oldestCachedDate: earliestCachedDate,
+            checkedAt: today,
+          });
+          console.log(`      ℹ️  ${symbol} cannot extend earlier than ${earliestCachedDate} (provider limit/inception)`);
+          // Move to update queue since extension is not possible
+          symbolsNeedingUpdate.push(symbol);
+        } else {
+          // Successfully extended
+          const merged = mergeBars(olderBars, cached);
+          saveCachedBars(symbol, merged);
+          
+          // Reload and update cachedMap
+          const extendedCache = loadCachedBars(symbol);
+          if (extendedCache) {
+            cachedMap.set(symbol, extendedCache);
+            console.log(`      ✓ Extended: ${olderBars.length} older bars, total: ${extendedCache.length} bars`);
+          }
         }
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);

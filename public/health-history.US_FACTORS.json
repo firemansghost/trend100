@@ -19801,5 +19801,18 @@
     "diffusionPct": 0,
     "diffusionCount": 0,
     "diffusionTotalCompared": 10
+  },
+  {
+    "date": "2026-01-26",
+    "greenPct": 100,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_ON",
+    "knownCount": 10,
+    "unknownCount": 0,
+    "totalTickers": 10,
+    "diffusionPct": 0,
+    "diffusionCount": 0,
+    "diffusionTotalCompared": 10
   }
 ]

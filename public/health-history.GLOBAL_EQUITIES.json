@@ -20123,5 +20123,18 @@
     "diffusionPct": 0,
     "diffusionCount": 0,
     "diffusionTotalCompared": 11
+  },
+  {
+    "date": "2026-01-26",
+    "greenPct": 90.9,
+    "yellowPct": 0,
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON",
+    "knownCount": 11,
+    "unknownCount": 0,
+    "totalTickers": 11,
+    "diffusionPct": 0,
+    "diffusionCount": 0,
+    "diffusionTotalCompared": 11
   }
 ]

@@ -19,7 +19,8 @@ const HISTORY_DIR = join(process.cwd(), 'public');
 const MIN_POINTS_THRESHOLD = 30; // Minimum points after running for a while
 const MAX_SHRINKAGE_PCT = 20; // Fail if history shrinks by more than 20%
 const MAX_ZERO_PCT = 30; // Fail if more than 30% of points have zero health (warm-up issue)
-const EXPECTED_CACHE_DAYS = 1530; // Expected cache days once extended (1600 default - buffer)
+const DEFAULT_CACHE_DAYS = 2300; // Default cache days (matches workflow defaults)
+const BUFFER_DAYS = 70; // Buffer for expected cache days check (cacheDays - buffer)
 const WARMUP_CHECK_DAYS = 365; // Only evaluate warm-up zeros over the most recent window
 
 /**
@@ -146,11 +147,13 @@ function verifyDeckHistory(deckId: TrendDeckId): { ok: boolean; message: string 
   const zeroPct =
     validWindowHistory.length > 0 ? (zeroPoints.length / validWindowHistory.length) * 100 : 0;
   
-  // Check if cache should be extended (if we expect >= 730 days but have many zero points)
-  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '800', 10);
+  // Check if cache should be extended (if we expect sufficient days but have many zero points)
+  // Derive expected cache days from env (with buffer) instead of hard-coded constant
+  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || String(DEFAULT_CACHE_DAYS), 10);
+  const expectedCacheDays = Math.max(cacheDays - BUFFER_DAYS, 0);
   const strictWarmup = process.env.TREND100_STRICT_WARMUP === '1';
   
-  if (cacheDays >= EXPECTED_CACHE_DAYS && zeroPct > MAX_ZERO_PCT) {
+  if (cacheDays >= expectedCacheDays && zeroPct > MAX_ZERO_PCT) {
     const message =
       `${deckId}: ${zeroPct.toFixed(1)}% zero points (${zeroPoints.length}/${validWindowHistory.length} valid) ` +
       `in last ${windowDays} days - warm-up issue detected. Cache may need extension (expected ${cacheDays} days).`;

@@ -9,9 +9,9 @@ on:
         default: '200'
         type: string
       cache_days:
-        description: 'Target cache days (default: 1600)'
+        description: 'Target cache days (default: 2300)'
         required: false
-        default: '1600'
+        default: '2300'
         type: string
 
 # Concurrency: single-writer rule for generated artifacts
@@ -49,7 +49,7 @@ jobs:
         env:
           DATA_PROVIDER: marketstack
           MARKETSTACK_API_KEY: ${{ secrets.MARKETSTACK_API_KEY }}
-          MARKETSTACK_CACHE_DAYS: ${{ inputs.cache_days || '1600' }}
+          MARKETSTACK_CACHE_DAYS: ${{ inputs.cache_days || '2300' }}
           MARKETSTACK_EXTEND_MAX_SYMBOLS: ${{ inputs.max_symbols || '200' }}
         run: |
           set -euo pipefail

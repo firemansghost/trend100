@@ -40,7 +40,7 @@ jobs:
 
       - name: Sync, generate, commit and push
         env:
-          MARKETSTACK_CACHE_DAYS: 1600
+          MARKETSTACK_CACHE_DAYS: 2300
           MARKETSTACK_EXTEND_MAX_SYMBOLS: 10
           TREND100_STRICT_WARMUP: 0
           HEALTH_HISTORY_RETENTION_DAYS: 0

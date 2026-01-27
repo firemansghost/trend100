@@ -20116,5 +20116,18 @@
     "diffusionPct": 16.7,
     "diffusionCount": 3,
     "diffusionTotalCompared": 18
+  },
+  {
+    "date": "2026-01-27",
+    "greenPct": 66.7,
+    "yellowPct": 5.6,
+    "redPct": 27.8,
+    "regimeLabel": "TRANSITION",
+    "knownCount": 18,
+    "unknownCount": 0,
+    "totalTickers": 18,
+    "diffusionPct": 0,
+    "diffusionCount": 0,
+    "diffusionTotalCompared": 18
   }
 ]

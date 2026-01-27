@@ -17,6 +17,8 @@
  * - Cache files stored in data/marketstack/eod/<symbol>.json
  */
 
+import './load-env';
+
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import type {

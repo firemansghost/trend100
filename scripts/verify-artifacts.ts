@@ -5,6 +5,8 @@
  * Useful for debugging and verification.
  */
 
+import './load-env';
+
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join } from 'path';
 import type { TrendHealthHistoryPoint, TrendDeckId } from '../src/modules/trend100/types';

@@ -9,6 +9,8 @@
  * - 1: History loss detected or below minimum threshold
  */
 
+import './load-env';
+
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';

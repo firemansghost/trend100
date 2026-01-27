@@ -5,6 +5,8 @@
  * recomputing ticker statuses for start/end dates.
  */
 
+import './load-env';
+
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import type {

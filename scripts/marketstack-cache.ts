@@ -4,6 +4,8 @@
  * Handles file-based caching of EOD bars to avoid refetching full history.
  */
 
+import './load-env';
+
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';

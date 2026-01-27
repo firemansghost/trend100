@@ -11,6 +11,8 @@
  * - Requires MARKETSTACK_OFFLINE=1 to prevent accidental API calls
  */
 
+import './load-env';
+
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import type {

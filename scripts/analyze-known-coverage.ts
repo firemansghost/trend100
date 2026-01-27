@@ -5,6 +5,8 @@
  * for a given date. Useful for understanding why health history points are UNKNOWN.
  */
 
+import './load-env';
+
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import type {

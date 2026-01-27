@@ -17,7 +17,7 @@
  * - Cache files stored in data/marketstack/eod/<symbol>.json
  */
 
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import type {
   TrendSnapshot,

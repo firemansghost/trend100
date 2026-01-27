@@ -16,6 +16,15 @@ const META_DIR = join(CACHE_DIR, '.meta');
 
 /**
  * Metadata for inception-limited symbols
+ * 
+ * Inception-limited: Symbols that cannot extend earlier than their oldest cached date
+ * because the provider (Marketstack) has no historical data before that point (e.g., ARM, PLTR, SNOW).
+ * When extension attempts return 0 older bars, we mark the symbol as inception-limited to avoid
+ * wasting extension budget on future runs.
+ * 
+ * Environment variables:
+ * - MARKETSTACK_EXTEND_MAX_SYMBOLS: Budget for extension attempts per run (default: 10)
+ * - MARKETSTACK_FORCE_EXTEND=1: Override inception-limited check and retry extension
  */
 interface CacheMetadata {
   inceptionLimited: boolean;

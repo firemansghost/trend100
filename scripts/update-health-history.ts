@@ -33,6 +33,39 @@ import type { EodBar } from '../src/modules/trend100/data/providers/marketstack'
 import { sanitizeHealthHistory, isWeekend } from './healthHistorySanitize';
 
 /**
+ * Create a fully-schema-compliant UNKNOWN health history point
+ * 
+ * All fields must be finite numbers to pass validation.
+ * UNKNOWN points use 0/0/0 for percentages and 0/0/totalTickers for diffusion.
+ */
+function makeUnknownPoint(
+  date: string,
+  totalTickers: number,
+  knownCount: number,
+  unknownCount: number,
+  eligibleCount?: number,
+  ineligibleCount?: number,
+  missingCount?: number
+): TrendHealthHistoryPoint {
+  return {
+    date,
+    regimeLabel: 'UNKNOWN',
+    greenPct: 0,
+    yellowPct: 0,
+    redPct: 0,
+    knownCount,
+    unknownCount,
+    totalTickers,
+    diffusionPct: 0,
+    diffusionCount: 0,
+    diffusionTotalCompared: totalTickers,
+    eligibleCount,
+    ineligibleCount,
+    missingCount,
+  };
+}
+
+/**
  * Health-history retention policy (calendar days).
  *
  * - If unset: default to 0 (no trimming; retain all points)
@@ -298,44 +331,14 @@ function computeHealthForDate(
     if (eligibleCount === 0) {
       // No eligible tickers - return UNKNOWN
       return {
-        point: {
-          date: targetDate,
-          greenPct: null,
-          yellowPct: null,
-          redPct: null,
-          regimeLabel: 'UNKNOWN',
-          diffusionPct: 0,
-          diffusionCount: 0,
-          diffusionTotalCompared: totalTickers,
-          knownCount,
-          unknownCount,
-          totalTickers,
-          eligibleCount: 0,
-          ineligibleCount: 0,
-          missingCount,
-        },
+        point: makeUnknownPoint(targetDate, totalTickers, knownCount, unknownCount, 0, 0, missingCount),
         tickers,
       };
     }
     if (eligibleCount < minEligibleCount) {
       // Too few eligible tickers - return UNKNOWN
       return {
-        point: {
-          date: targetDate,
-          greenPct: null,
-          yellowPct: null,
-          redPct: null,
-          regimeLabel: 'UNKNOWN',
-          diffusionPct: 0,
-          diffusionCount: 0,
-          diffusionTotalCompared: totalTickers,
-          knownCount,
-          unknownCount,
-          totalTickers,
-          eligibleCount,
-          ineligibleCount,
-          missingCount,
-        },
+        point: makeUnknownPoint(targetDate, totalTickers, knownCount, unknownCount, eligibleCount, ineligibleCount, missingCount),
         tickers,
       };
     }
@@ -350,22 +353,15 @@ function computeHealthForDate(
   if (knownPct < minKnownPct) {
     // Insufficient data - return UNKNOWN point
     return {
-      point: {
-        date: targetDate,
-        greenPct: null,
-        yellowPct: null,
-        redPct: null,
-        regimeLabel: 'UNKNOWN',
-        diffusionPct: 0,
-        diffusionCount: 0,
-        diffusionTotalCompared: totalTickers,
+      point: makeUnknownPoint(
+        targetDate,
+        totalTickers,
         knownCount,
         unknownCount,
-        totalTickers,
-        eligibleCount: denominatorMode === 'eligible' ? eligibleCount : undefined,
-        ineligibleCount: denominatorMode === 'eligible' ? ineligibleCount : undefined,
-        missingCount: denominatorMode === 'eligible' ? missingCount : undefined,
-      },
+        denominatorMode === 'eligible' ? eligibleCount : undefined,
+        denominatorMode === 'eligible' ? ineligibleCount : undefined,
+        denominatorMode === 'eligible' ? missingCount : undefined
+      ),
       tickers,
     };
   }

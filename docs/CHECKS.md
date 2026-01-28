@@ -81,6 +81,15 @@
 - **Fix:** This should no longer happen after consolidating scheduled writers. Only "Update Snapshots" is scheduled; other writer workflows (Update Health History, Backfill Health History, Extend EOD Cache) are manual-only. Writer workflows now queue (`cancel-in-progress: false`) instead of canceling each other.
 - **Expected behavior:** If multiple writer workflows trigger (e.g., scheduled Update Snapshots + manual dispatch), they queue and run sequentially, not cancel.
 
+### "Backfill workflow failing verify:artifacts due to partial-schema UNKNOWN points"
+- **Symptom:** Backfill Health History workflow fails with "Found N partial-schema point(s)" error, typically for new decks or early history periods with insufficient data.
+- **Root cause:** UNKNOWN points (insufficient history/warm-up) were previously written with null percentages or missing diffusion fields, which fails the strict schema validator.
+- **Fix:** All UNKNOWN points now use `makeUnknownPoint()` helper which ensures:
+  - `greenPct: 0, yellowPct: 0, redPct: 0` (not null)
+  - `diffusionPct: 0, diffusionCount: 0, diffusionTotalCompared: totalTickers` (all finite numbers)
+- **Verification:** After backfill, run `pnpm verify:artifacts` - should report 0 partial-schema points for all decks.
+- **Note:** UNKNOWN points are still included in history files (for timeline continuity) but use 0/0/0 percentages and won't be plotted in charts.
+
 ## Known Failure Modes
 - Off-by-one MA windows and "lookahead" bugs
 - Weekly resample picking wrong day (Thu vs Fri) around holidays

@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-01-23 — (Data) Backfill UNKNOWN points must include full health-history schema to pass validation
+**Choice:** All health-history points (VALID or UNKNOWN) must include the complete required schema with all fields as finite numbers. UNKNOWN points use 0/0/0 for greenPct/yellowPct/redPct (not null) and 0/0/totalTickers for diffusion fields. Introduced `makeUnknownPoint()` helper function to ensure consistent schema compliance.  
+**Why:** The `verify:artifacts` validator enforces `hasFullHealthSchema()` which requires all percentage and diffusion fields to be finite numbers. UNKNOWN points with null percentages or missing diffusion fields fail validation, causing backfill workflows to fail.  
+**Alternatives considered:** Allow null percentages for UNKNOWN points (breaks validator contract), make validator less strict (defeats purpose of validation), filter out UNKNOWN points (loses timeline continuity).
+
+---
+
 ### 2026-01-23 — (Product) METALS_MINING deck with group filtering
 **Choice:** Added new deck "Metals & Mining" (METALS_MINING) with 11 tickers split into two groups: METALS (physical/basket ETFs: GLTR, GLDM, SLV, PPLT, PALL) and MINERS (equity ETFs: GDX, GDXJ, SIL, SILJ, XME, PICK). Added optional `group` field to `TrendUniverseItem` and `TrendTickerSnapshot` types. UI shows toggle (All / Metals / Miners) when deck has grouped tickers. Group filter preserved in URL query param (`?group=metals|miners|all`).  
 **Why:** Users want to compare physical metals performance vs mining equity performance. Grouping allows filtering without separate decks. URL param enables shareable filtered views.  

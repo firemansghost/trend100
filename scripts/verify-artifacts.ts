@@ -12,6 +12,7 @@ import { join } from 'path';
 import type { TrendHealthHistoryPoint, TrendDeckId } from '../src/modules/trend100/types';
 import { getAllDeckIds } from '../src/modules/trend100/data/decks';
 import { getMinKnownPctForDeck } from '../src/modules/trend100/data/deckConfig';
+import { isWeekend, hasFullHealthSchema } from './healthHistorySanitize';
 
 const PUBLIC_DIR = join(process.cwd(), 'public');
 const EOD_CACHE_DIR = join(process.cwd(), 'data', 'marketstack', 'eod');
@@ -26,12 +27,13 @@ function getHealthHistoryRetentionDays(): number {
 
 /**
  * Print health history stats for a deck
+ * Returns false if validation fails (weekend/partial points found)
  */
-function printHealthHistoryStats(deckId: TrendDeckId): void {
+function printHealthHistoryStats(deckId: TrendDeckId): boolean {
   const filePath = join(PUBLIC_DIR, `health-history.${deckId}.json`);
   if (!existsSync(filePath)) {
     console.log(`  ${deckId}: File not found`);
-    return;
+    return true; // Not an error if file doesn't exist
   }
   
   try {
@@ -39,7 +41,30 @@ function printHealthHistoryStats(deckId: TrendDeckId): void {
     const history = JSON.parse(content) as TrendHealthHistoryPoint[];
     if (!Array.isArray(history) || history.length === 0) {
       console.log(`  ${deckId}: Empty or invalid`);
-      return;
+      return true; // Not a validation failure
+    }
+
+    // Validate: check for weekend points and partial-schema points
+    const weekendPoints: string[] = [];
+    const partialSchemaPoints: string[] = [];
+    
+    for (const point of history) {
+      if (isWeekend(point.date)) {
+        weekendPoints.push(point.date);
+      }
+      if (!hasFullHealthSchema(point)) {
+        partialSchemaPoints.push(point.date);
+      }
+    }
+
+    // Fail if weekend or partial points found
+    if (weekendPoints.length > 0) {
+      console.error(`  ❌ ${deckId}: Found ${weekendPoints.length} weekend point(s) (first: ${weekendPoints[0]})`);
+      return false;
+    }
+    if (partialSchemaPoints.length > 0) {
+      console.error(`  ❌ ${deckId}: Found ${partialSchemaPoints.length} partial-schema point(s) (first: ${partialSchemaPoints[0]})`);
+      return false;
     }
     
     const earliest = history[0]!.date;
@@ -111,8 +136,11 @@ function printHealthHistoryStats(deckId: TrendDeckId): void {
     if (firstValidDate && firstValidDate !== earliest) {
       console.log(`    First valid: ${firstValidDate}`);
     }
+    
+    return true; // Validation passed
   } catch (error) {
     console.log(`  ${deckId}: Error reading file: ${error}`);
+    return false; // Error reading file is a failure
   }
 }
 
@@ -211,8 +239,17 @@ function main() {
 
   console.log('Health History Files:');
   const deckIds = getAllDeckIds();
+  let validationFailed = false;
   for (const deckId of deckIds) {
-    printHealthHistoryStats(deckId);
+    const isValid = printHealthHistoryStats(deckId);
+    if (!isValid) {
+      validationFailed = true;
+    }
+  }
+  
+  if (validationFailed) {
+    console.error('\n❌ Validation failed: weekend or partial-schema points found in health history');
+    process.exit(1);
   }
   
   console.log('\nEOD Cache Files (sample: SPY, QQQ, TLT, GLDM, FBTC):');

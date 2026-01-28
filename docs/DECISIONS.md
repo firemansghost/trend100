@@ -5,6 +5,34 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-01-23 — (Data) Health history sanitization: remove weekend and partial-schema points
+**Choice:** Added sanitization step to health history loading that removes weekend dates (Saturday/Sunday) and partial-schema points (missing required fields). Added guards to prevent weekend points from being appended. Added verification checks that fail loudly if weekend or partial points are found.  
+**Why:** Weekend dates have no market data and corrupt charts (e.g., 2026-01-24 Saturday point caused massive dip). Partial-schema points (missing knownCount/unknownCount/totalTickers/diffusion fields) indicate incomplete computation and should not be persisted.  
+**Alternatives considered:** Filtering in UI only (data corruption remains), manual cleanup (error-prone), accepting weekend points (chart corruption).
+
+---
+
+### 2026-01-23 — (Ops) Inception-limited metadata persistence for cache extension budget protection
+**Choice:** Added metadata sidecar files in `data/marketstack/eod/.meta/` to track symbols that cannot extend earlier than their oldest cached date (inception-limited). When extension attempts return 0 older bars, we mark the symbol as inception-limited and skip future extension attempts to preserve budget.  
+**Why:** Some symbols (ARM, PLTR, SNOW, etc.) legitimately cannot extend back to 2019 because Marketstack has no historical data. Without metadata, the script would waste extension budget on these symbols every run.  
+**Alternatives considered:** Heuristic-based detection only (unreliable), hardcoded allowlist (not scalable), accepting wasted budget (inefficient).
+
+---
+
+### 2026-01-23 — (Data) Increase Marketstack cache retention to 2300 calendar days
+**Choice:** Increased `MARKETSTACK_CACHE_DAYS` from 1600 to 2300 calendar days across all workflows and scripts. This provides sufficient lookback for indicator warm-up (SMA200 + 50-week MAs) while keeping health-history retention at 365 days for the chart window.  
+**Why:** Indicator warm-up requires more history than the chart displays. With 2300-day cache, the full 1-year health-history window has meaningful values (not flat/zero for early dates).  
+**Alternatives considered:** Keep 1600 days (insufficient for full-year meaningful history), unlimited cache (repo size concerns), separate indicator cache (complexity).
+
+---
+
+### 2026-01-23 — (Ops) dotenv + .env.local loading via side-effect import pattern
+**Choice:** Implemented local environment variable loading using `dotenv` package with side-effect import pattern (`import './load-env'`). Scripts load `.env.local` first, then `.env` as fallback. Uses `override: false` to ensure CI env vars take precedence.  
+**Why:** ESM import order requires env vars to be loaded during import phase, before other modules evaluate. Side-effect import ensures `loadEnv()` runs immediately when the module is imported.  
+**Alternatives considered:** Manual `loadEnv()` calls (unreliable in ESM), runtime-only loading (misses import-time reads), hardcoded CI-only approach (poor local dev experience).
+
+---
+
 ### 2026-01-22 — (Ops) Workflow: concurrency + rebase/retry to avoid non-fast-forward push failures
 **Choice:** Added concurrency group with `cancel-in-progress: true` to prevent overlapping workflow runs. Implemented rebase-before-commit and retry loop (3 attempts) in push step to handle race conditions when main advances during job execution.  
 **Why:** Workflow was failing with "cannot lock ref" errors due to concurrent runs or main advancing between commit and push. Concurrency prevents overlaps; rebase+retry handles remaining race conditions without force-push.  

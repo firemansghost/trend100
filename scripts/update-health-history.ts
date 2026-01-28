@@ -30,6 +30,7 @@ import { calcSMA, calcEMA, resampleDailyToWeekly } from '../src/modules/trend100
 import { classifyTrend } from '../src/modules/trend100/engine/classifyTrend';
 import { computeHealthScore } from '../src/modules/trend100/engine/healthScore';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
+import { sanitizeHealthHistory, isWeekend } from './healthHistorySanitize';
 
 /**
  * Health-history retention policy (calendar days).
@@ -65,7 +66,17 @@ function loadHistory(deckId: TrendDeckId): TrendHealthHistoryPoint[] {
     if (!Array.isArray(history)) {
       return [];
     }
-    return history;
+    
+    // Sanitize: remove weekend points and partial-schema points
+    const { sanitized, removedWeekend, removedPartial } = sanitizeHealthHistory(history);
+    
+    if (removedWeekend > 0 || removedPartial > 0) {
+      console.log(
+        `  🧹 Sanitized health history for ${deckId}: removed ${removedWeekend} weekend point(s), removed ${removedPartial} partial-schema point(s)`
+      );
+    }
+    
+    return sanitized;
   } catch (error) {
     // File doesn't exist or is invalid - start fresh
     return [];
@@ -507,6 +518,12 @@ function backfillDeckHistory(
   let prevTickers: TrendTickerSnapshot[] | null = null;
 
   for (const date of tradingDays) {
+    // Guard: skip weekend dates (shouldn't happen if tradingDays is correct, but double-check)
+    if (isWeekend(date)) {
+      console.log(`  ⚠️  Skipping weekend date in backfill: ${date}`);
+      continue;
+    }
+
     const result = computeHealthForDate(deckId, date, metaIndex);
     if (!result) {
       unknown++;
@@ -571,6 +588,12 @@ function updateDeckHistory(deckId: TrendDeckId): void {
   // Get today's snapshot for this deck
   const snapshot = getLatestSnapshot(deckId);
   const asOfDate = snapshot.asOfDate; // Already in YYYY-MM-DD format (effective trading day)
+
+  // Guard: skip weekend dates (markets are closed)
+  if (isWeekend(asOfDate)) {
+    console.log(`  ⚠️  Skipping health history entry for ${deckId}: asOfDate is weekend (${asOfDate})`);
+    return;
+  }
 
   // Load existing history
   const existingHistory = loadHistory(deckId);

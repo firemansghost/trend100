@@ -36,6 +36,7 @@ import { mergeAndTrimTimeSeries } from './timeSeriesUtils';
 import { buildTickerMetaIndex, enrichUniverseItemMeta } from '../src/modules/trend100/data/tickerMeta';
 import { getMinKnownPctForDeck, getKnownDenominatorMode, getMinEligibleCountForDeck } from '../src/modules/trend100/data/deckConfig';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
+import { sanitizeHealthHistory, isWeekend } from './healthHistorySanitize';
 
 /**
  * Health-history retention policy (calendar days).
@@ -397,7 +398,7 @@ function getHistoryFilePath(deckId: TrendDeckId): string {
   return join(process.cwd(), 'public', `health-history.${deckId}.json`);
 }
 
-// Load existing history
+// Load existing history (with sanitization)
 function loadHistory(deckId: TrendDeckId): TrendHealthHistoryPoint[] {
   const filePath = getHistoryFilePath(deckId);
   try {
@@ -406,7 +407,17 @@ function loadHistory(deckId: TrendDeckId): TrendHealthHistoryPoint[] {
     if (!Array.isArray(history)) {
       return [];
     }
-    return history;
+    
+    // Sanitize: remove weekend points and partial-schema points
+    const { sanitized, removedWeekend, removedPartial } = sanitizeHealthHistory(history);
+    
+    if (removedWeekend > 0 || removedPartial > 0) {
+      console.log(
+        `  🧹 Sanitized health history for ${deckId}: removed ${removedWeekend} weekend point(s), removed ${removedPartial} partial-schema point(s)`
+      );
+    }
+    
+    return sanitized;
   } catch (error) {
     return [];
   }
@@ -667,6 +678,12 @@ async function main() {
 
     // Load existing history
     const existingHistory = loadHistory(deckId);
+
+    // Guard: skip weekend dates (markets are closed)
+    if (isWeekend(snapshot.asOfDate)) {
+      console.log(`  ⚠️  Skipping health history entry for ${deckId}: asOfDate is weekend (${snapshot.asOfDate})`);
+      continue;
+    }
 
     // Recompute today's health with validity check (to get knownCount/unknownCount)
     const todayResult = computeHealthForDate(deckId, snapshot.asOfDate, metaIndex);

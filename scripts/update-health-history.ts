@@ -304,7 +304,9 @@ function computeHealthForDate(
           yellowPct: null,
           redPct: null,
           regimeLabel: 'UNKNOWN',
-          diffusionPct: null,
+          diffusionPct: 0,
+          diffusionCount: 0,
+          diffusionTotalCompared: totalTickers,
           knownCount,
           unknownCount,
           totalTickers,
@@ -324,7 +326,9 @@ function computeHealthForDate(
           yellowPct: null,
           redPct: null,
           regimeLabel: 'UNKNOWN',
-          diffusionPct: null,
+          diffusionPct: 0,
+          diffusionCount: 0,
+          diffusionTotalCompared: totalTickers,
           knownCount,
           unknownCount,
           totalTickers,
@@ -352,7 +356,9 @@ function computeHealthForDate(
         yellowPct: null,
         redPct: null,
         regimeLabel: 'UNKNOWN',
-        diffusionPct: null,
+        diffusionPct: 0,
+        diffusionCount: 0,
+        diffusionTotalCompared: totalTickers,
         knownCount,
         unknownCount,
         totalTickers,
@@ -374,6 +380,9 @@ function computeHealthForDate(
       yellowPct: health.yellowPct,
       redPct: health.redPct,
       regimeLabel: health.regimeLabel,
+      diffusionPct: 0, // Will be set when merging into history if previous point exists
+      diffusionCount: 0,
+      diffusionTotalCompared: totalTickers,
       knownCount,
       unknownCount,
       totalTickers,
@@ -539,14 +548,17 @@ function backfillDeckHistory(
       const diffusion = computeDiffusion(deckId, prevDate, date, metaIndex);
       point = {
         ...point,
-        diffusionPct: diffusion.diffusionPct,
+        diffusionPct: diffusion.diffusionPct ?? 0,
         diffusionCount: diffusion.diffusionCount,
         diffusionTotalCompared: diffusion.diffusionTotalCompared,
       };
     } else {
+      // No previous point: set diffusion to zero (first point in history)
       point = {
         ...point,
-        diffusionPct: null,
+        diffusionPct: 0,
+        diffusionCount: 0,
+        diffusionTotalCompared: point.totalTickers,
       };
     }
 
@@ -629,14 +641,17 @@ function updateDeckHistory(deckId: TrendDeckId): void {
     const diffusion = computeDiffusion(deckId, prevTradingDate, asOfDate, metaIndex);
     entry = {
       ...entry,
-      diffusionPct: diffusion.diffusionPct,
+      diffusionPct: diffusion.diffusionPct ?? 0,
       diffusionCount: diffusion.diffusionCount,
       diffusionTotalCompared: diffusion.diffusionTotalCompared,
     };
   } else {
+    // No previous point: set diffusion to zero (first point in history)
     entry = {
       ...entry,
-      diffusionPct: null,
+      diffusionPct: 0,
+      diffusionCount: 0,
+      diffusionTotalCompared: entry.totalTickers,
     };
   }
 

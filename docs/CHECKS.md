@@ -67,6 +67,11 @@
   - If found, regenerate health history: `pnpm update:snapshots` (sanitization runs on load)
   - Verify: `grep -E '"date": "202[0-9]-[0-9]{2}-(0[6]|1[0-9]|2[0-9]|3[01])"' public/health-history.*.json` should return nothing (no Sat/Sun dates)
 
+### "Workflow canceled: higher priority waiting request for trend100-cache-writer"
+- **Symptom:** Scheduled "Update Snapshots" workflow gets canceled with message about concurrency group.
+- **Fix:** This should no longer happen after consolidating scheduled writers. Only "Update Snapshots" is scheduled; other writer workflows (Update Health History, Backfill Health History, Extend EOD Cache) are manual-only. Writer workflows now queue (`cancel-in-progress: false`) instead of canceling each other.
+- **Expected behavior:** If multiple writer workflows trigger (e.g., scheduled Update Snapshots + manual dispatch), they queue and run sequentially, not cancel.
+
 ## Known Failure Modes
 - Off-by-one MA windows and "lookahead" bugs
 - Weekly resample picking wrong day (Thu vs Fri) around holidays

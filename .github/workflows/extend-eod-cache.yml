@@ -16,9 +16,10 @@ on:
 
 # Concurrency: single-writer rule for generated artifacts
 # All workflows that commit generated JSON to main must share this group
+# cancel-in-progress: false so workflows queue instead of canceling each other
 concurrency:
   group: trend100-cache-writer
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   extend:

@@ -32,6 +32,7 @@ interface Trend100DashboardProps {
   deckDescription?: string;
   deckSections?: TrendDeckSection[];
   isDemoMode?: boolean;
+  initialGroupFilter?: string | null;
 }
 
 export function Trend100Dashboard({
@@ -42,10 +43,12 @@ export function Trend100Dashboard({
   deckDescription,
   deckSections = [],
   isDemoMode = false,
+  initialGroupFilter = null,
 }: Trend100DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(initialGroupFilter);
   const [sortKey, setSortKey] = useState<SortKey>('UNIVERSE');
   const [timeframe, setTimeframe] = useState<Timeframe>('1Y');
   const [selectedTicker, setSelectedTicker] =
@@ -92,12 +95,42 @@ export function Trend100Dashboard({
     }
   }, [selectedSection, deckSections]);
 
-  // Apply filters first (section -> search -> tags)
+  // Check if deck has grouped tickers (for showing toggle)
+  const hasGroups = useMemo(() => {
+    return snapshot.tickers.some((t) => t.group !== undefined);
+  }, [snapshot.tickers]);
+
+  // Get available groups from current deck's tickers
+  const availableGroups = useMemo(() => {
+    const groups = new Set<string>();
+    snapshot.tickers.forEach((ticker) => {
+      if (ticker.group) {
+        groups.add(ticker.group);
+      }
+    });
+    return Array.from(groups).sort();
+  }, [snapshot.tickers]);
+
+  // Update URL when group filter changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (selectedGroup === null || selectedGroup === 'all') {
+        url.searchParams.delete('group');
+      } else {
+        url.searchParams.set('group', selectedGroup.toLowerCase());
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [selectedGroup]);
+
+  // Apply filters first (section -> group -> search -> tags)
   const filteredTickers = applyFilters(
     snapshot.tickers,
     searchQuery,
     selectedTags,
-    selectedSection
+    selectedSection,
+    selectedGroup
   );
 
   // Then apply sorting
@@ -181,6 +214,39 @@ export function Trend100Dashboard({
         tagCounts={tagCounts}
         isDemoMode={isDemoMode}
       />
+      {/* Group Toggle - show if deck has grouped tickers */}
+      {hasGroups && availableGroups.length > 0 && (
+        <div className="container mx-auto px-4 py-3 border-b border-zinc-800">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-zinc-300">Filter:</span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSelectedGroup(null)}
+                className={`px-3 py-1 text-xs rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 ${
+                  selectedGroup === null
+                    ? 'bg-zinc-700 text-zinc-100 border-zinc-600'
+                    : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'
+                }`}
+              >
+                All
+              </button>
+              {availableGroups.map((group) => (
+                <button
+                  key={group}
+                  onClick={() => setSelectedGroup(group)}
+                  className={`px-3 py-1 text-xs rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 ${
+                    selectedGroup === group
+                      ? 'bg-zinc-700 text-zinc-100 border-zinc-600'
+                      : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'
+                  }`}
+                >
+                  {group === 'METALS' ? 'Metals' : group === 'MINERS' ? 'Miners' : group}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       {/* Section Pills - between TopBar and chart */}
       {deckSections.length > 0 && (
         <div className="container mx-auto px-4 py-3 border-b border-zinc-800">

@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-01-23 — (Product) METALS_MINING deck with group filtering
+**Choice:** Added new deck "Metals & Mining" (METALS_MINING) with 11 tickers split into two groups: METALS (physical/basket ETFs: GLTR, GLDM, SLV, PPLT, PALL) and MINERS (equity ETFs: GDX, GDXJ, SIL, SILJ, XME, PICK). Added optional `group` field to `TrendUniverseItem` and `TrendTickerSnapshot` types. UI shows toggle (All / Metals / Miners) when deck has grouped tickers. Group filter preserved in URL query param (`?group=metals|miners|all`).  
+**Why:** Users want to compare physical metals performance vs mining equity performance. Grouping allows filtering without separate decks. URL param enables shareable filtered views.  
+**Alternatives considered:** Separate decks for metals vs miners (more duplication), tag-based filtering only (less discoverable), no filtering (doesn't meet requirement).
+
+---
+
 ### 2026-01-23 — (Ops) Consolidate scheduled writer workflows to avoid concurrency cancellations
 **Choice:** Removed schedule from "Update Health History" workflow (now manual-only via `workflow_dispatch`). Changed all writer workflows' concurrency from `cancel-in-progress: true` to `cancel-in-progress: false` so they queue instead of canceling each other. Only "Update Snapshots" remains scheduled (weekdays 12:15 UTC).  
 **Why:** Both "Update Snapshots" and "Update Health History" were scheduled at the same time (12:15 UTC) and shared the same concurrency group with `cancel-in-progress: true`, causing one to cancel the other. Since "Update Snapshots" already updates health history as part of its run, having a separate scheduled health history workflow was redundant and caused cancellations.  

@@ -100,7 +100,7 @@ function loadEodCache(symbol: string): EodBar[] | null {
  * Compute ticker snapshot for a specific date from EOD bars (reused from update-health-history.ts)
  */
 function computeTickerSnapshotForDate(
-  item: { ticker: string; tags: string[]; section?: string; subtitle?: string; name?: string },
+  item: { ticker: string; tags: string[]; section?: string; group?: string; subtitle?: string; name?: string },
   eodBars: EodBar[],
   targetDate: string
 ): TrendTickerSnapshot | null {
@@ -127,6 +127,7 @@ function computeTickerSnapshotForDate(
       ticker: item.ticker,
       tags: item.tags,
       section: item.section,
+      group: item.group,
       subtitle: item.subtitle,
       name: item.name,
       status: 'UNKNOWN',
@@ -432,7 +433,7 @@ function saveHistory(deckId: TrendDeckId, history: TrendHealthHistoryPoint[]): v
 
 // Compute ticker snapshot from EOD series
 function computeTickerSnapshot(
-  item: { ticker: string; tags: string[]; section?: string; subtitle?: string; name?: string },
+  item: { ticker: string; tags: string[]; section?: string; group?: string; subtitle?: string; name?: string },
   eodBars: Array<{ date: string; close: number }>
 ): TrendTickerSnapshot | null {
   if (eodBars.length === 0) {
@@ -462,6 +463,7 @@ function computeTickerSnapshot(
       ticker: item.ticker,
       tags: item.tags,
       section: item.section,
+      group: item.group,
       subtitle: item.subtitle,
       name: item.name,
       status: 'UNKNOWN',
@@ -540,7 +542,7 @@ async function main() {
   // Map: providerSymbol -> list of (deckId, ticker, tags, section, subtitle, name)
   const symbolMap = new Map<
     string,
-    Array<{ deckId: TrendDeckId; ticker: string; tags: string[]; section?: string; subtitle?: string; name?: string }>
+    Array<{ deckId: TrendDeckId; ticker: string; tags: string[]; section?: string; group?: string; subtitle?: string; name?: string }>
   >();
 
   for (const deckId of deckIds) {
@@ -556,6 +558,7 @@ async function main() {
         ticker: item.ticker,
         tags: item.tags,
         section: item.section,
+        group: item.group,
         subtitle: item.subtitle,
         name: item.name,
       });
@@ -600,6 +603,7 @@ async function main() {
         ticker: item.ticker,
         tags: item.tags,
         section: item.section,
+        group: item.group,
         subtitle: item.subtitle,
         name: item.name,
       };

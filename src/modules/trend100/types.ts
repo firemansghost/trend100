@@ -56,6 +56,7 @@ export interface TrendUniverseItem {
   ticker: string;
   tags: TrendTag[];
   section?: string; // Optional section grouping (deck-specific)
+  group?: string; // Optional group for filtering (e.g., "METALS", "MINERS")
   providerTicker?: string; // For future real-data provider mapping (e.g., "BTC-USD")
   subtitle?: string; // Optional short label for tiles (e.g., "FBTC", "Technology")
   name?: string; // Optional full descriptive name for modal (e.g., "Technology Select Sector SPDR Fund")
@@ -70,6 +71,7 @@ export interface TrendTickerSnapshot {
   ticker: string;
   tags: string[];
   section?: string; // Optional section grouping (deck-specific)
+  group?: string; // Optional group for filtering (e.g., "METALS", "MINERS")
   subtitle?: string; // Optional short label for tiles (e.g., "FBTC", "Technology")
   name?: string; // Optional full descriptive name for modal (e.g., "Technology Select Sector SPDR Fund")
   status: TrendStatus;
@@ -125,7 +127,8 @@ export type TrendDeckId =
   | 'US_FACTORS'
   | 'GLOBAL_EQUITIES'
   | 'FIXED_INCOME'
-  | 'MACRO';
+  | 'MACRO'
+  | 'METALS_MINING';
 
 export interface TrendDeckSection {
   id: string;

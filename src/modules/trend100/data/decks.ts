@@ -112,12 +112,32 @@ const MACRO_UNIVERSE: TrendUniverse = [
   { ticker: 'Ethereum', tags: ['crypto'], section: 'Crypto', providerTicker: 'FETH', subtitle: 'FETH', name: 'Fidelity Ethereum Fund' },
 ];
 
+/**
+ * Metals & Mining deck (11 tickers)
+ */
+const METALS_MINING_UNIVERSE: TrendUniverse = [
+  // Metals (physical/basket ETFs)
+  { ticker: 'GLTR', tags: ['etf', 'metals', 'precious'], group: 'METALS', section: 'Metals', subtitle: 'Precious Metals', name: 'abrdn Physical Precious Metals Basket Shares ETF' },
+  { ticker: 'GLDM', tags: ['etf', 'metals', 'gold'], group: 'METALS', section: 'Metals', subtitle: 'Gold', name: 'SPDR Gold MiniShares Trust' },
+  { ticker: 'SLV', tags: ['etf', 'metals', 'silver'], group: 'METALS', section: 'Metals', subtitle: 'Silver', name: 'iShares Silver Trust' },
+  { ticker: 'PPLT', tags: ['etf', 'metals', 'platinum'], group: 'METALS', section: 'Metals', subtitle: 'Platinum', name: 'abrdn Physical Platinum Shares ETF' },
+  { ticker: 'PALL', tags: ['etf', 'metals', 'palladium'], group: 'METALS', section: 'Metals', subtitle: 'Palladium', name: 'abrdn Physical Palladium Shares ETF' },
+  // Miners (equity ETFs)
+  { ticker: 'GDX', tags: ['etf', 'miners', 'gold-miners'], group: 'MINERS', section: 'Miners', subtitle: 'Gold Miners', name: 'VanEck Gold Miners ETF' },
+  { ticker: 'GDXJ', tags: ['etf', 'miners', 'gold-miners-junior'], group: 'MINERS', section: 'Miners', subtitle: 'Junior Gold', name: 'VanEck Junior Gold Miners ETF' },
+  { ticker: 'SIL', tags: ['etf', 'miners', 'silver-miners'], group: 'MINERS', section: 'Miners', subtitle: 'Silver Miners', name: 'Global X Silver Miners ETF' },
+  { ticker: 'SILJ', tags: ['etf', 'miners', 'silver-miners-junior'], group: 'MINERS', section: 'Miners', subtitle: 'Junior Silver', name: 'ETFMG Prime Junior Silver Miners ETF' },
+  { ticker: 'XME', tags: ['etf', 'miners', 'metals-mining'], group: 'MINERS', section: 'Miners', subtitle: 'Metals & Mining', name: 'SPDR S&P Metals & Mining ETF' },
+  { ticker: 'PICK', tags: ['etf', 'miners', 'metals-mining-global'], group: 'MINERS', section: 'Miners', subtitle: 'Global Mining', name: 'iShares MSCI Global Metals & Mining Producers ETF' },
+];
+
 // Validate all universes
 validateUniverse(US_SECTORS_UNIVERSE);
 validateUniverse(US_FACTORS_UNIVERSE);
 validateUniverse(GLOBAL_EQUITIES_UNIVERSE);
 validateUniverse(FIXED_INCOME_UNIVERSE);
 validateUniverse(MACRO_UNIVERSE);
+validateUniverse(METALS_MINING_UNIVERSE);
 
 /**
  * All available decks
@@ -189,6 +209,16 @@ export const DECKS: TrendDeck[] = [
       { id: 'Uranium', label: 'Uranium' },
       { id: 'Crypto', label: 'Crypto' },
       { id: 'Dollar', label: 'Dollar' },
+    ],
+  },
+  {
+    id: 'METALS_MINING',
+    label: 'Metals & Mining',
+    description: 'Physical metals ETFs and mining equity ETFs',
+    universe: METALS_MINING_UNIVERSE,
+    sections: [
+      { id: 'Metals', label: 'Metals' },
+      { id: 'Miners', label: 'Miners' },
     ],
   },
 ];

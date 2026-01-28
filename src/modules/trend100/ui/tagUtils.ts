@@ -81,15 +81,32 @@ export function filterBySection(
 }
 
 /**
- * Applies section, search, and tag filters in order
+ * Filters tickers by group (single-select: "METALS", "MINERS", or null for all)
+ */
+export function filterByGroup(
+  snapshots: TrendTickerSnapshot[],
+  selectedGroup: string | null
+): TrendTickerSnapshot[] {
+  if (selectedGroup === null || selectedGroup === 'all') {
+    return snapshots;
+  }
+  return snapshots.filter(
+    (snapshot) => snapshot.group === selectedGroup
+  );
+}
+
+/**
+ * Applies section, group, search, and tag filters in order
  */
 export function applyFilters(
   snapshots: TrendTickerSnapshot[],
   searchQuery: string,
   selectedTags: string[],
-  selectedSection: string | null = null
+  selectedSection: string | null = null,
+  selectedGroup: string | null = null
 ): TrendTickerSnapshot[] {
   let filtered = filterBySection(snapshots, selectedSection);
+  filtered = filterByGroup(filtered, selectedGroup);
   filtered = filterBySearch(filtered, searchQuery);
   filtered = filterByTags(filtered, selectedTags);
   return filtered;

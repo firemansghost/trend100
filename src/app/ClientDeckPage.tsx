@@ -22,11 +22,17 @@ interface ClientDeckPageProps {
 function ClientDeckPageContent() {
   const searchParams = useSearchParams();
   const rawDeck = searchParams.get('deck');
+  const rawGroup = searchParams.get('group');
   const debug = searchParams.get('debug') === '1';
 
   // Resolve deckId
   const deckId: TrendDeckId = isDeckId(rawDeck) ? rawDeck : 'LEADERSHIP';
   const deck = getDeck(deckId);
+
+  // Resolve group filter (valid values: 'metals', 'miners', 'all', or null for all)
+  const groupFilter: string | null = rawGroup && ['metals', 'miners', 'all'].includes(rawGroup.toLowerCase())
+    ? rawGroup.toUpperCase() === 'METALS' ? 'METALS' : rawGroup.toUpperCase() === 'MINERS' ? 'MINERS' : null
+    : null;
 
   // Snapshot state
   const [snapshot, setSnapshot] = useState<ReturnType<typeof getLatestSnapshot> | null>(null);
@@ -150,6 +156,7 @@ function ClientDeckPageContent() {
         deckDescription={deck.description}
         deckSections={deck.sections ?? []}
         isDemoMode={snapshotSource === 'mock'}
+        initialGroupFilter={groupFilter}
       />
     </>
   );

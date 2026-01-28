@@ -1,6 +1,6 @@
 {
-  "runDate": "2026-01-27",
-  "asOfDate": "2026-01-26",
+  "runDate": "2026-01-28",
+  "asOfDate": "2026-01-27",
   "universeSize": 18,
   "tickers": [
     {
@@ -14,13 +14,13 @@
       "subtitle": "Agg Bond",
       "name": "iShares Core U.S. Aggregate Bond ETF",
       "status": "GREEN",
-      "price": 100.26,
-      "changePct": 0.24,
-      "sma200": 99.27,
+      "price": 100.19,
+      "changePct": -0.07,
+      "sma200": 99.28,
       "sma50w": 99.2,
       "ema50w": 99.43,
-      "distanceTo200dPct": 1,
-      "distanceToUpperBandPct": 0.83
+      "distanceTo200dPct": 0.92,
+      "distanceToUpperBandPct": 0.77
     },
     {
       "ticker": "BILS",
@@ -52,13 +52,13 @@
       "subtitle": "BDCs",
       "name": "VanEck Business Development Company ETF",
       "status": "RED",
-      "price": 14.21,
-      "changePct": -2,
+      "price": 14.23,
+      "changePct": 0.14,
       "sma200": 15.24,
       "sma50w": 15.45,
       "ema50w": 15.24,
-      "distanceTo200dPct": -6.76,
-      "distanceToUpperBandPct": -8
+      "distanceTo200dPct": -6.64,
+      "distanceToUpperBandPct": -7.88
     },
     {
       "ticker": "BKLN",
@@ -71,13 +71,13 @@
       "subtitle": "Bank Loans",
       "name": "Invesco Senior Loan ETF",
       "status": "RED",
-      "price": 20.84,
-      "changePct": -0.29,
-      "sma200": 20.89,
+      "price": 20.82,
+      "changePct": -0.1,
+      "sma200": 20.9,
       "sma50w": 20.89,
       "ema50w": 20.94,
-      "distanceTo200dPct": -0.26,
-      "distanceToUpperBandPct": -0.49
+      "distanceTo200dPct": -0.37,
+      "distanceToUpperBandPct": -0.59
     },
     {
       "ticker": "BNDX",
@@ -90,13 +90,13 @@
       "subtitle": "Intl Bond",
       "name": "Vanguard Total International Bond ETF",
       "status": "RED",
-      "price": 48.53,
-      "changePct": 0.12,
-      "sma200": 49.26,
+      "price": 48.52,
+      "changePct": -0.02,
+      "sma200": 49.25,
       "sma50w": 49.17,
       "ema50w": 49.15,
-      "distanceTo200dPct": -1.47,
-      "distanceToUpperBandPct": -1.3
+      "distanceTo200dPct": -1.49,
+      "distanceToUpperBandPct": -1.32
     },
     {
       "ticker": "BWX",
@@ -108,14 +108,14 @@
       "section": "Rates",
       "subtitle": "Intl Corp",
       "name": "SPDR Bloomberg International Corporate Bond ETF",
-      "status": "RED",
-      "price": 22.81,
-      "changePct": 1.56,
+      "status": "GREEN",
+      "price": 23.04,
+      "changePct": 1.01,
       "sma200": 22.82,
-      "sma50w": 22.69,
-      "ema50w": 22.6,
-      "distanceTo200dPct": -0.03,
-      "distanceToUpperBandPct": 0.53
+      "sma50w": 22.7,
+      "ema50w": 22.61,
+      "distanceTo200dPct": 0.95,
+      "distanceToUpperBandPct": 1.52
     },
     {
       "ticker": "CWB",
@@ -128,13 +128,13 @@
       "subtitle": "Convertibles",
       "name": "SPDR Bloomberg Convertible Securities ETF",
       "status": "GREEN",
-      "price": 93.7,
-      "changePct": -0.55,
-      "sma200": 86.05,
-      "sma50w": 85.04,
-      "ema50w": 86.41,
-      "distanceTo200dPct": 8.89,
-      "distanceToUpperBandPct": 8.44
+      "price": 94.91,
+      "changePct": 1.29,
+      "sma200": 86.17,
+      "sma50w": 85.06,
+      "ema50w": 86.46,
+      "distanceTo200dPct": 10.15,
+      "distanceToUpperBandPct": 9.78
     },
     {
       "ticker": "EMB",
@@ -147,13 +147,13 @@
       "subtitle": "EM USD Debt",
       "name": "iShares J.P. Morgan USD Emerging Markets Bond ETF",
       "status": "GREEN",
-      "price": 96.82,
-      "changePct": 0.35,
-      "sma200": 93.61,
+      "price": 96.78,
+      "changePct": -0.04,
+      "sma200": 93.66,
       "sma50w": 93.28,
-      "ema50w": 94.01,
-      "distanceTo200dPct": 3.43,
-      "distanceToUpperBandPct": 2.99
+      "ema50w": 94,
+      "distanceTo200dPct": 3.33,
+      "distanceToUpperBandPct": 2.95
     },
     {
       "ticker": "EMLC",
@@ -166,13 +166,13 @@
       "subtitle": "EM Local",
       "name": "VanEck J.P. Morgan EM Local Currency Bond ETF",
       "status": "GREEN",
-      "price": 26.35,
-      "changePct": 0.57,
-      "sma200": 25.21,
-      "sma50w": 25.06,
-      "ema50w": 25.24,
-      "distanceTo200dPct": 4.52,
-      "distanceToUpperBandPct": 4.41
+      "price": 26.57,
+      "changePct": 0.83,
+      "sma200": 25.23,
+      "sma50w": 25.07,
+      "ema50w": 25.25,
+      "distanceTo200dPct": 5.33,
+      "distanceToUpperBandPct": 5.24
     },
     {
       "ticker": "HYG",
@@ -185,12 +185,13 @@
       "subtitle": "High Yield",
       "name": "iShares iBoxx $ High Yield Corporate Bond ETF",
       "status": "GREEN",
-      "price": 81.18,
-      "sma200": 80.13,
+      "price": 81.17,
+      "changePct": -0.01,
+      "sma200": 80.16,
       "sma50w": 80.01,
       "ema50w": 80.15,
-      "distanceTo200dPct": 1.31,
-      "distanceToUpperBandPct": 1.29
+      "distanceTo200dPct": 1.26,
+      "distanceToUpperBandPct": 1.27
     },
     {
       "ticker": "IEF",
@@ -203,13 +204,13 @@
       "subtitle": "7–10y Tsy",
       "name": "iShares 7-10 Year Treasury Bond ETF",
       "status": "GREEN",
-      "price": 96.09,
-      "changePct": 0.31,
+      "price": 95.98,
+      "changePct": -0.11,
       "sma200": 95.69,
       "sma50w": 95.57,
       "ema50w": 95.76,
-      "distanceTo200dPct": 0.42,
-      "distanceToUpperBandPct": 0.34
+      "distanceTo200dPct": 0.3,
+      "distanceToUpperBandPct": 0.23
     },
     {
       "ticker": "LQD",
@@ -222,13 +223,13 @@
       "subtitle": "IG Credit",
       "name": "iShares iBoxx $ Investment Grade Corporate Bond ETF",
       "status": "GREEN",
-      "price": 110.93,
-      "changePct": 0.14,
-      "sma200": 109.6,
+      "price": 110.81,
+      "changePct": -0.11,
+      "sma200": 109.63,
       "sma50w": 109.47,
-      "ema50w": 109.92,
-      "distanceTo200dPct": 1.21,
-      "distanceToUpperBandPct": 0.92
+      "ema50w": 109.91,
+      "distanceTo200dPct": 1.08,
+      "distanceToUpperBandPct": 0.81
     },
     {
       "ticker": "MBB",
@@ -241,13 +242,13 @@
       "subtitle": "MBS",
       "name": "iShares MBS ETF",
       "status": "GREEN",
-      "price": 95.75,
-      "changePct": 0.41,
-      "sma200": 94.13,
+      "price": 95.74,
+      "changePct": -0.01,
+      "sma200": 94.14,
       "sma50w": 94.09,
       "ema50w": 94.4,
-      "distanceTo200dPct": 1.72,
-      "distanceToUpperBandPct": 1.43
+      "distanceTo200dPct": 1.7,
+      "distanceToUpperBandPct": 1.42
     },
     {
       "ticker": "PFF",
@@ -260,13 +261,13 @@
       "subtitle": "Preferreds",
       "name": "iShares Preferred & Income Securities ETF",
       "status": "GREEN",
-      "price": 31.88,
-      "changePct": -0.19,
-      "sma200": 30.98,
+      "price": 31.84,
+      "changePct": -0.13,
+      "sma200": 31,
       "sma50w": 31.01,
       "ema50w": 31.3,
-      "distanceTo200dPct": 2.9,
-      "distanceToUpperBandPct": 1.85
+      "distanceTo200dPct": 2.72,
+      "distanceToUpperBandPct": 1.73
     },
     {
       "ticker": "SHY",
@@ -279,13 +280,13 @@
       "subtitle": "1–3y Tsy",
       "name": "iShares 1-3 Year Treasury Bond ETF",
       "status": "GREEN",
-      "price": 82.87,
-      "changePct": 0.07,
+      "price": 82.89,
+      "changePct": 0.02,
       "sma200": 82.74,
       "sma50w": 82.71,
       "ema50w": 82.69,
-      "distanceTo200dPct": 0.16,
-      "distanceToUpperBandPct": 0.19
+      "distanceTo200dPct": 0.19,
+      "distanceToUpperBandPct": 0.22
     },
     {
       "ticker": "STIP",
@@ -298,13 +299,13 @@
       "subtitle": "Short TIPS",
       "name": "iShares 0-5 Year TIPS Bond ETF",
       "status": "RED",
-      "price": 102.57,
-      "changePct": 0.13,
+      "price": 102.65,
+      "changePct": 0.08,
       "sma200": 102.86,
       "sma50w": 102.83,
-      "ema50w": 102.48,
-      "distanceTo200dPct": -0.28,
-      "distanceToUpperBandPct": -0.25
+      "ema50w": 102.49,
+      "distanceTo200dPct": -0.2,
+      "distanceToUpperBandPct": -0.18
     },
     {
       "ticker": "TIP",
@@ -317,13 +318,13 @@
       "subtitle": "TIPS",
       "name": "iShares TIPS Bond ETF",
       "status": "GREEN",
-      "price": 110.38,
-      "changePct": 0.34,
-      "sma200": 110.16,
+      "price": 110.39,
+      "changePct": 0.01,
+      "sma200": 110.17,
       "sma50w": 110.12,
       "ema50w": 110,
       "distanceTo200dPct": 0.2,
-      "distanceToUpperBandPct": 0.23
+      "distanceToUpperBandPct": 0.24
     },
     {
       "ticker": "TLT",
@@ -335,20 +336,20 @@
       "section": "Rates",
       "subtitle": "20y+ Tsy",
       "name": "iShares 20+ Year Treasury Bond ETF",
-      "status": "YELLOW",
-      "price": 88.35,
-      "changePct": 0.75,
-      "sma200": 87.92,
-      "sma50w": 88.27,
-      "ema50w": 88.85,
-      "distanceTo200dPct": 0.49,
-      "distanceToUpperBandPct": -0.56
+      "status": "RED",
+      "price": 87.8,
+      "changePct": -0.62,
+      "sma200": 87.91,
+      "sma50w": 88.26,
+      "ema50w": 88.82,
+      "distanceTo200dPct": -0.13,
+      "distanceToUpperBandPct": -1.15
     }
   ],
   "health": {
-    "greenPct": 66.7,
-    "yellowPct": 5.6,
+    "greenPct": 72.2,
+    "yellowPct": 0,
     "redPct": 27.8,
-    "regimeLabel": "TRANSITION"
+    "regimeLabel": "RISK_ON"
   }
 }

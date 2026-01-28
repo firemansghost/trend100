@@ -17538,15 +17538,15 @@
   },
   {
     "date": "2026-01-27",
-    "greenPct": 65,
-    "yellowPct": 6,
-    "redPct": 29,
+    "greenPct": 69,
+    "yellowPct": 1,
+    "redPct": 30,
     "regimeLabel": "TRANSITION",
     "knownCount": 100,
     "unknownCount": 0,
     "totalTickers": 100,
-    "diffusionPct": 0,
-    "diffusionCount": 0,
+    "diffusionPct": 7,
+    "diffusionCount": 7,
     "diffusionTotalCompared": 100
   },
   {

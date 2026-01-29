@@ -5,6 +5,17 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-01-29 — (Data/UI) Grouped decks generate group-specific health-history series (used by chart)
+**Choice:** For decks whose universe items include `group` (e.g., METALS_MINING), the pipeline generates multiple health-history artifacts:
+- `public/health-history.<DECK>.json` (ALL)
+- `public/health-history.<DECK>.<group>.json` (e.g., `.metals`, `.miners`)
+
+The UI chart loads the group-specific file when the user selects a group, with fallback to ALL if the group file is missing.
+
+**Why:** The group toggle must change the chart without splitting the deck into multiple decks. Precomputing group series keeps the UI simple and keeps computation in the existing offline/CI pipeline.
+
+---
+
 ### 2026-01-23 — (Data) Backfill UNKNOWN points must include full health-history schema to pass validation
 **Choice:** All health-history points (VALID or UNKNOWN) must include the complete required schema with all fields as finite numbers. UNKNOWN points use 0/0/0 for greenPct/yellowPct/redPct (not null) and 0/0/totalTickers for diffusion fields. Introduced `makeUnknownPoint()` helper function to ensure consistent schema compliance.  
 **Why:** The `verify:artifacts` validator enforces `hasFullHealthSchema()` which requires all percentage and diffusion fields to be finite numbers. UNKNOWN points with null percentages or missing diffusion fields fail validation, causing backfill workflows to fail.  

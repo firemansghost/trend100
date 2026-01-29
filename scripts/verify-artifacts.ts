@@ -10,7 +10,7 @@ import './load-env';
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join } from 'path';
 import type { TrendHealthHistoryPoint, TrendDeckId } from '../src/modules/trend100/types';
-import { getAllDeckIds } from '../src/modules/trend100/data/decks';
+import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
 import { getMinKnownPctForDeck } from '../src/modules/trend100/data/deckConfig';
 import { isWeekend, hasFullHealthSchema } from './healthHistorySanitize';
 
@@ -29,18 +29,27 @@ function getHealthHistoryRetentionDays(): number {
  * Print health history stats for a deck
  * Returns false if validation fails (weekend/partial points found)
  */
-function printHealthHistoryStats(deckId: TrendDeckId): boolean {
-  const filePath = join(PUBLIC_DIR, `health-history.${deckId}.json`);
+function printHealthHistoryStatsForFile(
+  label: string,
+  fileName: string,
+  deckIdForConfig: TrendDeckId,
+  requireExists: boolean
+): boolean {
+  const filePath = join(PUBLIC_DIR, fileName);
   if (!existsSync(filePath)) {
-    console.log(`  ${deckId}: File not found`);
-    return true; // Not an error if file doesn't exist
+    if (requireExists) {
+      console.error(`  ❌ ${label}: File not found (${fileName})`);
+      return false;
+    }
+    console.log(`  ${label}: File not found`);
+    return true;
   }
   
   try {
     const content = readFileSync(filePath, 'utf-8');
     const history = JSON.parse(content) as TrendHealthHistoryPoint[];
     if (!Array.isArray(history) || history.length === 0) {
-      console.log(`  ${deckId}: Empty or invalid`);
+      console.log(`  ${label}: Empty or invalid`);
       return true; // Not a validation failure
     }
 
@@ -59,11 +68,11 @@ function printHealthHistoryStats(deckId: TrendDeckId): boolean {
 
     // Fail if weekend or partial points found
     if (weekendPoints.length > 0) {
-      console.error(`  ❌ ${deckId}: Found ${weekendPoints.length} weekend point(s) (first: ${weekendPoints[0]})`);
+      console.error(`  ❌ ${label}: Found ${weekendPoints.length} weekend point(s) (first: ${weekendPoints[0]})`);
       return false;
     }
     if (partialSchemaPoints.length > 0) {
-      console.error(`  ❌ ${deckId}: Found ${partialSchemaPoints.length} partial-schema point(s) (first: ${partialSchemaPoints[0]})`);
+      console.error(`  ❌ ${label}: Found ${partialSchemaPoints.length} partial-schema point(s) (first: ${partialSchemaPoints[0]})`);
       return false;
     }
     
@@ -116,11 +125,11 @@ function printHealthHistoryStats(deckId: TrendDeckId): boolean {
     
     // Get per-deck minKnownPct
     const envDefault = parseFloat(process.env.TREND100_MIN_KNOWN_PCT || '0.9');
-    const deckMinKnownPct = getMinKnownPctForDeck(deckId, envDefault);
+    const deckMinKnownPct = getMinKnownPctForDeck(deckIdForConfig, envDefault);
     
     // For MACRO, show eligible stats
     let eligibleStats = '';
-    if (deckId === 'MACRO' && validPoints.length > 0) {
+    if (deckIdForConfig === 'MACRO' && validPoints.length > 0) {
       const recentValid = validPoints.slice(-365); // Last 365 valid points
       const eligibleCounts = recentValid
         .map((p) => p.eligibleCount ?? p.totalTickers ?? 0)
@@ -131,7 +140,7 @@ function printHealthHistoryStats(deckId: TrendDeckId): boolean {
       }
     }
     
-    console.log(`  ${deckId}: ${history.length} points (${earliest} to ${latest}, ~${days} days)${status}`);
+    console.log(`  ${label}: ${history.length} points (${earliest} to ${latest}, ~${days} days)${status}`);
     console.log(`    Valid: ${validPoints.length}, UNKNOWN: ${unknownPoints.length}, MinKnownPct: ${deckMinKnownPct.toFixed(2)}${eligibleStats}`);
     if (firstValidDate && firstValidDate !== earliest) {
       console.log(`    First valid: ${firstValidDate}`);
@@ -139,9 +148,20 @@ function printHealthHistoryStats(deckId: TrendDeckId): boolean {
     
     return true; // Validation passed
   } catch (error) {
-    console.log(`  ${deckId}: Error reading file: ${error}`);
+    console.log(`  ${label}: Error reading file: ${error}`);
     return false; // Error reading file is a failure
   }
+}
+
+function getGroupKeysForDeck(deckId: TrendDeckId): string[] {
+  const deck = getDeck(deckId);
+  const keys = new Set<string>();
+  for (const item of deck.universe) {
+    if (item.group) {
+      keys.add(item.group.toLowerCase());
+    }
+  }
+  return Array.from(keys).sort((a, b) => a.localeCompare(b));
 }
 
 /**
@@ -241,9 +261,30 @@ function main() {
   const deckIds = getAllDeckIds();
   let validationFailed = false;
   for (const deckId of deckIds) {
-    const isValid = printHealthHistoryStats(deckId);
-    if (!isValid) {
-      validationFailed = true;
+    const groupKeys = getGroupKeysForDeck(deckId);
+
+    // Always validate the base (ALL) file.
+    const requireBase = groupKeys.length > 0;
+    const baseOk = printHealthHistoryStatsForFile(
+      deckId,
+      `health-history.${deckId}.json`,
+      deckId,
+      requireBase
+    );
+    if (!baseOk) validationFailed = true;
+
+    // For grouped decks, require and validate per-group series files.
+    if (groupKeys.length > 0) {
+      for (const key of groupKeys) {
+        const label = `${deckId}.${key}`;
+        const ok = printHealthHistoryStatsForFile(
+          label,
+          `health-history.${deckId}.${key}.json`,
+          deckId,
+          true
+        );
+        if (!ok) validationFailed = true;
+      }
     }
   }
   

@@ -29,10 +29,12 @@ function ClientDeckPageContent() {
   const deckId: TrendDeckId = isDeckId(rawDeck) ? rawDeck : 'LEADERSHIP';
   const deck = getDeck(deckId);
 
-  // Resolve group filter (valid values: 'metals', 'miners', 'all', or null for all)
-  const groupFilter: string | null = rawGroup && ['metals', 'miners', 'all'].includes(rawGroup.toLowerCase())
-    ? rawGroup.toUpperCase() === 'METALS' ? 'METALS' : rawGroup.toUpperCase() === 'MINERS' ? 'MINERS' : null
-    : null;
+  // Resolve group filter from URL (used for heatmap filtering + selecting chart series file)
+  const rawGroupLower = rawGroup?.toLowerCase() ?? null;
+  const groupKeyLower: 'metals' | 'miners' | null =
+    rawGroupLower === 'metals' ? 'metals' : rawGroupLower === 'miners' ? 'miners' : null;
+  const groupFilter: string | null =
+    groupKeyLower === 'metals' ? 'METALS' : groupKeyLower === 'miners' ? 'MINERS' : null;
 
   // Snapshot state
   const [snapshot, setSnapshot] = useState<ReturnType<typeof getLatestSnapshot> | null>(null);
@@ -75,16 +77,23 @@ function ClientDeckPageContent() {
   const [historySource, setHistorySource] = useState<'file' | 'mock'>('mock');
   const [historyLoading, setHistoryLoading] = useState(true);
 
-  // Load history when deckId changes
+  // Load history when deckId or group changes
   useEffect(() => {
     async function loadHistory() {
       setHistoryLoading(true);
       try {
-        const fileName = `health-history.${deckId}.json`;
-        const res = await fetch(`/${fileName}`, { cache: 'no-store' });
+        const baseFileName = `health-history.${deckId}.json`;
+        const groupFileName = groupKeyLower ? `health-history.${deckId}.${groupKeyLower}.json` : null;
+
+        // If group selected, try group series first; fall back to ALL if missing
+        let res = await fetch(`/${groupFileName ?? baseFileName}`, { cache: 'no-store' });
+        if (!res.ok && groupFileName) {
+          res = await fetch(`/${baseFileName}`, { cache: 'no-store' });
+        }
         if (!res.ok) {
           throw new Error('File not found');
         }
+
         const data = (await res.json()) as TrendHealthHistoryPoint[];
         // Validate it's an array
         if (Array.isArray(data)) {
@@ -109,7 +118,7 @@ function ClientDeckPageContent() {
     }
 
     loadHistory();
-  }, [deckId]);
+  }, [deckId, groupKeyLower]);
 
   // Debug panel
   const debugPanel = debug && (

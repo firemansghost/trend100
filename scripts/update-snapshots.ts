@@ -26,6 +26,7 @@ import type {
   TrendTickerSnapshot,
   TrendDeckId,
   TrendHealthHistoryPoint,
+  TrendUniverseItem,
 } from '../src/modules/trend100/types';
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
 import { ensureHistoryBatch } from './marketstack-cache';
@@ -70,6 +71,8 @@ function makeUnknownPoint(
     missingCount,
   };
 }
+
+type HistoryGroupKey = string; // e.g. "metals", "miners"
 
 /**
  * Health-history retention policy (calendar days).
@@ -220,12 +223,14 @@ function computeTickerSnapshotForDate(
 function computeHealthForDate(
   deckId: TrendDeckId,
   targetDate: string,
-  metaIndex: Record<string, { subtitle?: string; name?: string }>
-): { point: TrendHealthHistoryPoint; tickers: TrendTickerSnapshot[] } | null {
+  metaIndex: Record<string, { subtitle?: string; name?: string }>,
+  universeOverride?: TrendUniverseItem[]
+): { point: TrendHealthHistoryPoint; tickers: TrendTickerSnapshot[] } {
   const deck = getDeck(deckId);
   const tickers: TrendTickerSnapshot[] = [];
+  const universe = universeOverride ?? deck.universe;
 
-  for (const item of deck.universe) {
+  for (const item of universe) {
     const providerSymbol = item.providerTicker ?? item.ticker;
     const eodBars = loadEodCache(providerSymbol);
 
@@ -246,11 +251,7 @@ function computeHealthForDate(
     }
   }
 
-  if (tickers.length === 0) {
-    return null;
-  }
-
-  const totalTickers = deck.universe.length;
+  const totalTickers = universe.length;
   
   // Track eligible/ineligible/missing counts
   const statuses = tickers.map((t) => t.status);
@@ -260,11 +261,14 @@ function computeHealthForDate(
   const eligibleCount = tickers.length;
   const ineligibleCount = statuses.filter((s) => s === 'UNKNOWN').length;
   const missingCount = totalTickers - eligibleCount;
-  const unknownCount = ineligibleCount;
   
   // Determine denominator mode (MACRO uses eligible, others use total)
   const denominatorMode = getKnownDenominatorMode(deckId);
   const denominator = denominatorMode === 'eligible' ? eligibleCount : totalTickers;
+  const unknownCount =
+    denominatorMode === 'eligible'
+      ? ineligibleCount
+      : Math.max(0, totalTickers - knownCount);
   
   // Check minEligibleCount threshold (MACRO only)
   const minEligibleCount = getMinEligibleCountForDeck(deckId);
@@ -333,14 +337,11 @@ function computeDiffusion(
   deckId: TrendDeckId,
   date1: string,
   date2: string,
-  metaIndex: Record<string, { subtitle?: string; name?: string }>
+  metaIndex: Record<string, { subtitle?: string; name?: string }>,
+  universeOverride?: TrendUniverseItem[]
 ): { diffusionPct: number | null; diffusionCount: number; diffusionTotalCompared: number } {
-  const result1 = computeHealthForDate(deckId, date1, metaIndex);
-  const result2 = computeHealthForDate(deckId, date2, metaIndex);
-
-  if (!result1 || !result2) {
-    return { diffusionPct: null, diffusionCount: 0, diffusionTotalCompared: 0 };
-  }
+  const result1 = computeHealthForDate(deckId, date1, metaIndex, universeOverride);
+  const result2 = computeHealthForDate(deckId, date2, metaIndex, universeOverride);
 
   if (result1.point.regimeLabel === 'UNKNOWN' || result2.point.regimeLabel === 'UNKNOWN') {
     return { diffusionPct: null, diffusionCount: 0, diffusionTotalCompared: 0 };
@@ -389,6 +390,23 @@ function computeDiffusion(
   };
 }
 
+function getGroupKeysForDeck(deckId: TrendDeckId): HistoryGroupKey[] {
+  const deck = getDeck(deckId);
+  const keys = new Set<string>();
+  for (const item of deck.universe) {
+    if (item.group) {
+      keys.add(item.group.toLowerCase());
+    }
+  }
+  return Array.from(keys).sort((a, b) => a.localeCompare(b));
+}
+
+function getUniverseForGroup(deckId: TrendDeckId, groupKey?: HistoryGroupKey): TrendUniverseItem[] {
+  const deck = getDeck(deckId);
+  if (!groupKey) return deck.universe;
+  return deck.universe.filter((item) => (item.group ?? '').toLowerCase() === groupKey);
+}
+
 // Get today's date in YYYY-MM-DD format
 function getTodayDate(): string {
   return new Date().toISOString().split('T')[0]!;
@@ -400,13 +418,14 @@ function getSnapshotFilePath(deckId: TrendDeckId): string {
 }
 
 // Get history file path
-function getHistoryFilePath(deckId: TrendDeckId): string {
-  return join(process.cwd(), 'public', `health-history.${deckId}.json`);
+function getHistoryFilePath(deckId: TrendDeckId, groupKey?: HistoryGroupKey): string {
+  const suffix = groupKey ? `.${groupKey}` : '';
+  return join(process.cwd(), 'public', `health-history.${deckId}${suffix}.json`);
 }
 
 // Load existing history (with sanitization)
-function loadHistory(deckId: TrendDeckId): TrendHealthHistoryPoint[] {
-  const filePath = getHistoryFilePath(deckId);
+function loadHistory(deckId: TrendDeckId, groupKey?: HistoryGroupKey): TrendHealthHistoryPoint[] {
+  const filePath = getHistoryFilePath(deckId, groupKey);
   try {
     const content = readFileSync(filePath, 'utf-8');
     const history = JSON.parse(content) as TrendHealthHistoryPoint[];
@@ -418,8 +437,9 @@ function loadHistory(deckId: TrendDeckId): TrendHealthHistoryPoint[] {
     const { sanitized, removedWeekend, removedPartial } = sanitizeHealthHistory(history);
     
     if (removedWeekend > 0 || removedPartial > 0) {
+      const label = groupKey ? `${deckId}.${groupKey}` : deckId;
       console.log(
-        `  🧹 Sanitized health history for ${deckId}: removed ${removedWeekend} weekend point(s), removed ${removedPartial} partial-schema point(s)`
+        `  🧹 Sanitized health history for ${label}: removed ${removedWeekend} weekend point(s), removed ${removedPartial} partial-schema point(s)`
       );
     }
     
@@ -430,9 +450,9 @@ function loadHistory(deckId: TrendDeckId): TrendHealthHistoryPoint[] {
 }
 
 // Save history
-function saveHistory(deckId: TrendDeckId, history: TrendHealthHistoryPoint[]): void {
+function saveHistory(deckId: TrendDeckId, history: TrendHealthHistoryPoint[], groupKey?: HistoryGroupKey): void {
   const sorted = [...history].sort((a, b) => a.date.localeCompare(b.date));
-  const filePath = getHistoryFilePath(deckId);
+  const filePath = getHistoryFilePath(deckId, groupKey);
   writeFileSync(filePath, JSON.stringify(sorted, null, 2) + '\n', 'utf-8');
 }
 
@@ -685,71 +705,66 @@ async function main() {
     const snapshot = snapshots.get(deckId);
     if (!snapshot) continue;
 
-    // Load existing history
-    const existingHistory = loadHistory(deckId);
-
     // Guard: skip weekend dates (markets are closed)
     if (isWeekend(snapshot.asOfDate)) {
       console.log(`  ⚠️  Skipping health history entry for ${deckId}: asOfDate is weekend (${snapshot.asOfDate})`);
       continue;
     }
 
-    // Recompute today's health with validity check (to get knownCount/unknownCount)
-    const todayResult = computeHealthForDate(deckId, snapshot.asOfDate, metaIndex);
-    if (!todayResult) {
-      console.log(`  ⚠️  Skipping health history entry for ${deckId}: no data available (date: ${snapshot.asOfDate})`);
-      continue;
-    }
+    const groupKeys = getGroupKeysForDeck(deckId);
+    const variants: Array<{ groupKey?: HistoryGroupKey }> = [{}, ...groupKeys.map((g) => ({ groupKey: g }))];
 
-    let entry = todayResult.point;
+    for (const variant of variants) {
+      const groupKey = variant.groupKey;
+      const label = groupKey ? `${deckId}.${groupKey}` : deckId;
+      const universe = getUniverseForGroup(deckId, groupKey);
 
-    // Compute diffusion: find previous trading day and compare
-    let prevTradingDate: string | null = null;
-    if (existingHistory.length > 0) {
-      for (let i = existingHistory.length - 1; i >= 0; i--) {
-        const prev = existingHistory[i]!;
-        if (prev.date < snapshot.asOfDate) {
-          prevTradingDate = prev.date;
-          break;
+      const existingHistory = loadHistory(deckId, groupKey);
+
+      const todayResult = computeHealthForDate(deckId, snapshot.asOfDate, metaIndex, universe);
+      let entry = todayResult.point;
+
+      // Compute diffusion: find previous trading day and compare
+      let prevTradingDate: string | null = null;
+      if (existingHistory.length > 0) {
+        for (let i = existingHistory.length - 1; i >= 0; i--) {
+          const prev = existingHistory[i]!;
+          if (prev.date < snapshot.asOfDate) {
+            prevTradingDate = prev.date;
+            break;
+          }
         }
       }
-    }
 
-    if (prevTradingDate && entry.regimeLabel !== 'UNKNOWN') {
-      const diffusion = computeDiffusion(deckId, prevTradingDate, snapshot.asOfDate, metaIndex);
-      entry = {
-        ...entry,
-        diffusionPct: diffusion.diffusionPct ?? 0,
-        diffusionCount: diffusion.diffusionCount,
-        diffusionTotalCompared: diffusion.diffusionTotalCompared,
-      };
-    } else {
-      // No previous point: set diffusion to zero (first point in history)
-      entry = {
-        ...entry,
-        diffusionPct: 0,
-        diffusionCount: 0,
-        diffusionTotalCompared: entry.totalTickers,
-      };
-    }
+      if (prevTradingDate && entry.regimeLabel !== 'UNKNOWN') {
+        const diffusion = computeDiffusion(deckId, prevTradingDate, snapshot.asOfDate, metaIndex, universe);
+        entry = {
+          ...entry,
+          diffusionPct: diffusion.diffusionPct ?? 0,
+          diffusionCount: diffusion.diffusionCount,
+          diffusionTotalCompared: diffusion.diffusionTotalCompared,
+        };
+      } else {
+        entry = {
+          ...entry,
+          diffusionPct: 0,
+          diffusionCount: 0,
+          diffusionTotalCompared: entry.totalTickers,
+        };
+      }
 
-    // Include UNKNOWN points (they won't be plotted but preserve timeline)
-    // Merge with existing (dedupe by date) and trim to retention window
-    const mergedHistory = mergeAndTrimTimeSeries(
-      existingHistory,
-      [entry],
-      (point) => point.date,
-      retentionDays
-    );
+      const mergedHistory = mergeAndTrimTimeSeries(
+        existingHistory,
+        [entry],
+        (point) => point.date,
+        retentionDays
+      );
 
-    // Save merged and trimmed history
-    saveHistory(deckId, mergedHistory);
-    const statusLabel = entry.regimeLabel === 'UNKNOWN' ? 'UNKNOWN' : 'valid';
-    console.log(
-      `  ✓ Updated health history for ${deckId}: ${mergedHistory.length} points (${statusLabel}, retention: ${retentionDays === 0 ? 'none' : `${retentionDays} days`})`
-    );
-    if (entry.diffusionPct !== null) {
-      console.log(`    Diffusion: ${entry.diffusionPct}% (${entry.diffusionCount}/${entry.diffusionTotalCompared} flips)`);
+      saveHistory(deckId, mergedHistory, groupKey);
+      const statusLabel = entry.regimeLabel === 'UNKNOWN' ? 'UNKNOWN' : 'valid';
+      console.log(
+        `  ✓ Updated health history for ${label}: ${mergedHistory.length} points (${statusLabel}, retention: ${retentionDays === 0 ? 'none' : `${retentionDays} days`})`
+      );
     }
   }
 

@@ -72,13 +72,13 @@
       "subtitle": "Oil",
       "name": "United States Oil Fund LP",
       "status": "GREEN",
-      "price": 73.48,
-      "changePct": 2.31,
-      "sma200": 71.77,
-      "sma50w": 72.06,
-      "ema50w": 72.2,
-      "distanceTo200dPct": 2.39,
-      "distanceToUpperBandPct": 1.77
+      "price": 76.62,
+      "changePct": 4.27,
+      "sma200": 71.83,
+      "sma50w": 72.12,
+      "ema50w": 72.32,
+      "distanceTo200dPct": 6.66,
+      "distanceToUpperBandPct": 5.94
     },
     {
       "ticker": "FXA",
@@ -186,13 +186,13 @@
       "subtitle": "Dollar",
       "name": "Invesco DB US Dollar Index Bullish Fund",
       "status": "RED",
-      "price": 26.78,
-      "changePct": -1.36,
-      "sma200": 27.56,
+      "price": 26.63,
+      "changePct": -0.56,
+      "sma200": 27.55,
       "sma50w": 27.68,
-      "ema50w": 27.81,
-      "distanceTo200dPct": -2.82,
-      "distanceToUpperBandPct": -3.7
+      "ema50w": 27.8,
+      "distanceTo200dPct": -3.34,
+      "distanceToUpperBandPct": -4.22
     },
     {
       "ticker": "GDX",
@@ -281,13 +281,13 @@
       "subtitle": "Uranium",
       "name": "Sprott Physical Uranium Trust",
       "status": "GREEN",
-      "price": 21.65,
-      "changePct": -4.5,
-      "sma200": 17.61,
-      "sma50w": 17.29,
-      "ema50w": 18.3,
-      "distanceTo200dPct": 22.95,
-      "distanceToUpperBandPct": 18.31
+      "price": 23.95,
+      "changePct": 10.62,
+      "sma200": 17.66,
+      "sma50w": 17.34,
+      "ema50w": 18.39,
+      "distanceTo200dPct": 35.59,
+      "distanceToUpperBandPct": 30.24
     },
     {
       "ticker": "Bitcoin",
@@ -298,13 +298,13 @@
       "subtitle": "FBTC",
       "name": "Fidelity Wise Origin Bitcoin Fund",
       "status": "RED",
-      "price": 77.83,
-      "changePct": -0.84,
-      "sma200": 90.73,
-      "sma50w": 88.06,
-      "ema50w": 84.69,
-      "distanceTo200dPct": -14.22,
-      "distanceToUpperBandPct": -11.62
+      "price": 77.55,
+      "changePct": -0.36,
+      "sma200": 90.78,
+      "sma50w": 87.91,
+      "ema50w": 84.41,
+      "distanceTo200dPct": -14.57,
+      "distanceToUpperBandPct": -11.79
     },
     {
       "ticker": "Ethereum",
@@ -315,13 +315,13 @@
       "subtitle": "FETH",
       "name": "Fidelity Ethereum Fund",
       "status": "RED",
-      "price": 29.27,
-      "changePct": -3.05,
-      "sma200": 32.21,
-      "sma50w": 30.44,
-      "ema50w": 32.36,
-      "distanceTo200dPct": -9.14,
-      "distanceToUpperBandPct": -9.56
+      "price": 30.01,
+      "changePct": 2.53,
+      "sma200": 32.29,
+      "sma50w": 30.49,
+      "ema50w": 32.27,
+      "distanceTo200dPct": -7.05,
+      "distanceToUpperBandPct": -7.01
     }
   ],
   "health": {

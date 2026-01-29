@@ -23,6 +23,7 @@ export function isWeekend(dateStr: string): boolean {
  * - date (string)
  * - regimeLabel (string)
  * - greenPct, yellowPct, redPct (number, must be finite)
+ * - pctAboveUpperBand, stretch200MedianPct, heatScore (number, must be finite)
  * - knownCount, unknownCount, totalTickers (number, must be finite)
  * - diffusionPct, diffusionCount, diffusionTotalCompared (number, must be finite)
  */
@@ -45,6 +46,17 @@ export function hasFullHealthSchema(point: TrendHealthHistoryPoint): boolean {
     return false;
   }
   if (typeof point.redPct !== 'number' || !Number.isFinite(point.redPct)) {
+    return false;
+  }
+
+  // Check overextension metric fields are numbers (must be finite)
+  if (typeof point.pctAboveUpperBand !== 'number' || !Number.isFinite(point.pctAboveUpperBand)) {
+    return false;
+  }
+  if (typeof point.stretch200MedianPct !== 'number' || !Number.isFinite(point.stretch200MedianPct)) {
+    return false;
+  }
+  if (typeof point.heatScore !== 'number' || !Number.isFinite(point.heatScore)) {
     return false;
   }
 

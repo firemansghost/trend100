@@ -23,6 +23,7 @@ import { SectionPills } from './SectionPills';
 import type { TrendDeckSection } from '../types';
 
 type Timeframe = '3M' | '1Y' | 'ALL';
+type MetricChoice = 'health' | 'heat' | 'upper' | 'stretch';
 
 interface Trend100DashboardProps {
   snapshot: TrendSnapshot;
@@ -33,6 +34,7 @@ interface Trend100DashboardProps {
   deckSections?: TrendDeckSection[];
   isDemoMode?: boolean;
   initialGroupFilter?: string | null;
+  initialMetric?: MetricChoice;
 }
 
 export function Trend100Dashboard({
@@ -44,11 +46,13 @@ export function Trend100Dashboard({
   deckSections = [],
   isDemoMode = false,
   initialGroupFilter = null,
+  initialMetric = 'health',
 }: Trend100DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(initialGroupFilter);
+  const [metric, setMetric] = useState<MetricChoice>(initialMetric);
   const [sortKey, setSortKey] = useState<SortKey>('UNIVERSE');
   const [timeframe, setTimeframe] = useState<Timeframe>('1Y');
   const [selectedTicker, setSelectedTicker] =
@@ -124,6 +128,19 @@ export function Trend100Dashboard({
     }
   }, [selectedGroup]);
 
+  // Update URL when metric changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (metric === 'health') {
+        url.searchParams.delete('metric');
+      } else {
+        url.searchParams.set('metric', metric);
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [metric]);
+
   // Apply filters first (section -> group -> search -> tags)
   const filteredTickers = applyFilters(
     snapshot.tickers,
@@ -145,7 +162,7 @@ export function Trend100Dashboard({
     // Step 2: Drop trailing all-zero or UNKNOWN points (belt-and-suspenders)
     while (filtered.length > 0) {
       const last = filtered[filtered.length - 1]!;
-      const totalPct = (last.greenPct ?? 0) + (last.yellowPct ?? 0) + (last.redPct ?? 0);
+      const totalPct = last.greenPct + last.yellowPct + last.redPct;
       if (totalPct === 0 || last.regimeLabel === 'UNKNOWN') {
         filtered = filtered.slice(0, -1);
       } else {
@@ -178,12 +195,27 @@ export function Trend100Dashboard({
   // Find first valid point in displayed range (for notice)
   const firstValidPoint = useMemo(() => {
     for (const point of filteredHistory) {
-      if (point.greenPct !== null && point.regimeLabel !== 'UNKNOWN') {
+      if (point.regimeLabel !== 'UNKNOWN') {
         return point;
       }
     }
     return null;
   }, [filteredHistory]);
+
+  const metricConfig = useMemo(() => {
+    switch (metric) {
+      case 'health':
+        return { metricKey: 'greenPct' as const, label: 'Health (Green %)', yDomain: [0, 100] as const };
+      case 'heat':
+        return { metricKey: 'heatScore' as const, label: 'Heat (0–100)', yDomain: [0, 100] as const };
+      case 'upper':
+        return { metricKey: 'pctAboveUpperBand' as const, label: '% Above Upper Band', yDomain: [0, 100] as const };
+      case 'stretch':
+        return { metricKey: 'stretch200MedianPct' as const, label: 'Stretch vs 200D (Median %)', yDomain: ['auto', 'auto'] as const };
+      default:
+        return { metricKey: 'greenPct' as const, label: 'Health (Green %)', yDomain: [0, 100] as const };
+    }
+  }, [metric]);
 
   const handleTileClick = (ticker: TrendTickerSnapshot) => {
     setSelectedTicker(ticker);
@@ -217,7 +249,7 @@ export function Trend100Dashboard({
       {/* Group Toggle - show if deck has grouped tickers */}
       {hasGroups && availableGroups.length > 0 && (
         <div className="container mx-auto px-4 py-3 border-b border-zinc-800">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <span className="text-sm font-medium text-zinc-300">Filter:</span>
             <div className="flex gap-2">
               <button
@@ -275,6 +307,24 @@ export function Trend100Dashboard({
               </div>
             </div>
             <div className="flex gap-2 items-center">
+              {([
+                { key: 'health', label: 'Health' },
+                { key: 'heat', label: 'Heat' },
+                { key: 'upper', label: '% Upper' },
+                { key: 'stretch', label: 'Stretch' },
+              ] as Array<{ key: MetricChoice; label: string }>).map((m) => (
+                <button
+                  key={m.key}
+                  onClick={() => setMetric(m.key)}
+                  className={`px-3 py-1 text-xs rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 ${
+                    metric === m.key
+                      ? 'bg-zinc-700 text-zinc-100 border-zinc-600'
+                      : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
               {(['3M', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
                 <button
                   key={tf}
@@ -305,7 +355,13 @@ export function Trend100Dashboard({
               Data unavailable before {firstValidPoint.date} (insufficient history)
             </p>
           )}
-          <HealthHistoryChart data={filteredHistory} showDiffusion={showDiffusion} />
+          <HealthHistoryChart
+            data={filteredHistory}
+            showDiffusion={showDiffusion}
+            metricKey={metricConfig.metricKey}
+            metricLabel={metricConfig.label}
+            yDomain={metricConfig.yDomain as any}
+          />
         </div>
 
         {/* Heatmap Grid */}

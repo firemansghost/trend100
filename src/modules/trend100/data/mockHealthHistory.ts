@@ -43,6 +43,10 @@ function getRegimeLabel(greenPct: number): 'RISK_ON' | 'TRANSITION' | 'RISK_OFF'
   }
 }
 
+function clamp(x: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, x));
+}
+
 /**
  * Generates mock health history with smooth, deterministic values
  * 
@@ -95,12 +99,29 @@ export function buildMockHealthHistory(
     const yellowPct = Math.round((remaining * 0.4) * 10) / 10;
     const redPct = Math.round((remaining * 0.6) * 10) / 10;
 
+    const totalTickers = 100;
+    const knownCount = totalTickers;
+    const unknownCount = 0;
+    const pctAboveUpperBand = Math.round(greenPct * 10) / 10;
+    const stretch200MedianPct = Math.round(((greenPct / 100) * 60) * 10) / 10;
+    const stretchScore = clamp((stretch200MedianPct / 60) * 100, 0, 100);
+    const heatScore = Math.round(0.6 * pctAboveUpperBand + 0.4 * stretchScore);
+
     history.push({
       date: dateStr,
       greenPct: Math.round(greenPct * 10) / 10,
       yellowPct,
       redPct,
       regimeLabel: getRegimeLabel(greenPct),
+      diffusionPct: 0,
+      diffusionCount: 0,
+      diffusionTotalCompared: totalTickers,
+      pctAboveUpperBand,
+      stretch200MedianPct,
+      heatScore,
+      knownCount,
+      unknownCount,
+      totalTickers,
     });
   }
 

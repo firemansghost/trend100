@@ -16,6 +16,18 @@ The UI chart loads the group-specific file when the user selects a group, with f
 
 ---
 
+### 2026-01-29 — (Data/UI) Add overextension metrics to mitigate 100% GREEN flatlines
+**Choice:** Keep the existing GREEN% health metric unchanged, and add three additional per-day metrics to every health-history point:
+- `pctAboveUpperBand`: breadth above the upper band (0–100)
+- `stretch200MedianPct`: median distance vs 200D trend (%)
+- `heatScore`: 0–100 composite of breadth + stretch
+
+The UI chart can switch between Health/Heat/%AboveUpper/Stretch using `?metric=health|heat|upper|stretch`.
+
+**Why:** Some decks can sit at 100% GREEN for long periods, which hides “overextension / peak risk”. These extra metrics expose saturation even when GREEN% is pinned.
+
+---
+
 ### 2026-01-23 — (Data) Backfill UNKNOWN points must include full health-history schema to pass validation
 **Choice:** All health-history points (VALID or UNKNOWN) must include the complete required schema with all fields as finite numbers. UNKNOWN points use 0/0/0 for greenPct/yellowPct/redPct (not null) and 0/0/totalTickers for diffusion fields. Introduced `makeUnknownPoint()` helper function to ensure consistent schema compliance.  
 **Why:** The `verify:artifacts` validator enforces `hasFullHealthSchema()` which requires all percentage and diffusion fields to be finite numbers. UNKNOWN points with null percentages or missing diffusion fields fail validation, causing backfill workflows to fail.  

@@ -66,6 +66,9 @@ function makeUnknownPoint(
     diffusionPct: 0,
     diffusionCount: 0,
     diffusionTotalCompared: totalTickers,
+    pctAboveUpperBand: 0,
+    stretch200MedianPct: 0,
+    heatScore: 0,
     eligibleCount,
     ineligibleCount,
     missingCount,
@@ -73,6 +76,22 @@ function makeUnknownPoint(
 }
 
 type HistoryGroupKey = string; // e.g. "metals", "miners"
+
+function clamp(x: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, x));
+}
+
+function median(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 1) return sorted[mid]!;
+  return (sorted[mid - 1]! + sorted[mid]!) / 2;
+}
+
+function round1(x: number): number {
+  return Math.round(x * 10) / 10;
+}
 
 /**
  * Health-history retention policy (calendar days).
@@ -309,6 +328,22 @@ function computeHealthForDate(
 
   const health = computeHealthScore({ statuses: knownStatuses });
 
+  // Overextension / peak-risk metrics (use finite per-ticker fields only)
+  const upperVals = tickers
+    .filter((t) => t.status !== 'UNKNOWN' && Number.isFinite(t.distanceToUpperBandPct as number))
+    .map((t) => t.distanceToUpperBandPct as number);
+  const eligibleUpper = upperVals.length;
+  const aboveUpperCount = upperVals.filter((v) => v > 0).length;
+  const pctAboveUpperBand =
+    eligibleUpper === 0 ? 0 : round1((100 * aboveUpperCount) / eligibleUpper);
+
+  const stretchVals = tickers
+    .filter((t) => t.status !== 'UNKNOWN' && Number.isFinite(t.distanceTo200dPct as number))
+    .map((t) => t.distanceTo200dPct as number);
+  const stretch200MedianPct = median(stretchVals);
+  const stretchScore = clamp((stretch200MedianPct / 60) * 100, 0, 100);
+  const heatScore = Math.round(0.6 * pctAboveUpperBand + 0.4 * stretchScore);
+
   return {
     point: {
       date: targetDate,
@@ -319,6 +354,9 @@ function computeHealthForDate(
       diffusionPct: 0, // Will be set when merging into history if previous point exists
       diffusionCount: 0,
       diffusionTotalCompared: totalTickers,
+      pctAboveUpperBand,
+      stretch200MedianPct,
+      heatScore,
       knownCount,
       unknownCount,
       totalTickers,

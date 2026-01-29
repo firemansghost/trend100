@@ -104,6 +104,14 @@
   - Daily writer: `pnpm -s update:snapshots`
   - Then: `pnpm -s verify:artifacts`
 
+### "100% green flatline (chart looks useless)"
+- **Cause:** It can be legitimate for every ticker to stay GREEN for long periods, pinning GREEN% at 100.
+- **Fix:** Switch chart metric using the metric selector (or URL):
+  - `?metric=heat` (Heat score 0–100)
+  - `?metric=upper` (% Above Upper Band)
+  - `?metric=stretch` (Stretch vs 200D median %)
+- **Verify data:** `pnpm -s verify:artifacts` enforces the extra fields exist and are finite numbers on every point.
+
 ## Known Failure Modes
 - Off-by-one MA windows and "lookahead" bugs
 - Weekly resample picking wrong day (Thu vs Fri) around holidays

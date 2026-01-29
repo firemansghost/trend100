@@ -17,9 +17,14 @@ import {
 } from 'recharts';
 import type { TrendHealthHistoryPoint } from '../types';
 
+type MetricKey = 'greenPct' | 'heatScore' | 'pctAboveUpperBand' | 'stretch200MedianPct';
+
 interface HealthHistoryChartProps {
   data: TrendHealthHistoryPoint[];
   showDiffusion?: boolean;
+  metricKey?: MetricKey;
+  metricLabel?: string;
+  yDomain?: [number | 'auto' | 'dataMin' | 'dataMax', number | 'auto' | 'dataMin' | 'dataMax'];
 }
 
 /**
@@ -36,12 +41,12 @@ function formatTickLabel(dateStr: string, isLongRange: boolean): string {
 /**
  * Custom tooltip for the chart - always shows full daily date
  */
-function CustomTooltip({ active, payload, showDiffusion }: any) {
+function CustomTooltip({ active, payload, showDiffusion, metricKey, metricLabel }: any) {
   if (active && payload && payload.length) {
     const data = payload[0].payload as TrendHealthHistoryPoint;
     
     // Handle UNKNOWN points
-    if (data.regimeLabel === 'UNKNOWN' || data.greenPct === null) {
+    if (data.regimeLabel === 'UNKNOWN') {
       return (
         <div className="bg-zinc-800 border border-zinc-700 rounded p-2 shadow-lg">
           <p className="text-xs text-zinc-400 mb-1">{data.date}</p>
@@ -65,16 +70,14 @@ function CustomTooltip({ active, payload, showDiffusion }: any) {
     return (
       <div className="bg-zinc-800 border border-zinc-700 rounded p-2 shadow-lg">
         <p className="text-xs text-zinc-400 mb-1">{data.date}</p>
-        <p className="text-sm font-semibold text-green-400">
-          Green: {data.greenPct}%
+        <p className="text-sm font-semibold text-zinc-100">
+          {metricLabel}: {metricKey ? (data as any)[metricKey] : data.greenPct}
+          {metricKey === 'stretch200MedianPct' ? '%' : '%'}
         </p>
-        {data.yellowPct !== undefined && data.yellowPct !== null && (
-          <p className="text-xs text-yellow-400">Yellow: {data.yellowPct}%</p>
-        )}
-        {data.redPct !== undefined && data.redPct !== null && (
-          <p className="text-xs text-red-400">Red: {data.redPct}%</p>
-        )}
-        {showDiffusion && data.diffusionPct !== null && data.diffusionPct !== undefined && (
+        <p className="text-xs text-green-400">Green: {data.greenPct}%</p>
+        <p className="text-xs text-yellow-400">Yellow: {data.yellowPct}%</p>
+        <p className="text-xs text-red-400">Red: {data.redPct}%</p>
+        {showDiffusion && (
           <p className="text-xs text-blue-400 mt-1">
             Diffusion: {data.diffusionPct}%
           </p>
@@ -94,7 +97,13 @@ function CustomTooltip({ active, payload, showDiffusion }: any) {
   return null;
 }
 
-export function HealthHistoryChart({ data, showDiffusion = false }: HealthHistoryChartProps) {
+export function HealthHistoryChart({
+  data,
+  showDiffusion = false,
+  metricKey = 'greenPct',
+  metricLabel = 'Health (Green %)',
+  yDomain = [0, 100],
+}: HealthHistoryChartProps) {
   // Determine if we should use compact date format for labels (for longer ranges)
   const isLongRange = data.length > 180;
 
@@ -108,7 +117,7 @@ export function HealthHistoryChart({ data, showDiffusion = false }: HealthHistor
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
       <h3 className="text-sm font-semibold text-zinc-300 mb-4">
-        Market Health (Green %)
+        {metricLabel}
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
@@ -131,13 +140,22 @@ export function HealthHistoryChart({ data, showDiffusion = false }: HealthHistor
           <YAxis
             stroke="#71717a"
             tick={{ fill: '#71717a', fontSize: 12 }}
-            domain={[0, 100]}
+            domain={yDomain}
             label={{ value: '%', position: 'insideLeft', fill: '#71717a' }}
           />
-          <Tooltip content={(props) => <CustomTooltip {...props} showDiffusion={showDiffusion} />} />
+          <Tooltip
+            content={(props) => (
+              <CustomTooltip
+                {...props}
+                showDiffusion={showDiffusion}
+                metricKey={metricKey}
+                metricLabel={metricLabel}
+              />
+            )}
+          />
           <Line
             type="monotone"
-            dataKey="greenPct"
+            dataKey={metricKey}
             stroke="#22c55e"
             strokeWidth={2}
             dot={false}

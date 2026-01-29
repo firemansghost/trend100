@@ -102,18 +102,24 @@ export interface TrendSnapshot {
 // Health history types
 export interface TrendHealthHistoryPoint {
   date: string; // YYYY-MM-DD
-  greenPct: number | null; // 0-100 (can be 1 decimal), null if UNKNOWN
-  yellowPct?: number | null;
-  redPct?: number | null;
-  regimeLabel?: 'RISK_ON' | 'TRANSITION' | 'RISK_OFF' | 'UNKNOWN';
+  greenPct: number; // 0-100 (may be 1 decimal); UNKNOWN points use 0
+  yellowPct: number;
+  redPct: number;
+  regimeLabel: 'RISK_ON' | 'TRANSITION' | 'RISK_OFF' | 'UNKNOWN';
   // Diffusion: % of tickers that changed status vs previous trading day
-  diffusionPct?: number | null; // 0-100 (1 decimal), null if unavailable
-  diffusionCount?: number; // Number of tickers that flipped
-  diffusionTotalCompared?: number; // Total tickers compared (both days known)
-  // Validity metadata
-  knownCount?: number; // Number of tickers with known status (GREEN/YELLOW/RED)
-  unknownCount?: number; // Number of tickers with UNKNOWN status (eligibleCount - knownCount)
-  totalTickers?: number; // Total tickers in deck
+  diffusionPct: number; // 0-100 (may be 1 decimal); first point uses 0
+  diffusionCount: number; // Number of tickers that flipped
+  diffusionTotalCompared: number; // Total tickers compared (both days known)
+
+  // Overextension / peak-risk metrics (finite numbers; UNKNOWN points use 0)
+  pctAboveUpperBand: number; // 0-100
+  stretch200MedianPct: number; // median distanceTo200dPct, can exceed 100
+  heatScore: number; // 0-100 composite
+
+  // Validity metadata (finite numbers)
+  knownCount: number; // Number of tickers with known status (GREEN/YELLOW/RED)
+  unknownCount: number; // Number of tickers not known (varies by denominator mode)
+  totalTickers: number; // Total tickers in deck variant
   // Eligible denominator metadata (for MACRO and similar decks)
   eligibleCount?: number; // Number of tickers with bars (computable or ineligible)
   ineligibleCount?: number; // Number of tickers with bars but insufficient lookback

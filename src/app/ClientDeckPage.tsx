@@ -23,6 +23,7 @@ function ClientDeckPageContent() {
   const searchParams = useSearchParams();
   const rawDeck = searchParams.get('deck');
   const rawGroup = searchParams.get('group');
+  const rawMetric = searchParams.get('metric');
   const debug = searchParams.get('debug') === '1';
 
   // Resolve deckId
@@ -35,6 +36,9 @@ function ClientDeckPageContent() {
     rawGroupLower === 'metals' ? 'metals' : rawGroupLower === 'miners' ? 'miners' : null;
   const groupFilter: string | null =
     groupKeyLower === 'metals' ? 'METALS' : groupKeyLower === 'miners' ? 'MINERS' : null;
+
+  const metricKey =
+    rawMetric === 'heat' || rawMetric === 'upper' || rawMetric === 'stretch' ? rawMetric : 'health';
 
   // Snapshot state
   const [snapshot, setSnapshot] = useState<ReturnType<typeof getLatestSnapshot> | null>(null);
@@ -166,6 +170,7 @@ function ClientDeckPageContent() {
         deckSections={deck.sections ?? []}
         isDemoMode={snapshotSource === 'mock'}
         initialGroupFilter={groupFilter}
+        initialMetric={metricKey as any}
       />
     </>
   );

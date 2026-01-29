@@ -20577,5 +20577,18 @@
     "knownCount": 12,
     "unknownCount": 0,
     "totalTickers": 12
+  },
+  {
+    "date": "2026-01-29",
+    "greenPct": 50,
+    "yellowPct": 0,
+    "redPct": 50,
+    "regimeLabel": "TRANSITION",
+    "diffusionPct": 0,
+    "diffusionCount": 0,
+    "diffusionTotalCompared": 12,
+    "knownCount": 12,
+    "unknownCount": 0,
+    "totalTickers": 12
   }
 ]

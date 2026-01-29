@@ -11,5 +11,18 @@
     "knownCount": 6,
     "unknownCount": 0,
     "totalTickers": 6
+  },
+  {
+    "date": "2026-01-29",
+    "greenPct": 100,
+    "yellowPct": 0,
+    "redPct": 0,
+    "regimeLabel": "RISK_ON",
+    "diffusionPct": 0,
+    "diffusionCount": 0,
+    "diffusionTotalCompared": 6,
+    "knownCount": 6,
+    "unknownCount": 0,
+    "totalTickers": 6
   }
 ]

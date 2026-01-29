@@ -20568,14 +20568,14 @@
   {
     "date": "2026-01-28",
     "greenPct": 65,
-    "yellowPct": 6,
-    "redPct": 29,
+    "yellowPct": 2,
+    "redPct": 33,
     "regimeLabel": "TRANSITION",
+    "diffusionPct": 4,
+    "diffusionCount": 4,
+    "diffusionTotalCompared": 100,
     "knownCount": 100,
     "unknownCount": 0,
-    "totalTickers": 100,
-    "diffusionPct": 0,
-    "diffusionCount": 0,
-    "diffusionTotalCompared": 100
+    "totalTickers": 100
   }
 ]

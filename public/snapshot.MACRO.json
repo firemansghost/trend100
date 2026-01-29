@@ -1,6 +1,6 @@
 {
-  "runDate": "2026-01-28",
-  "asOfDate": "2026-01-27",
+  "runDate": "2026-01-29",
+  "asOfDate": "2026-01-28",
   "universeSize": 17,
   "tickers": [
     {
@@ -14,13 +14,13 @@
       "subtitle": "Agriculture",
       "name": "Invesco DB Agriculture Fund",
       "status": "RED",
-      "price": 25.84,
-      "changePct": 0.31,
+      "price": 25.88,
+      "changePct": 0.15,
       "sma200": 26.52,
       "sma50w": 26.52,
       "ema50w": 26.22,
-      "distanceTo200dPct": -2.57,
-      "distanceToUpperBandPct": -2.57
+      "distanceTo200dPct": -2.42,
+      "distanceToUpperBandPct": -2.42
     },
     {
       "ticker": "DBB",
@@ -33,13 +33,13 @@
       "subtitle": "Base Metals",
       "name": "Invesco DB Base Metals Fund",
       "status": "GREEN",
-      "price": 24.32,
-      "changePct": 0.12,
-      "sma200": 20.35,
+      "price": 24.57,
+      "changePct": 1.03,
+      "sma200": 20.38,
       "sma50w": 20.29,
-      "ema50w": 20.99,
-      "distanceTo200dPct": 19.53,
-      "distanceToUpperBandPct": 15.89
+      "ema50w": 21,
+      "distanceTo200dPct": 20.56,
+      "distanceToUpperBandPct": 17.03
     },
     {
       "ticker": "PDBC",
@@ -52,13 +52,13 @@
       "subtitle": "Commodities",
       "name": "Invesco Optimum Yield Diversified Commodity Strategy No K-1 ETF",
       "status": "GREEN",
-      "price": 14.62,
-      "changePct": 1.39,
-      "sma200": 13.29,
-      "sma50w": 13.32,
-      "ema50w": 13.49,
-      "distanceTo200dPct": 10.03,
-      "distanceToUpperBandPct": 8.39
+      "price": 14.82,
+      "changePct": 1.37,
+      "sma200": 13.3,
+      "sma50w": 13.33,
+      "ema50w": 13.5,
+      "distanceTo200dPct": 11.44,
+      "distanceToUpperBandPct": 9.81
     },
     {
       "ticker": "USO",
@@ -91,13 +91,13 @@
       "subtitle": "AUD",
       "name": "Invesco CurrencyShares Australian Dollar Trust",
       "status": "GREEN",
-      "price": 69.39,
-      "changePct": 1.23,
-      "sma200": 64.73,
-      "sma50w": 64.44,
-      "ema50w": 65.04,
-      "distanceTo200dPct": 7.2,
-      "distanceToUpperBandPct": 6.68
+      "price": 69.64,
+      "changePct": 0.36,
+      "sma200": 64.77,
+      "sma50w": 64.45,
+      "ema50w": 65.05,
+      "distanceTo200dPct": 7.52,
+      "distanceToUpperBandPct": 7.05
     },
     {
       "ticker": "FXB",
@@ -110,13 +110,13 @@
       "subtitle": "GBP",
       "name": "Invesco CurrencyShares British Pound Sterling Trust",
       "status": "GREEN",
-      "price": 133.09,
-      "changePct": 1.13,
-      "sma200": 128.86,
-      "sma50w": 128.17,
-      "ema50w": 127.77,
-      "distanceTo200dPct": 3.28,
-      "distanceToUpperBandPct": 3.84
+      "price": 132.78,
+      "changePct": -0.23,
+      "sma200": 128.91,
+      "sma50w": 128.16,
+      "ema50w": 127.76,
+      "distanceTo200dPct": 3,
+      "distanceToUpperBandPct": 3.6
     },
     {
       "ticker": "FXC",
@@ -129,13 +129,13 @@
       "subtitle": "CAD",
       "name": "Invesco CurrencyShares Canadian Dollar Trust",
       "status": "GREEN",
-      "price": 71.96,
-      "changePct": 0.95,
-      "sma200": 70.63,
-      "sma50w": 70.34,
+      "price": 72.05,
+      "changePct": 0.13,
+      "sma200": 70.64,
+      "sma50w": 70.35,
       "ema50w": 70.48,
-      "distanceTo200dPct": 1.89,
-      "distanceToUpperBandPct": 2.1
+      "distanceTo200dPct": 2,
+      "distanceToUpperBandPct": 2.23
     },
     {
       "ticker": "FXE",
@@ -148,13 +148,13 @@
       "subtitle": "EUR",
       "name": "Invesco CurrencyShares Euro Trust",
       "status": "GREEN",
-      "price": 111.09,
-      "changePct": 1.24,
-      "sma200": 106.92,
-      "sma50w": 105.95,
-      "ema50w": 105.94,
-      "distanceTo200dPct": 3.9,
-      "distanceToUpperBandPct": 4.86
+      "price": 110.3,
+      "changePct": -0.71,
+      "sma200": 106.97,
+      "sma50w": 105.93,
+      "ema50w": 105.91,
+      "distanceTo200dPct": 3.11,
+      "distanceToUpperBandPct": 4.13
     },
     {
       "ticker": "FXY",
@@ -167,13 +167,13 @@
       "subtitle": "JPY",
       "name": "Invesco CurrencyShares Japanese Yen Trust",
       "status": "RED",
-      "price": 60.36,
-      "changePct": 1.12,
-      "sma200": 61.64,
-      "sma50w": 61.63,
-      "ema50w": 60.76,
-      "distanceTo200dPct": -2.07,
-      "distanceToUpperBandPct": -2.06
+      "price": 59.95,
+      "changePct": -0.68,
+      "sma200": 61.62,
+      "sma50w": 61.62,
+      "ema50w": 60.74,
+      "distanceTo200dPct": -2.72,
+      "distanceToUpperBandPct": -2.71
     },
     {
       "ticker": "UUP",
@@ -205,13 +205,13 @@
       "subtitle": "Gold Miners",
       "name": "VanEck Gold Miners ETF",
       "status": "GREEN",
-      "price": 109.29,
-      "changePct": 1.68,
-      "sma200": 66.38,
-      "sma50w": 64.09,
-      "ema50w": 68.83,
-      "distanceTo200dPct": 64.65,
-      "distanceToUpperBandPct": 58.78
+      "price": 112.16,
+      "changePct": 2.63,
+      "sma200": 66.71,
+      "sma50w": 64.15,
+      "ema50w": 68.94,
+      "distanceTo200dPct": 68.12,
+      "distanceToUpperBandPct": 62.68
     },
     {
       "ticker": "GLDM",
@@ -224,13 +224,13 @@
       "subtitle": "Gold",
       "name": "SPDR Gold MiniShares Trust",
       "status": "GREEN",
-      "price": 102.51,
-      "changePct": 2.45,
-      "sma200": 73.95,
-      "sma50w": 72.45,
-      "ema50w": 74.52,
-      "distanceTo200dPct": 38.61,
-      "distanceToUpperBandPct": 37.55
+      "price": 106.44,
+      "changePct": 3.83,
+      "sma200": 74.18,
+      "sma50w": 72.53,
+      "ema50w": 74.68,
+      "distanceTo200dPct": 43.49,
+      "distanceToUpperBandPct": 42.53
     },
     {
       "ticker": "SIL",
@@ -243,13 +243,13 @@
       "subtitle": "Silver Miners",
       "name": "Global X Silver Miners ETF",
       "status": "GREEN",
-      "price": 112.73,
-      "changePct": 0.64,
-      "sma200": 61.38,
-      "sma50w": 59.27,
-      "ema50w": 65.02,
-      "distanceTo200dPct": 83.67,
-      "distanceToUpperBandPct": 73.38
+      "price": 114.52,
+      "changePct": 1.59,
+      "sma200": 61.77,
+      "sma50w": 59.3,
+      "ema50w": 65.09,
+      "distanceTo200dPct": 85.41,
+      "distanceToUpperBandPct": 75.94
     },
     {
       "ticker": "SLV",
@@ -262,13 +262,13 @@
       "subtitle": "Silver",
       "name": "iShares Silver Trust",
       "status": "GREEN",
-      "price": 101.59,
-      "changePct": 3.3,
-      "sma200": 42.55,
-      "sma50w": 42.06,
-      "ema50w": 47.39,
-      "distanceTo200dPct": 138.77,
-      "distanceToUpperBandPct": 114.37
+      "price": 105.6,
+      "changePct": 3.95,
+      "sma200": 42.94,
+      "sma50w": 42.14,
+      "ema50w": 47.55,
+      "distanceTo200dPct": 145.95,
+      "distanceToUpperBandPct": 122.09
     },
     {
       "ticker": "SRUUF",

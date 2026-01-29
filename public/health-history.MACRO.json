@@ -25301,14 +25301,14 @@
     "yellowPct": 0,
     "redPct": 29.4,
     "regimeLabel": "RISK_ON",
+    "diffusionPct": 0,
+    "diffusionCount": 0,
+    "diffusionTotalCompared": 17,
     "knownCount": 17,
     "unknownCount": 0,
     "totalTickers": 17,
     "eligibleCount": 17,
     "ineligibleCount": 0,
-    "missingCount": 0,
-    "diffusionPct": 0,
-    "diffusionCount": 0,
-    "diffusionTotalCompared": 17
+    "missingCount": 0
   }
 ]

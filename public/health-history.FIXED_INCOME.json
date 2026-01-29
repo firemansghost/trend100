@@ -20554,15 +20554,15 @@
   },
   {
     "date": "2026-01-28",
-    "greenPct": 66.7,
-    "yellowPct": 5.6,
+    "greenPct": 72.2,
+    "yellowPct": 0,
     "redPct": 27.8,
-    "regimeLabel": "TRANSITION",
-    "knownCount": 18,
-    "unknownCount": 0,
-    "totalTickers": 18,
+    "regimeLabel": "RISK_ON",
     "diffusionPct": 0,
     "diffusionCount": 0,
-    "diffusionTotalCompared": 18
+    "diffusionTotalCompared": 18,
+    "knownCount": 18,
+    "unknownCount": 0,
+    "totalTickers": 18
   }
 ]

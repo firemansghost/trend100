@@ -20571,11 +20571,11 @@
     "yellowPct": 0,
     "redPct": 50,
     "regimeLabel": "TRANSITION",
-    "knownCount": 12,
-    "unknownCount": 0,
-    "totalTickers": 12,
     "diffusionPct": 0,
     "diffusionCount": 0,
-    "diffusionTotalCompared": 12
+    "diffusionTotalCompared": 12,
+    "knownCount": 12,
+    "unknownCount": 0,
+    "totalTickers": 12
   }
 ]

@@ -26909,5 +26909,22 @@
     "knownCount": 11,
     "unknownCount": 0,
     "totalTickers": 11
+  },
+  {
+    "date": "2026-01-30",
+    "greenPct": 90.9,
+    "yellowPct": 0,
+    "redPct": 9.1,
+    "regimeLabel": "RISK_ON",
+    "diffusionPct": 0,
+    "diffusionCount": 0,
+    "diffusionTotalCompared": 11,
+    "pctAboveUpperBand": 90.9,
+    "medianDistanceAboveUpperBandPct": 11.8,
+    "stretch200MedianPct": 11.33,
+    "heatScore": 62,
+    "knownCount": 11,
+    "unknownCount": 0,
+    "totalTickers": 11
   }
 ]

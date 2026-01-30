@@ -1,6 +1,6 @@
 {
   "runDate": "2026-01-30",
-  "asOfDate": "2026-01-29",
+  "asOfDate": "2026-01-30",
   "universeSize": 12,
   "tickers": [
     {
@@ -14,13 +14,13 @@
       "subtitle": "S&P 500",
       "name": "SPDR S&P 500 ETF Trust",
       "status": "GREEN",
-      "price": 694.04,
-      "changePct": -0.2,
-      "sma200": 640.33,
-      "sma50w": 628.52,
-      "ema50w": 640.59,
-      "distanceTo200dPct": 8.39,
-      "distanceToUpperBandPct": 8.34
+      "price": 691.97,
+      "changePct": -0.3,
+      "sma200": 641.1,
+      "sma50w": 628.48,
+      "ema50w": 640.51,
+      "distanceTo200dPct": 7.94,
+      "distanceToUpperBandPct": 8.03
     },
     {
       "ticker": "XLB",
@@ -33,13 +33,13 @@
       "subtitle": "Materials",
       "name": "Materials Select Sector SPDR Fund",
       "status": "RED",
-      "price": 50,
-      "changePct": 0.1,
-      "sma200": 80.59,
-      "sma50w": 80.21,
-      "ema50w": 75.86,
-      "distanceTo200dPct": -37.96,
-      "distanceToUpperBandPct": -37.66
+      "price": 49.27,
+      "changePct": -1.46,
+      "sma200": 80.43,
+      "sma50w": 80.2,
+      "ema50w": 75.83,
+      "distanceTo200dPct": -38.74,
+      "distanceToUpperBandPct": -38.56
     },
     {
       "ticker": "XLC",
@@ -52,13 +52,13 @@
       "subtitle": "Comm Svcs",
       "name": "Communication Services Select Sector SPDR Fund",
       "status": "GREEN",
-      "price": 119.79,
-      "changePct": 2.6,
-      "sma200": 109.79,
+      "price": 120.12,
+      "changePct": 0.27,
+      "sma200": 109.94,
       "sma50w": 107.96,
-      "ema50w": 108.93,
-      "distanceTo200dPct": 9.1,
-      "distanceToUpperBandPct": 9.97
+      "ema50w": 108.95,
+      "distanceTo200dPct": 9.26,
+      "distanceToUpperBandPct": 10.25
     },
     {
       "ticker": "XLE",
@@ -71,13 +71,13 @@
       "subtitle": "Energy",
       "name": "Energy Select Sector SPDR Fund",
       "status": "RED",
-      "price": 50.51,
-      "changePct": 0.92,
-      "sma200": 79.1,
-      "sma50w": 79.65,
-      "ema50w": 75.47,
-      "distanceTo200dPct": -36.14,
-      "distanceToUpperBandPct": -36.58
+      "price": 51.05,
+      "changePct": 1.07,
+      "sma200": 78.96,
+      "sma50w": 79.66,
+      "ema50w": 75.49,
+      "distanceTo200dPct": -35.35,
+      "distanceToUpperBandPct": -35.91
     },
     {
       "ticker": "XLF",
@@ -90,13 +90,13 @@
       "subtitle": "Financials",
       "name": "Financial Select Sector SPDR Fund",
       "status": "GREEN",
-      "price": 53.55,
-      "changePct": 1.06,
-      "sma200": 52.42,
+      "price": 53.44,
+      "changePct": -0.21,
+      "sma200": 52.45,
       "sma50w": 51.89,
       "ema50w": 51.87,
-      "distanceTo200dPct": 2.16,
-      "distanceToUpperBandPct": 3.19
+      "distanceTo200dPct": 1.89,
+      "distanceToUpperBandPct": 2.98
     },
     {
       "ticker": "XLI",
@@ -109,13 +109,13 @@
       "subtitle": "Industrials",
       "name": "Industrial Select Sector SPDR Fund",
       "status": "GREEN",
-      "price": 165.86,
-      "changePct": 1.05,
-      "sma200": 149.93,
-      "sma50w": 147.16,
-      "ema50w": 149.28,
-      "distanceTo200dPct": 10.62,
-      "distanceToUpperBandPct": 11.11
+      "price": 165.44,
+      "changePct": -0.25,
+      "sma200": 150.12,
+      "sma50w": 147.15,
+      "ema50w": 149.26,
+      "distanceTo200dPct": 10.2,
+      "distanceToUpperBandPct": 10.84
     },
     {
       "ticker": "XLK",
@@ -128,13 +128,13 @@
       "subtitle": "Technology",
       "name": "Technology Select Sector SPDR Fund",
       "status": "RED",
-      "price": 146.87,
-      "changePct": -1.58,
-      "sma200": 237.98,
-      "sma50w": 230.38,
-      "ema50w": 221,
-      "distanceTo200dPct": -38.29,
-      "distanceToUpperBandPct": -36.25
+      "price": 143.87,
+      "changePct": -2.04,
+      "sma200": 237.7,
+      "sma50w": 230.32,
+      "ema50w": 220.88,
+      "distanceTo200dPct": -39.47,
+      "distanceToUpperBandPct": -37.54
     },
     {
       "ticker": "XLP",
@@ -147,13 +147,13 @@
       "subtitle": "Staples",
       "name": "Consumer Staples Select Sector SPDR Fund",
       "status": "GREEN",
-      "price": 82.13,
-      "changePct": -0.23,
-      "sma200": 80.06,
-      "sma50w": 80.29,
-      "ema50w": 79.73,
-      "distanceTo200dPct": 2.59,
-      "distanceToUpperBandPct": 2.3
+      "price": 83.51,
+      "changePct": 1.68,
+      "sma200": 80.08,
+      "sma50w": 80.31,
+      "ema50w": 79.78,
+      "distanceTo200dPct": 4.29,
+      "distanceToUpperBandPct": 3.98
     },
     {
       "ticker": "XLRE",
@@ -165,14 +165,14 @@
       "section": "Sectors",
       "subtitle": "Real Estate",
       "name": "Real Estate Select Sector SPDR Fund",
-      "status": "RED",
-      "price": 41.37,
-      "changePct": 1.27,
-      "sma200": 41.39,
+      "status": "YELLOW",
+      "price": 41.43,
+      "changePct": 0.15,
+      "sma200": 41.41,
       "sma50w": 41.43,
       "ema50w": 41.33,
-      "distanceTo200dPct": -0.06,
-      "distanceToUpperBandPct": -0.15
+      "distanceTo200dPct": 0.06,
+      "distanceToUpperBandPct": -0.01
     },
     {
       "ticker": "XLU",
@@ -185,12 +185,13 @@
       "subtitle": "Utilities",
       "name": "Utilities Select Sector SPDR Fund",
       "status": "RED",
-      "price": 43.33,
-      "sma200": 77.07,
+      "price": 43.26,
+      "changePct": -0.16,
+      "sma200": 76.91,
       "sma50w": 76.11,
       "ema50w": 71.06,
-      "distanceTo200dPct": -43.78,
-      "distanceToUpperBandPct": -43.07
+      "distanceTo200dPct": -43.75,
+      "distanceToUpperBandPct": -43.16
     },
     {
       "ticker": "XLV",
@@ -203,13 +204,13 @@
       "subtitle": "Health Care",
       "name": "Health Care Select Sector SPDR Fund",
       "status": "GREEN",
-      "price": 153.82,
-      "changePct": -0.32,
-      "sma200": 141.77,
-      "sma50w": 142.41,
-      "ema50w": 145.78,
-      "distanceTo200dPct": 8.5,
-      "distanceToUpperBandPct": 5.52
+      "price": 154.79,
+      "changePct": 0.63,
+      "sma200": 141.85,
+      "sma50w": 142.43,
+      "ema50w": 145.82,
+      "distanceTo200dPct": 9.12,
+      "distanceToUpperBandPct": 6.15
     },
     {
       "ticker": "XLY",
@@ -222,19 +223,19 @@
       "subtitle": "Discretionary",
       "name": "Consumer Discretionary Select Sector SPDR Fund",
       "status": "RED",
-      "price": 121.19,
-      "changePct": -0.48,
-      "sma200": 205.04,
+      "price": 121.17,
+      "changePct": -0.02,
+      "sma200": 204.7,
       "sma50w": 201.29,
       "ema50w": 190.55,
-      "distanceTo200dPct": -40.89,
-      "distanceToUpperBandPct": -39.79
+      "distanceTo200dPct": -40.8,
+      "distanceToUpperBandPct": -39.8
     }
   ],
   "health": {
     "greenPct": 50,
-    "yellowPct": 0,
-    "redPct": 50,
+    "yellowPct": 8.3,
+    "redPct": 41.7,
     "regimeLabel": "TRANSITION"
   }
 }

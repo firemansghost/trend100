@@ -1,6 +1,6 @@
 {
   "runDate": "2026-01-30",
-  "asOfDate": "2026-01-29",
+  "asOfDate": "2026-01-30",
   "universeSize": 100,
   "tickers": [
     {
@@ -11,13 +11,13 @@
         "broad-us"
       ],
       "status": "GREEN",
-      "price": 694.04,
-      "changePct": -0.2,
-      "sma200": 640.33,
-      "sma50w": 628.52,
-      "ema50w": 640.59,
-      "distanceTo200dPct": 8.39,
-      "distanceToUpperBandPct": 8.34
+      "price": 691.97,
+      "changePct": -0.3,
+      "sma200": 641.1,
+      "sma50w": 628.48,
+      "ema50w": 640.51,
+      "distanceTo200dPct": 7.94,
+      "distanceToUpperBandPct": 8.03
     },
     {
       "ticker": "QQQ",
@@ -27,13 +27,13 @@
         "nasdaq100"
       ],
       "status": "GREEN",
-      "price": 629.43,
-      "changePct": -0.6,
-      "sma200": 572.78,
-      "sma50w": 558.32,
-      "ema50w": 571.54,
-      "distanceTo200dPct": 9.89,
-      "distanceToUpperBandPct": 10.13
+      "price": 621.87,
+      "changePct": -1.2,
+      "sma200": 573.6,
+      "sma50w": 558.17,
+      "ema50w": 571.24,
+      "distanceTo200dPct": 8.41,
+      "distanceToUpperBandPct": 8.86
     },
     {
       "ticker": "IWM",
@@ -43,13 +43,13 @@
         "smallcap"
       ],
       "status": "GREEN",
-      "price": 263.37,
-      "changePct": 0.03,
-      "sma200": 230.91,
-      "sma50w": 226.72,
-      "ema50w": 235.13,
-      "distanceTo200dPct": 14.06,
-      "distanceToUpperBandPct": 12.01
+      "price": 259.73,
+      "changePct": -1.38,
+      "sma200": 231.28,
+      "sma50w": 226.65,
+      "ema50w": 234.99,
+      "distanceTo200dPct": 12.3,
+      "distanceToUpperBandPct": 10.53
     },
     {
       "ticker": "DIA",
@@ -59,13 +59,13 @@
         "dow"
       ],
       "status": "GREEN",
-      "price": 490.21,
-      "changePct": 0.02,
-      "sma200": 452.98,
-      "sma50w": 447.89,
-      "ema50w": 455.92,
-      "distanceTo200dPct": 8.22,
-      "distanceToUpperBandPct": 7.52
+      "price": 489.13,
+      "changePct": -0.22,
+      "sma200": 453.39,
+      "sma50w": 447.87,
+      "ema50w": 455.88,
+      "distanceTo200dPct": 7.88,
+      "distanceToUpperBandPct": 7.29
     },
     {
       "ticker": "RSP",
@@ -75,13 +75,13 @@
         "equal-weight"
       ],
       "status": "GREEN",
-      "price": 198.52,
-      "changePct": 0.13,
-      "sma200": 185.32,
-      "sma50w": 183.48,
-      "ema50w": 185.92,
-      "distanceTo200dPct": 7.12,
-      "distanceToUpperBandPct": 6.78
+      "price": 198.08,
+      "changePct": -0.22,
+      "sma200": 185.49,
+      "sma50w": 183.47,
+      "ema50w": 185.9,
+      "distanceTo200dPct": 6.79,
+      "distanceToUpperBandPct": 6.55
     },
     {
       "ticker": "XLK",
@@ -91,13 +91,13 @@
         "tech"
       ],
       "status": "RED",
-      "price": 146.87,
-      "changePct": -1.58,
-      "sma200": 237.98,
-      "sma50w": 230.38,
-      "ema50w": 221,
-      "distanceTo200dPct": -38.29,
-      "distanceToUpperBandPct": -36.25
+      "price": 143.87,
+      "changePct": -2.04,
+      "sma200": 237.7,
+      "sma50w": 230.32,
+      "ema50w": 220.88,
+      "distanceTo200dPct": -39.47,
+      "distanceToUpperBandPct": -37.54
     },
     {
       "ticker": "XLF",
@@ -107,13 +107,13 @@
         "financials"
       ],
       "status": "GREEN",
-      "price": 53.55,
-      "changePct": 1.06,
-      "sma200": 52.42,
+      "price": 53.44,
+      "changePct": -0.21,
+      "sma200": 52.45,
       "sma50w": 51.89,
       "ema50w": 51.87,
-      "distanceTo200dPct": 2.16,
-      "distanceToUpperBandPct": 3.19
+      "distanceTo200dPct": 1.89,
+      "distanceToUpperBandPct": 2.98
     },
     {
       "ticker": "XLE",
@@ -123,13 +123,13 @@
         "energy"
       ],
       "status": "RED",
-      "price": 50.51,
-      "changePct": 0.92,
-      "sma200": 79.1,
-      "sma50w": 79.65,
-      "ema50w": 75.47,
-      "distanceTo200dPct": -36.14,
-      "distanceToUpperBandPct": -36.58
+      "price": 51.05,
+      "changePct": 1.07,
+      "sma200": 78.96,
+      "sma50w": 79.66,
+      "ema50w": 75.49,
+      "distanceTo200dPct": -35.35,
+      "distanceToUpperBandPct": -35.91
     },
     {
       "ticker": "XLV",
@@ -139,13 +139,13 @@
         "healthcare"
       ],
       "status": "GREEN",
-      "price": 153.82,
-      "changePct": -0.32,
-      "sma200": 141.77,
-      "sma50w": 142.41,
-      "ema50w": 145.78,
-      "distanceTo200dPct": 8.5,
-      "distanceToUpperBandPct": 5.52
+      "price": 154.79,
+      "changePct": 0.63,
+      "sma200": 141.85,
+      "sma50w": 142.43,
+      "ema50w": 145.82,
+      "distanceTo200dPct": 9.12,
+      "distanceToUpperBandPct": 6.15
     },
     {
       "ticker": "XLI",
@@ -155,13 +155,13 @@
         "industrials"
       ],
       "status": "GREEN",
-      "price": 165.86,
-      "changePct": 1.05,
-      "sma200": 149.93,
-      "sma50w": 147.16,
-      "ema50w": 149.28,
-      "distanceTo200dPct": 10.62,
-      "distanceToUpperBandPct": 11.11
+      "price": 165.44,
+      "changePct": -0.25,
+      "sma200": 150.12,
+      "sma50w": 147.15,
+      "ema50w": 149.26,
+      "distanceTo200dPct": 10.2,
+      "distanceToUpperBandPct": 10.84
     },
     {
       "ticker": "XLP",
@@ -171,13 +171,13 @@
         "staples"
       ],
       "status": "GREEN",
-      "price": 82.13,
-      "changePct": -0.23,
-      "sma200": 80.06,
-      "sma50w": 80.29,
-      "ema50w": 79.73,
-      "distanceTo200dPct": 2.59,
-      "distanceToUpperBandPct": 2.3
+      "price": 83.51,
+      "changePct": 1.68,
+      "sma200": 80.08,
+      "sma50w": 80.31,
+      "ema50w": 79.78,
+      "distanceTo200dPct": 4.29,
+      "distanceToUpperBandPct": 3.98
     },
     {
       "ticker": "XLU",
@@ -187,12 +187,13 @@
         "utilities"
       ],
       "status": "RED",
-      "price": 43.33,
-      "sma200": 77.07,
+      "price": 43.26,
+      "changePct": -0.16,
+      "sma200": 76.91,
       "sma50w": 76.11,
       "ema50w": 71.06,
-      "distanceTo200dPct": -43.78,
-      "distanceToUpperBandPct": -43.07
+      "distanceTo200dPct": -43.75,
+      "distanceToUpperBandPct": -43.16
     },
     {
       "ticker": "XLY",
@@ -202,13 +203,13 @@
         "discretionary"
       ],
       "status": "RED",
-      "price": 121.19,
-      "changePct": -0.48,
-      "sma200": 205.04,
+      "price": 121.17,
+      "changePct": -0.02,
+      "sma200": 204.7,
       "sma50w": 201.29,
       "ema50w": 190.55,
-      "distanceTo200dPct": -40.89,
-      "distanceToUpperBandPct": -39.79
+      "distanceTo200dPct": -40.8,
+      "distanceToUpperBandPct": -39.8
     },
     {
       "ticker": "XLC",
@@ -218,13 +219,13 @@
         "communications"
       ],
       "status": "GREEN",
-      "price": 119.79,
-      "changePct": 2.6,
-      "sma200": 109.79,
+      "price": 120.12,
+      "changePct": 0.27,
+      "sma200": 109.94,
       "sma50w": 107.96,
-      "ema50w": 108.93,
-      "distanceTo200dPct": 9.1,
-      "distanceToUpperBandPct": 9.97
+      "ema50w": 108.95,
+      "distanceTo200dPct": 9.26,
+      "distanceToUpperBandPct": 10.25
     },
     {
       "ticker": "XLB",
@@ -234,13 +235,13 @@
         "materials"
       ],
       "status": "RED",
-      "price": 50,
-      "changePct": 0.1,
-      "sma200": 80.59,
-      "sma50w": 80.21,
-      "ema50w": 75.86,
-      "distanceTo200dPct": -37.96,
-      "distanceToUpperBandPct": -37.66
+      "price": 49.27,
+      "changePct": -1.46,
+      "sma200": 80.43,
+      "sma50w": 80.2,
+      "ema50w": 75.83,
+      "distanceTo200dPct": -38.74,
+      "distanceToUpperBandPct": -38.56
     },
     {
       "ticker": "XLRE",
@@ -249,14 +250,14 @@
         "sector",
         "real-estate"
       ],
-      "status": "RED",
-      "price": 41.37,
-      "changePct": 1.27,
-      "sma200": 41.39,
+      "status": "YELLOW",
+      "price": 41.43,
+      "changePct": 0.15,
+      "sma200": 41.41,
       "sma50w": 41.43,
       "ema50w": 41.33,
-      "distanceTo200dPct": -0.06,
-      "distanceToUpperBandPct": -0.15
+      "distanceTo200dPct": 0.06,
+      "distanceToUpperBandPct": -0.01
     },
     {
       "ticker": "SMH",
@@ -265,13 +266,13 @@
         "semis"
       ],
       "status": "GREEN",
-      "price": 417.52,
-      "changePct": 0.21,
-      "sma200": 306.5,
-      "sma50w": 294.56,
-      "ema50w": 314.72,
-      "distanceTo200dPct": 36.22,
-      "distanceToUpperBandPct": 32.66
+      "price": 403.46,
+      "changePct": -3.37,
+      "sma200": 307.51,
+      "sma50w": 294.28,
+      "ema50w": 314.17,
+      "distanceTo200dPct": 31.2,
+      "distanceToUpperBandPct": 28.42
     },
     {
       "ticker": "HYG",
@@ -280,13 +281,13 @@
         "credit"
       ],
       "status": "GREEN",
-      "price": 81.03,
-      "changePct": -0.01,
-      "sma200": 80.2,
-      "sma50w": 80,
-      "ema50w": 80.14,
-      "distanceTo200dPct": 1.04,
-      "distanceToUpperBandPct": 1.11
+      "price": 81.12,
+      "changePct": 0.11,
+      "sma200": 80.22,
+      "sma50w": 80.01,
+      "ema50w": 80.15,
+      "distanceTo200dPct": 1.12,
+      "distanceToUpperBandPct": 1.21
     },
     {
       "ticker": "TLT",
@@ -295,13 +296,13 @@
         "rates"
       ],
       "status": "RED",
-      "price": 87.62,
-      "changePct": 0.02,
+      "price": 87.13,
+      "changePct": -0.56,
       "sma200": 87.91,
-      "sma50w": 88.26,
-      "ema50w": 88.82,
-      "distanceTo200dPct": -0.33,
-      "distanceToUpperBandPct": -1.35
+      "sma50w": 88.25,
+      "ema50w": 88.8,
+      "distanceTo200dPct": -0.89,
+      "distanceToUpperBandPct": -1.88
     },
     {
       "ticker": "GLD",
@@ -311,13 +312,13 @@
         "commodity"
       ],
       "status": "GREEN",
-      "price": 495.9,
-      "changePct": 0.27,
-      "sma200": 345.88,
-      "sma50w": 337.28,
-      "ema50w": 347.26,
-      "distanceTo200dPct": 43.37,
-      "distanceToUpperBandPct": 42.8
+      "price": 445.6,
+      "changePct": -10.14,
+      "sma200": 346.62,
+      "sma50w": 336.27,
+      "ema50w": 345.29,
+      "distanceTo200dPct": 28.56,
+      "distanceToUpperBandPct": 29.05
     },
     {
       "ticker": "AAPL",
@@ -325,13 +326,13 @@
         "tech"
       ],
       "status": "GREEN",
-      "price": 258.28,
-      "changePct": 0.72,
-      "sma200": 236.12,
-      "sma50w": 234.14,
-      "ema50w": 243,
-      "distanceTo200dPct": 9.39,
-      "distanceToUpperBandPct": 6.29
+      "price": 259.48,
+      "changePct": 0.46,
+      "sma200": 236.42,
+      "sma50w": 234.16,
+      "ema50w": 243.05,
+      "distanceTo200dPct": 9.75,
+      "distanceToUpperBandPct": 6.76
     },
     {
       "ticker": "MSFT",
@@ -341,13 +342,13 @@
         "cloud"
       ],
       "status": "RED",
-      "price": 433.5,
-      "changePct": -9.99,
-      "sma200": 485.34,
-      "sma50w": 468.99,
-      "ema50w": 471.3,
-      "distanceTo200dPct": -10.68,
-      "distanceToUpperBandPct": -8.02
+      "price": 430.29,
+      "changePct": -0.74,
+      "sma200": 485.55,
+      "sma50w": 468.93,
+      "ema50w": 471.18,
+      "distanceTo200dPct": -11.38,
+      "distanceToUpperBandPct": -8.68
     },
     {
       "ticker": "NVDA",
@@ -356,13 +357,13 @@
         "ai"
       ],
       "status": "GREEN",
-      "price": 192.51,
-      "changePct": 0.52,
-      "sma200": 166.97,
-      "sma50w": 159.18,
-      "ema50w": 184.54,
-      "distanceTo200dPct": 15.3,
-      "distanceToUpperBandPct": 4.32
+      "price": 191.13,
+      "changePct": -0.72,
+      "sma200": 167.37,
+      "sma50w": 159.16,
+      "ema50w": 184.48,
+      "distanceTo200dPct": 14.19,
+      "distanceToUpperBandPct": 3.6
     },
     {
       "ticker": "AMZN",
@@ -372,13 +373,13 @@
         "consumer"
       ],
       "status": "GREEN",
-      "price": 241.73,
-      "changePct": -0.53,
-      "sma200": 221.23,
-      "sma50w": 217.7,
-      "ema50w": 222.49,
-      "distanceTo200dPct": 9.27,
-      "distanceToUpperBandPct": 8.65
+      "price": 239.3,
+      "changePct": -1.01,
+      "sma200": 221.5,
+      "sma50w": 217.65,
+      "ema50w": 222.39,
+      "distanceTo200dPct": 8.04,
+      "distanceToUpperBandPct": 7.6
     },
     {
       "ticker": "GOOGL",
@@ -387,13 +388,13 @@
         "communications"
       ],
       "status": "GREEN",
-      "price": 338.25,
-      "changePct": 0.67,
-      "sma200": 232.7,
+      "price": 338,
+      "changePct": -0.07,
+      "sma200": 233.6,
       "sma50w": 224.27,
-      "ema50w": 247.68,
-      "distanceTo200dPct": 45.36,
-      "distanceToUpperBandPct": 36.57
+      "ema50w": 247.67,
+      "distanceTo200dPct": 44.69,
+      "distanceToUpperBandPct": 36.47
     },
     {
       "ticker": "META",
@@ -402,13 +403,13 @@
         "communications"
       ],
       "status": "GREEN",
-      "price": 738.31,
-      "changePct": 10.4,
-      "sma200": 679.91,
-      "sma50w": 667.6,
-      "ema50w": 657.2,
-      "distanceTo200dPct": 8.59,
-      "distanceToUpperBandPct": 10.59
+      "price": 716.5,
+      "changePct": -2.95,
+      "sma200": 680.77,
+      "sma50w": 667.16,
+      "ema50w": 656.34,
+      "distanceTo200dPct": 5.25,
+      "distanceToUpperBandPct": 7.4
     },
     {
       "ticker": "TSLA",
@@ -417,13 +418,13 @@
         "consumer"
       ],
       "status": "GREEN",
-      "price": 416.56,
-      "changePct": -3.45,
-      "sma200": 375.35,
-      "sma50w": 359.41,
-      "ema50w": 381.19,
-      "distanceTo200dPct": 10.98,
-      "distanceToUpperBandPct": 9.28
+      "price": 430.41,
+      "changePct": 3.32,
+      "sma200": 376.24,
+      "sma50w": 359.69,
+      "ema50w": 381.74,
+      "distanceTo200dPct": 14.4,
+      "distanceToUpperBandPct": 12.75
     },
     {
       "ticker": "NFLX",
@@ -433,13 +434,13 @@
         "consumer"
       ],
       "status": "RED",
-      "price": 83.16,
-      "changePct": -1.75,
-      "sma200": 918.33,
-      "sma50w": 905.64,
-      "ema50w": 724.49,
-      "distanceTo200dPct": -90.94,
-      "distanceToUpperBandPct": -90.82
+      "price": 83.49,
+      "changePct": 0.4,
+      "sma200": 914.16,
+      "sma50w": 905.65,
+      "ema50w": 724.51,
+      "distanceTo200dPct": -90.87,
+      "distanceToUpperBandPct": -90.78
     },
     {
       "ticker": "ORCL",
@@ -449,13 +450,13 @@
         "cloud"
       ],
       "status": "RED",
-      "price": 169.01,
-      "changePct": -2.19,
-      "sma200": 219.23,
-      "sma50w": 206.74,
-      "ema50w": 206.83,
-      "distanceTo200dPct": -22.91,
-      "distanceToUpperBandPct": -18.28
+      "price": 164.66,
+      "changePct": -2.57,
+      "sma200": 219.39,
+      "sma50w": 206.65,
+      "ema50w": 206.66,
+      "distanceTo200dPct": -24.95,
+      "distanceToUpperBandPct": -20.32
     },
     {
       "ticker": "ADBE",
@@ -464,13 +465,13 @@
         "software"
       ],
       "status": "RED",
-      "price": 291.65,
-      "changePct": -2.65,
-      "sma200": 356.83,
-      "sma50w": 362.81,
-      "ema50w": 367.38,
-      "distanceTo200dPct": -18.27,
-      "distanceToUpperBandPct": -20.61
+      "price": 293.25,
+      "changePct": 0.55,
+      "sma200": 356.54,
+      "sma50w": 362.84,
+      "ema50w": 367.44,
+      "distanceTo200dPct": -17.75,
+      "distanceToUpperBandPct": -20.19
     },
     {
       "ticker": "CRM",
@@ -479,13 +480,13 @@
         "cloud"
       ],
       "status": "RED",
-      "price": 214.08,
-      "changePct": -6.09,
-      "sma200": 254.52,
-      "sma50w": 257.51,
-      "ema50w": 256.75,
-      "distanceTo200dPct": -15.89,
-      "distanceToUpperBandPct": -16.87
+      "price": 212.29,
+      "changePct": -0.84,
+      "sma200": 254.31,
+      "sma50w": 257.48,
+      "ema50w": 256.68,
+      "distanceTo200dPct": -16.52,
+      "distanceToUpperBandPct": -17.55
     },
     {
       "ticker": "NOW",
@@ -494,13 +495,13 @@
         "cloud"
       ],
       "status": "RED",
-      "price": 116.73,
-      "changePct": -9.94,
-      "sma200": 816.09,
+      "price": 117.01,
+      "changePct": 0.24,
+      "sma200": 812.74,
       "sma50w": 802.72,
-      "ema50w": 717.06,
-      "distanceTo200dPct": -85.7,
-      "distanceToUpperBandPct": -85.46
+      "ema50w": 717.07,
+      "distanceTo200dPct": -85.6,
+      "distanceToUpperBandPct": -85.42
     },
     {
       "ticker": "INTU",
@@ -509,13 +510,13 @@
         "payments"
       ],
       "status": "RED",
-      "price": 502.98,
-      "changePct": -6.63,
-      "sma200": 681.17,
-      "sma50w": 665.84,
-      "ema50w": 651.37,
-      "distanceTo200dPct": -26.16,
-      "distanceToUpperBandPct": -24.46
+      "price": 498.92,
+      "changePct": -0.81,
+      "sma200": 680.73,
+      "sma50w": 665.76,
+      "ema50w": 651.21,
+      "distanceTo200dPct": -26.71,
+      "distanceToUpperBandPct": -25.06
     },
     {
       "ticker": "SHOP",
@@ -523,14 +524,14 @@
         "software",
         "payments"
       ],
-      "status": "GREEN",
-      "price": 143.64,
-      "changePct": 3.4,
-      "sma200": 136.2,
-      "sma50w": 130.3,
-      "ema50w": 135.87,
-      "distanceTo200dPct": 5.47,
-      "distanceToUpperBandPct": 5.72
+      "status": "RED",
+      "price": 131.23,
+      "changePct": -8.64,
+      "sma200": 136.43,
+      "sma50w": 130.05,
+      "ema50w": 135.38,
+      "distanceTo200dPct": -3.81,
+      "distanceToUpperBandPct": -3.07
     },
     {
       "ticker": "SNOW",
@@ -540,13 +541,13 @@
         "ai"
       ],
       "status": "RED",
-      "price": 199.37,
-      "changePct": -7.7,
-      "sma200": 216.55,
-      "sma50w": 206.96,
-      "ema50w": 209.44,
-      "distanceTo200dPct": -7.93,
-      "distanceToUpperBandPct": -4.81
+      "price": 192.7,
+      "changePct": -3.35,
+      "sma200": 216.79,
+      "sma50w": 206.83,
+      "ema50w": 209.18,
+      "distanceTo200dPct": -11.11,
+      "distanceToUpperBandPct": -7.88
     },
     {
       "ticker": "MDB",
@@ -555,13 +556,13 @@
         "cloud"
       ],
       "status": "GREEN",
-      "price": 374.02,
-      "changePct": -9.01,
-      "sma200": 286.01,
-      "sma50w": 274.79,
-      "ema50w": 315.49,
-      "distanceTo200dPct": 30.77,
-      "distanceToUpperBandPct": 18.55
+      "price": 371.33,
+      "changePct": -0.72,
+      "sma200": 287.05,
+      "sma50w": 274.73,
+      "ema50w": 315.39,
+      "distanceTo200dPct": 29.36,
+      "distanceToUpperBandPct": 17.74
     },
     {
       "ticker": "PLTR",
@@ -570,13 +571,13 @@
         "ai"
       ],
       "status": "RED",
-      "price": 151.86,
-      "changePct": -3.49,
-      "sma200": 158.25,
-      "sma50w": 146.77,
-      "ema50w": 146.53,
-      "distanceTo200dPct": -4.04,
-      "distanceToUpperBandPct": 3.47
+      "price": 146.59,
+      "changePct": -3.47,
+      "sma200": 158.54,
+      "sma50w": 146.66,
+      "ema50w": 146.32,
+      "distanceTo200dPct": -7.54,
+      "distanceToUpperBandPct": -0.05
     },
     {
       "ticker": "PANW",
@@ -584,13 +585,13 @@
         "cyber"
       ],
       "status": "RED",
-      "price": 176.2,
-      "changePct": -4.1,
-      "sma200": 193.55,
-      "sma50w": 190.52,
-      "ema50w": 204.47,
-      "distanceTo200dPct": -8.96,
-      "distanceToUpperBandPct": -13.83
+      "price": 176.97,
+      "changePct": 0.44,
+      "sma200": 193.59,
+      "sma50w": 190.53,
+      "ema50w": 204.5,
+      "distanceTo200dPct": -8.59,
+      "distanceToUpperBandPct": -13.46
     },
     {
       "ticker": "CRWD",
@@ -598,13 +599,13 @@
         "cyber"
       ],
       "status": "RED",
-      "price": 444.62,
-      "changePct": -5.24,
-      "sma200": 470.33,
-      "sma50w": 452.68,
-      "ema50w": 449.22,
-      "distanceTo200dPct": -5.47,
-      "distanceToUpperBandPct": -1.78
+      "price": 441.41,
+      "changePct": -0.72,
+      "sma200": 470.64,
+      "sma50w": 452.61,
+      "ema50w": 449.09,
+      "distanceTo200dPct": -6.21,
+      "distanceToUpperBandPct": -2.48
     },
     {
       "ticker": "ZS",
@@ -613,13 +614,13 @@
         "networking"
       ],
       "status": "RED",
-      "price": 200.63,
-      "changePct": -6.23,
-      "sma200": 270.58,
-      "sma50w": 257.79,
-      "ema50w": 249.6,
-      "distanceTo200dPct": -25.85,
-      "distanceToUpperBandPct": -22.17
+      "price": 200.01,
+      "changePct": -0.31,
+      "sma200": 270.59,
+      "sma50w": 257.77,
+      "ema50w": 249.58,
+      "distanceTo200dPct": -26.08,
+      "distanceToUpperBandPct": -22.41
     },
     {
       "ticker": "NET",
@@ -628,13 +629,13 @@
         "cloud"
       ],
       "status": "RED",
-      "price": 180.39,
-      "changePct": -2.43,
-      "sma200": 190.64,
-      "sma50w": 179.72,
-      "ema50w": 179.26,
-      "distanceTo200dPct": -5.38,
-      "distanceToUpperBandPct": 0.37
+      "price": 177.35,
+      "changePct": -1.69,
+      "sma200": 191,
+      "sma50w": 179.66,
+      "ema50w": 179.14,
+      "distanceTo200dPct": -7.15,
+      "distanceToUpperBandPct": -1.28
     },
     {
       "ticker": "DDOG",
@@ -643,27 +644,27 @@
         "cloud"
       ],
       "status": "RED",
-      "price": 128.18,
-      "changePct": -8.81,
-      "sma200": 136.86,
-      "sma50w": 131.63,
-      "ema50w": 137.09,
-      "distanceTo200dPct": -6.34,
-      "distanceToUpperBandPct": -6.5
+      "price": 129.32,
+      "changePct": 0.89,
+      "sma200": 137.04,
+      "sma50w": 131.65,
+      "ema50w": 137.14,
+      "distanceTo200dPct": -5.64,
+      "distanceToUpperBandPct": -5.7
     },
     {
       "ticker": "ANET",
       "tags": [
         "networking"
       ],
-      "status": "GREEN",
-      "price": 148.15,
-      "changePct": -1.33,
-      "sma200": 121.18,
-      "sma50w": 115.31,
-      "ema50w": 142.66,
-      "distanceTo200dPct": 22.26,
-      "distanceToUpperBandPct": 3.85
+      "status": "YELLOW",
+      "price": 141.74,
+      "changePct": -4.33,
+      "sma200": 121.53,
+      "sma50w": 115.18,
+      "ema50w": 142.41,
+      "distanceTo200dPct": 16.63,
+      "distanceToUpperBandPct": -0.47
     },
     {
       "ticker": "AVGO",
@@ -671,13 +672,13 @@
         "semis"
       ],
       "status": "YELLOW",
-      "price": 330.73,
-      "changePct": -0.75,
-      "sma200": 303.91,
-      "sma50w": 285.8,
-      "ema50w": 340.67,
-      "distanceTo200dPct": 8.83,
-      "distanceToUpperBandPct": -2.92
+      "price": 331.3,
+      "changePct": 0.17,
+      "sma200": 304.65,
+      "sma50w": 285.81,
+      "ema50w": 340.7,
+      "distanceTo200dPct": 8.75,
+      "distanceToUpperBandPct": -2.76
     },
     {
       "ticker": "AMD",
@@ -686,13 +687,13 @@
         "ai"
       ],
       "status": "GREEN",
-      "price": 252.18,
-      "changePct": -0.22,
-      "sma200": 174.26,
-      "sma50w": 163.22,
-      "ema50w": 183.14,
-      "distanceTo200dPct": 44.71,
-      "distanceToUpperBandPct": 37.7
+      "price": 236.73,
+      "changePct": -6.13,
+      "sma200": 174.98,
+      "sma50w": 162.91,
+      "ema50w": 182.54,
+      "distanceTo200dPct": 35.29,
+      "distanceToUpperBandPct": 29.69
     },
     {
       "ticker": "QCOM",
@@ -700,13 +701,13 @@
         "semis"
       ],
       "status": "RED",
-      "price": 152.22,
-      "changePct": -0.31,
-      "sma200": 160.57,
-      "sma50w": 158.85,
-      "ema50w": 163.15,
-      "distanceTo200dPct": -5.2,
-      "distanceToUpperBandPct": -6.7
+      "price": 151.59,
+      "changePct": -0.41,
+      "sma200": 160.64,
+      "sma50w": 158.83,
+      "ema50w": 163.12,
+      "distanceTo200dPct": -5.63,
+      "distanceToUpperBandPct": -7.07
     },
     {
       "ticker": "INTC",
@@ -714,13 +715,13 @@
         "semis"
       ],
       "status": "GREEN",
-      "price": 48.66,
-      "changePct": -0.25,
-      "sma200": 29.55,
-      "sma50w": 28.93,
-      "ema50w": 32.75,
-      "distanceTo200dPct": 64.65,
-      "distanceToUpperBandPct": 48.58
+      "price": 46.47,
+      "changePct": -4.5,
+      "sma200": 29.69,
+      "sma50w": 28.89,
+      "ema50w": 32.67,
+      "distanceTo200dPct": 56.53,
+      "distanceToUpperBandPct": 42.26
     },
     {
       "ticker": "MU",
@@ -728,13 +729,13 @@
         "semis"
       ],
       "status": "GREEN",
-      "price": 435.79,
-      "changePct": 0.12,
-      "sma200": 172.94,
-      "sma50w": 165.37,
-      "ema50w": 198.73,
-      "distanceTo200dPct": 151.99,
-      "distanceToUpperBandPct": 119.28
+      "price": 414.88,
+      "changePct": -4.8,
+      "sma200": 174.67,
+      "sma50w": 164.95,
+      "ema50w": 197.91,
+      "distanceTo200dPct": 137.53,
+      "distanceToUpperBandPct": 109.63
     },
     {
       "ticker": "ASML",
@@ -742,13 +743,13 @@
         "semis"
       ],
       "status": "GREEN",
-      "price": 1455.16,
-      "changePct": 2.27,
-      "sma200": 900.57,
-      "sma50w": 876.5,
-      "ema50w": 959.41,
-      "distanceTo200dPct": 61.58,
-      "distanceToUpperBandPct": 51.67
+      "price": 1423,
+      "changePct": -2.21,
+      "sma200": 904.35,
+      "sma50w": 875.85,
+      "ema50w": 958.15,
+      "distanceTo200dPct": 57.35,
+      "distanceToUpperBandPct": 48.52
     },
     {
       "ticker": "TSM",
@@ -756,13 +757,13 @@
         "semis"
       ],
       "status": "GREEN",
-      "price": 339.55,
-      "changePct": -0.8,
-      "sma200": 253.06,
-      "sma50w": 241.73,
-      "ema50w": 257.54,
-      "distanceTo200dPct": 34.18,
-      "distanceToUpperBandPct": 31.84
+      "price": 330.5,
+      "changePct": -2.67,
+      "sma200": 253.92,
+      "sma50w": 241.55,
+      "ema50w": 257.19,
+      "distanceTo200dPct": 30.16,
+      "distanceToUpperBandPct": 28.5
     },
     {
       "ticker": "ARM",
@@ -771,13 +772,13 @@
         "ai"
       ],
       "status": "RED",
-      "price": 108.43,
-      "changePct": -1.39,
-      "sma200": 137.68,
-      "sma50w": 133.43,
-      "ema50w": 133.1,
-      "distanceTo200dPct": -21.25,
-      "distanceToUpperBandPct": -18.73
+      "price": 105.36,
+      "changePct": -2.83,
+      "sma200": 137.71,
+      "sma50w": 133.37,
+      "ema50w": 132.98,
+      "distanceTo200dPct": -23.49,
+      "distanceToUpperBandPct": -21
     },
     {
       "ticker": "TXN",
@@ -785,13 +786,13 @@
         "semis"
       ],
       "status": "GREEN",
-      "price": 218.97,
-      "changePct": 1.3,
-      "sma200": 183.26,
-      "sma50w": 182.95,
-      "ema50w": 184.11,
-      "distanceTo200dPct": 19.49,
-      "distanceToUpperBandPct": 18.94
+      "price": 215.55,
+      "changePct": -1.56,
+      "sma200": 183.6,
+      "sma50w": 182.88,
+      "ema50w": 183.97,
+      "distanceTo200dPct": 17.4,
+      "distanceToUpperBandPct": 17.17
     },
     {
       "ticker": "AMAT",
@@ -799,13 +800,13 @@
         "semis"
       ],
       "status": "GREEN",
-      "price": 341.34,
-      "changePct": 1.36,
-      "sma200": 206.25,
-      "sma50w": 199.38,
-      "ema50w": 221.13,
-      "distanceTo200dPct": 65.49,
-      "distanceToUpperBandPct": 54.36
+      "price": 322.32,
+      "changePct": -5.57,
+      "sma200": 207.14,
+      "sma50w": 199,
+      "ema50w": 220.39,
+      "distanceTo200dPct": 55.6,
+      "distanceToUpperBandPct": 46.25
     },
     {
       "ticker": "LRCX",
@@ -813,13 +814,13 @@
         "semis"
       ],
       "status": "GREEN",
-      "price": 248.17,
-      "changePct": 3.59,
-      "sma200": 125.15,
-      "sma50w": 119.21,
-      "ema50w": 181.51,
-      "distanceTo200dPct": 98.29,
-      "distanceToUpperBandPct": 36.72
+      "price": 233.46,
+      "changePct": -5.93,
+      "sma200": 125.98,
+      "sma50w": 118.92,
+      "ema50w": 180.94,
+      "distanceTo200dPct": 85.31,
+      "distanceToUpperBandPct": 29.03
     },
     {
       "ticker": "KLAC",
@@ -827,13 +828,13 @@
         "semis"
       ],
       "status": "GREEN",
-      "price": 1684.71,
-      "changePct": 3.53,
-      "sma200": 1013.93,
-      "sma50w": 971.65,
-      "ema50w": 1052.53,
-      "distanceTo200dPct": 66.16,
-      "distanceToUpperBandPct": 60.06
+      "price": 1427.94,
+      "changePct": -15.24,
+      "sma200": 1017.72,
+      "sma50w": 966.51,
+      "ema50w": 1042.46,
+      "distanceTo200dPct": 40.31,
+      "distanceToUpperBandPct": 36.98
     },
     {
       "ticker": "BRK.B",
@@ -841,13 +842,13 @@
         "financials"
       ],
       "status": "RED",
-      "price": 476.79,
-      "changePct": 0.7,
-      "sma200": 495.19,
-      "sma50w": 497.6,
-      "ema50w": 487.65,
-      "distanceTo200dPct": -3.72,
-      "distanceToUpperBandPct": -4.18
+      "price": 480.88,
+      "changePct": 0.86,
+      "sma200": 494.98,
+      "sma50w": 497.69,
+      "ema50w": 487.81,
+      "distanceTo200dPct": -2.85,
+      "distanceToUpperBandPct": -3.38
     },
     {
       "ticker": "JPM",
@@ -856,13 +857,13 @@
         "banking"
       ],
       "status": "GREEN",
-      "price": 306.42,
-      "changePct": 1.88,
-      "sma200": 292.56,
-      "sma50w": 285.53,
-      "ema50w": 288.53,
-      "distanceTo200dPct": 4.74,
-      "distanceToUpperBandPct": 6.2
+      "price": 305.89,
+      "changePct": -0.17,
+      "sma200": 292.91,
+      "sma50w": 285.52,
+      "ema50w": 288.51,
+      "distanceTo200dPct": 4.43,
+      "distanceToUpperBandPct": 6.02
     },
     {
       "ticker": "GS",
@@ -871,13 +872,13 @@
         "banking"
       ],
       "status": "GREEN",
-      "price": 940.12,
-      "changePct": 0.35,
-      "sma200": 742.62,
-      "sma50w": 718.73,
-      "ema50w": 751.45,
-      "distanceTo200dPct": 26.59,
-      "distanceToUpperBandPct": 25.11
+      "price": 935.41,
+      "changePct": -0.5,
+      "sma200": 744.83,
+      "sma50w": 718.63,
+      "ema50w": 751.27,
+      "distanceTo200dPct": 25.59,
+      "distanceToUpperBandPct": 24.51
     },
     {
       "ticker": "MS",
@@ -886,13 +887,13 @@
         "banking"
       ],
       "status": "GREEN",
-      "price": 182.4,
-      "changePct": 0.03,
-      "sma200": 150.99,
-      "sma50w": 146.75,
-      "ema50w": 152.89,
-      "distanceTo200dPct": 20.8,
-      "distanceToUpperBandPct": 19.3
+      "price": 182.87,
+      "changePct": 0.26,
+      "sma200": 151.37,
+      "sma50w": 146.76,
+      "ema50w": 152.91,
+      "distanceTo200dPct": 20.81,
+      "distanceToUpperBandPct": 19.59
     },
     {
       "ticker": "V",
@@ -901,13 +902,13 @@
         "payments"
       ],
       "status": "RED",
-      "price": 331.8,
-      "changePct": 1.47,
-      "sma200": 345.02,
-      "sma50w": 343.75,
-      "ema50w": 335.57,
-      "distanceTo200dPct": -3.83,
-      "distanceToUpperBandPct": -3.48
+      "price": 321.83,
+      "changePct": -3,
+      "sma200": 344.96,
+      "sma50w": 343.55,
+      "ema50w": 335.18,
+      "distanceTo200dPct": -6.71,
+      "distanceToUpperBandPct": -6.32
     },
     {
       "ticker": "MA",
@@ -916,13 +917,13 @@
         "payments"
       ],
       "status": "RED",
-      "price": 543.73,
-      "changePct": 4.29,
-      "sma200": 563.07,
-      "sma50w": 558.65,
-      "ema50w": 550.83,
-      "distanceTo200dPct": -3.44,
-      "distanceToUpperBandPct": -2.67
+      "price": 538.73,
+      "changePct": -0.92,
+      "sma200": 563.22,
+      "sma50w": 558.55,
+      "ema50w": 550.64,
+      "distanceTo200dPct": -4.35,
+      "distanceToUpperBandPct": -3.55
     },
     {
       "ticker": "BLK",
@@ -931,13 +932,13 @@
         "asset-mgmt"
       ],
       "status": "GREEN",
-      "price": 1127.78,
-      "changePct": 0.54,
-      "sma200": 1065.74,
-      "sma50w": 1046.5,
-      "ema50w": 1056.73,
-      "distanceTo200dPct": 5.82,
-      "distanceToUpperBandPct": 6.72
+      "price": 1118.94,
+      "changePct": -0.78,
+      "sma200": 1066.94,
+      "sma50w": 1046.33,
+      "ema50w": 1056.38,
+      "distanceTo200dPct": 4.87,
+      "distanceToUpperBandPct": 5.92
     },
     {
       "ticker": "SCHW",
@@ -946,12 +947,13 @@
         "banking"
       ],
       "status": "GREEN",
-      "price": 103.47,
-      "sma200": 92.96,
-      "sma50w": 90.7,
-      "ema50w": 91.49,
-      "distanceTo200dPct": 11.3,
-      "distanceToUpperBandPct": 13.09
+      "price": 103.86,
+      "changePct": 0.38,
+      "sma200": 93.1,
+      "sma50w": 90.71,
+      "ema50w": 91.51,
+      "distanceTo200dPct": 11.56,
+      "distanceToUpperBandPct": 13.5
     },
     {
       "ticker": "COST",
@@ -959,14 +961,14 @@
         "consumer",
         "staples"
       ],
-      "status": "GREEN",
-      "price": 952.89,
-      "changePct": -0.82,
-      "sma200": 951.49,
-      "sma50w": 952.35,
-      "ema50w": 928.3,
-      "distanceTo200dPct": 0.15,
-      "distanceToUpperBandPct": 0.06
+      "status": "RED",
+      "price": 940.25,
+      "changePct": -1.33,
+      "sma200": 951.38,
+      "sma50w": 952.09,
+      "ema50w": 927.81,
+      "distanceTo200dPct": -1.17,
+      "distanceToUpperBandPct": -1.24
     },
     {
       "ticker": "WMT",
@@ -975,13 +977,13 @@
         "staples"
       ],
       "status": "GREEN",
-      "price": 117.41,
-      "changePct": 0.72,
-      "sma200": 102.79,
-      "sma50w": 101.02,
-      "ema50w": 103.82,
-      "distanceTo200dPct": 14.23,
-      "distanceToUpperBandPct": 13.09
+      "price": 119.14,
+      "changePct": 1.47,
+      "sma200": 102.92,
+      "sma50w": 101.05,
+      "ema50w": 103.89,
+      "distanceTo200dPct": 15.76,
+      "distanceToUpperBandPct": 14.68
     },
     {
       "ticker": "HD",
@@ -989,14 +991,14 @@
         "consumer",
         "discretionary"
       ],
-      "status": "RED",
-      "price": 371.81,
-      "changePct": -0.93,
-      "sma200": 374.39,
-      "sma50w": 373.37,
-      "ema50w": 374.41,
-      "distanceTo200dPct": -0.69,
-      "distanceToUpperBandPct": -0.7
+      "status": "GREEN",
+      "price": 374.59,
+      "changePct": 0.75,
+      "sma200": 374.49,
+      "sma50w": 373.43,
+      "ema50w": 374.52,
+      "distanceTo200dPct": 0.03,
+      "distanceToUpperBandPct": 0.02
     },
     {
       "ticker": "LOW",
@@ -1005,13 +1007,13 @@
         "discretionary"
       ],
       "status": "GREEN",
-      "price": 266.64,
-      "changePct": -1.03,
-      "sma200": 239.65,
-      "sma50w": 239.26,
-      "ema50w": 245.57,
-      "distanceTo200dPct": 11.26,
-      "distanceToUpperBandPct": 8.58
+      "price": 267.13,
+      "changePct": 0.18,
+      "sma200": 239.89,
+      "sma50w": 239.27,
+      "ema50w": 245.59,
+      "distanceTo200dPct": 11.36,
+      "distanceToUpperBandPct": 8.77
     },
     {
       "ticker": "MCD",
@@ -1020,13 +1022,13 @@
         "discretionary"
       ],
       "status": "GREEN",
-      "price": 315.51,
-      "changePct": 0.87,
-      "sma200": 306.39,
-      "sma50w": 306.8,
-      "ema50w": 304.39,
-      "distanceTo200dPct": 2.98,
-      "distanceToUpperBandPct": 2.84
+      "price": 314.98,
+      "changePct": -0.17,
+      "sma200": 306.41,
+      "sma50w": 306.79,
+      "ema50w": 304.37,
+      "distanceTo200dPct": 2.8,
+      "distanceToUpperBandPct": 2.67
     },
     {
       "ticker": "SBUX",
@@ -1035,13 +1037,13 @@
         "discretionary"
       ],
       "status": "GREEN",
-      "price": 93.88,
-      "changePct": -1.35,
-      "sma200": 87.24,
-      "sma50w": 89.31,
-      "ema50w": 89.07,
-      "distanceTo200dPct": 7.61,
-      "distanceToUpperBandPct": 5.12
+      "price": 91.95,
+      "changePct": -2.06,
+      "sma200": 87.27,
+      "sma50w": 89.27,
+      "ema50w": 89,
+      "distanceTo200dPct": 5.36,
+      "distanceToUpperBandPct": 3.01
     },
     {
       "ticker": "BKNG",
@@ -1050,13 +1052,13 @@
         "travel"
       ],
       "status": "RED",
-      "price": 5113.32,
-      "changePct": 0.55,
-      "sma200": 5287.39,
-      "sma50w": 5208.02,
-      "ema50w": 5116.15,
-      "distanceTo200dPct": -3.29,
-      "distanceToUpperBandPct": -1.82
+      "price": 5001.84,
+      "changePct": -2.18,
+      "sma200": 5289.46,
+      "sma50w": 5205.8,
+      "ema50w": 5111.78,
+      "distanceTo200dPct": -5.44,
+      "distanceToUpperBandPct": -3.92
     },
     {
       "ticker": "ROST",
@@ -1065,13 +1067,13 @@
         "discretionary"
       ],
       "status": "GREEN",
-      "price": 186.5,
-      "changePct": 0.25,
-      "sma200": 153.86,
-      "sma50w": 150.81,
-      "ema50w": 158.75,
-      "distanceTo200dPct": 21.21,
-      "distanceToUpperBandPct": 17.48
+      "price": 188.65,
+      "changePct": 1.15,
+      "sma200": 154.1,
+      "sma50w": 150.85,
+      "ema50w": 158.83,
+      "distanceTo200dPct": 22.42,
+      "distanceToUpperBandPct": 18.77
     },
     {
       "ticker": "PG",
@@ -1079,13 +1081,13 @@
         "staples"
       ],
       "status": "RED",
-      "price": 149.9,
-      "changePct": 1.74,
-      "sma200": 154.18,
-      "sma50w": 156.62,
-      "ema50w": 154.08,
-      "distanceTo200dPct": -2.78,
-      "distanceToUpperBandPct": -4.29
+      "price": 151.82,
+      "changePct": 1.28,
+      "sma200": 154.11,
+      "sma50w": 156.66,
+      "ema50w": 154.15,
+      "distanceTo200dPct": -1.48,
+      "distanceToUpperBandPct": -3.09
     },
     {
       "ticker": "KO",
@@ -1093,13 +1095,13 @@
         "staples"
       ],
       "status": "GREEN",
-      "price": 73.43,
-      "changePct": 0.51,
-      "sma200": 69.97,
-      "sma50w": 70.16,
-      "ema50w": 69.33,
-      "distanceTo200dPct": 4.95,
-      "distanceToUpperBandPct": 4.66
+      "price": 74.85,
+      "changePct": 1.93,
+      "sma200": 69.99,
+      "sma50w": 70.19,
+      "ema50w": 69.39,
+      "distanceTo200dPct": 6.95,
+      "distanceToUpperBandPct": 6.64
     },
     {
       "ticker": "PEP",
@@ -1107,13 +1109,13 @@
         "staples"
       ],
       "status": "GREEN",
-      "price": 148.69,
-      "changePct": 0.13,
-      "sma200": 141.58,
-      "sma50w": 142.98,
-      "ema50w": 146.65,
-      "distanceTo200dPct": 5.02,
-      "distanceToUpperBandPct": 1.39
+      "price": 153.63,
+      "changePct": 3.32,
+      "sma200": 141.63,
+      "sma50w": 143.08,
+      "ema50w": 146.85,
+      "distanceTo200dPct": 8.48,
+      "distanceToUpperBandPct": 4.62
     },
     {
       "ticker": "UNH",
@@ -1121,13 +1123,13 @@
         "healthcare"
       ],
       "status": "RED",
-      "price": 292.29,
-      "changePct": -0.59,
-      "sma200": 331.88,
-      "sma50w": 356.87,
-      "ema50w": 366.16,
-      "distanceTo200dPct": -11.93,
-      "distanceToUpperBandPct": -20.18
+      "price": 286.93,
+      "changePct": -1.83,
+      "sma200": 330.32,
+      "sma50w": 356.76,
+      "ema50w": 365.95,
+      "distanceTo200dPct": -13.14,
+      "distanceToUpperBandPct": -21.59
     },
     {
       "ticker": "JNJ",
@@ -1135,13 +1137,13 @@
         "healthcare"
       ],
       "status": "GREEN",
-      "price": 227.29,
-      "changePct": -0.19,
-      "sma200": 178.99,
-      "sma50w": 177.31,
-      "ema50w": 184.2,
-      "distanceTo200dPct": 26.98,
-      "distanceToUpperBandPct": 23.4
+      "price": 227.25,
+      "changePct": -0.02,
+      "sma200": 179.37,
+      "sma50w": 177.3,
+      "ema50w": 184.19,
+      "distanceTo200dPct": 26.69,
+      "distanceToUpperBandPct": 23.38
     },
     {
       "ticker": "MRK",
@@ -1149,13 +1151,13 @@
         "healthcare"
       ],
       "status": "GREEN",
-      "price": 108.34,
-      "changePct": 1.35,
-      "sma200": 87.54,
-      "sma50w": 88.44,
-      "ema50w": 94.82,
-      "distanceTo200dPct": 23.76,
-      "distanceToUpperBandPct": 14.26
+      "price": 110.27,
+      "changePct": 1.78,
+      "sma200": 87.69,
+      "sma50w": 88.48,
+      "ema50w": 94.89,
+      "distanceTo200dPct": 25.74,
+      "distanceToUpperBandPct": 16.21
     },
     {
       "ticker": "ABBV",
@@ -1163,13 +1165,13 @@
         "healthcare"
       ],
       "status": "GREEN",
-      "price": 220.43,
-      "changePct": 0.8,
-      "sma200": 207.98,
-      "sma50w": 207.57,
-      "ema50w": 209.68,
-      "distanceTo200dPct": 5.99,
-      "distanceToUpperBandPct": 5.13
+      "price": 222.98,
+      "changePct": 1.16,
+      "sma200": 208.22,
+      "sma50w": 207.63,
+      "ema50w": 209.78,
+      "distanceTo200dPct": 7.09,
+      "distanceToUpperBandPct": 6.29
     },
     {
       "ticker": "LLY",
@@ -1177,13 +1179,13 @@
         "healthcare"
       ],
       "status": "GREEN",
-      "price": 1024.14,
-      "changePct": 0.03,
-      "sma200": 850.14,
-      "sma50w": 852.16,
-      "ema50w": 889.74,
-      "distanceTo200dPct": 20.47,
-      "distanceToUpperBandPct": 15.11
+      "price": 1037.15,
+      "changePct": 1.27,
+      "sma200": 851.66,
+      "sma50w": 852.42,
+      "ema50w": 890.25,
+      "distanceTo200dPct": 21.78,
+      "distanceToUpperBandPct": 16.5
     },
     {
       "ticker": "TMO",
@@ -1191,13 +1193,13 @@
         "healthcare"
       ],
       "status": "GREEN",
-      "price": 592.16,
-      "changePct": -2.61,
-      "sma200": 496.93,
-      "sma50w": 500.35,
-      "ema50w": 535.77,
-      "distanceTo200dPct": 19.16,
-      "distanceToUpperBandPct": 10.52
+      "price": 578.05,
+      "changePct": -2.38,
+      "sma200": 497.63,
+      "sma50w": 500.06,
+      "ema50w": 535.22,
+      "distanceTo200dPct": 16.16,
+      "distanceToUpperBandPct": 8
     },
     {
       "ticker": "AMGN",
@@ -1205,13 +1207,13 @@
         "healthcare"
       ],
       "status": "GREEN",
-      "price": 342.94,
-      "changePct": 0.21,
-      "sma200": 300.45,
-      "sma50w": 302.36,
-      "ema50w": 308.15,
-      "distanceTo200dPct": 14.14,
-      "distanceToUpperBandPct": 11.29
+      "price": 341.88,
+      "changePct": -0.31,
+      "sma200": 300.73,
+      "sma50w": 302.33,
+      "ema50w": 308.11,
+      "distanceTo200dPct": 13.68,
+      "distanceToUpperBandPct": 10.96
     },
     {
       "ticker": "ABT",
@@ -1219,13 +1221,13 @@
         "healthcare"
       ],
       "status": "RED",
-      "price": 106.09,
-      "changePct": 0.04,
-      "sma200": 129.33,
-      "sma50w": 129.33,
-      "ema50w": 125.35,
-      "distanceTo200dPct": -17.97,
-      "distanceToUpperBandPct": -17.97
+      "price": 109.32,
+      "changePct": 3.04,
+      "sma200": 129.25,
+      "sma50w": 129.39,
+      "ema50w": 125.48,
+      "distanceTo200dPct": -15.42,
+      "distanceToUpperBandPct": -15.51
     },
     {
       "ticker": "DHR",
@@ -1233,13 +1235,13 @@
         "healthcare"
       ],
       "status": "GREEN",
-      "price": 219.62,
-      "changePct": -2.19,
-      "sma200": 207.73,
-      "sma50w": 207.69,
-      "ema50w": 218.21,
-      "distanceTo200dPct": 5.72,
-      "distanceToUpperBandPct": 0.65
+      "price": 218.86,
+      "changePct": -0.35,
+      "sma200": 207.88,
+      "sma50w": 207.67,
+      "ema50w": 218.18,
+      "distanceTo200dPct": 5.28,
+      "distanceToUpperBandPct": 0.31
     },
     {
       "ticker": "CAT",
@@ -1247,13 +1249,13 @@
         "industrials"
       ],
       "status": "GREEN",
-      "price": 665.24,
-      "changePct": 3.41,
-      "sma200": 462.6,
-      "sma50w": 446.28,
-      "ema50w": 485.92,
-      "distanceTo200dPct": 43.8,
-      "distanceToUpperBandPct": 36.9
+      "price": 657.36,
+      "changePct": -1.18,
+      "sma200": 464.42,
+      "sma50w": 446.12,
+      "ema50w": 485.61,
+      "distanceTo200dPct": 41.54,
+      "distanceToUpperBandPct": 35.37
     },
     {
       "ticker": "DE",
@@ -1261,13 +1263,13 @@
         "industrials"
       ],
       "status": "GREEN",
-      "price": 530.07,
-      "changePct": 0.96,
-      "sma200": 487.24,
-      "sma50w": 485.88,
-      "ema50w": 476.17,
-      "distanceTo200dPct": 8.79,
-      "distanceToUpperBandPct": 9.09
+      "price": 528,
+      "changePct": -0.39,
+      "sma200": 487.58,
+      "sma50w": 485.84,
+      "ema50w": 476.09,
+      "distanceTo200dPct": 8.29,
+      "distanceToUpperBandPct": 8.68
     },
     {
       "ticker": "GE",
@@ -1275,13 +1277,13 @@
         "industrials"
       ],
       "status": "GREEN",
-      "price": 298.86,
-      "changePct": 2.18,
-      "sma200": 272.82,
-      "sma50w": 261.3,
-      "ema50w": 267.09,
-      "distanceTo200dPct": 9.55,
-      "distanceToUpperBandPct": 11.9
+      "price": 306.78,
+      "changePct": 2.65,
+      "sma200": 273.44,
+      "sma50w": 261.45,
+      "ema50w": 267.4,
+      "distanceTo200dPct": 12.19,
+      "distanceToUpperBandPct": 14.73
     },
     {
       "ticker": "HON",
@@ -1289,13 +1291,13 @@
         "industrials"
       ],
       "status": "GREEN",
-      "price": 227.24,
-      "changePct": 4.89,
-      "sma200": 212.52,
-      "sma50w": 211.8,
-      "ema50w": 210.01,
-      "distanceTo200dPct": 6.93,
-      "distanceToUpperBandPct": 7.29
+      "price": 227.52,
+      "changePct": 0.12,
+      "sma200": 212.67,
+      "sma50w": 211.81,
+      "ema50w": 210.02,
+      "distanceTo200dPct": 6.99,
+      "distanceToUpperBandPct": 7.42
     },
     {
       "ticker": "RTX",
@@ -1304,13 +1306,13 @@
         "defense"
       ],
       "status": "GREEN",
-      "price": 199.88,
-      "changePct": 0.21,
-      "sma200": 159.03,
-      "sma50w": 155.24,
-      "ema50w": 159.84,
-      "distanceTo200dPct": 25.68,
-      "distanceToUpperBandPct": 25.05
+      "price": 200.93,
+      "changePct": 0.53,
+      "sma200": 159.4,
+      "sma50w": 155.26,
+      "ema50w": 159.88,
+      "distanceTo200dPct": 26.06,
+      "distanceToUpperBandPct": 25.68
     },
     {
       "ticker": "LMT",
@@ -1319,13 +1321,13 @@
         "defense"
       ],
       "status": "GREEN",
-      "price": 622.51,
-      "changePct": 4.23,
-      "sma200": 475.92,
-      "sma50w": 475.48,
-      "ema50w": 490.71,
-      "distanceTo200dPct": 30.8,
-      "distanceToUpperBandPct": 26.86
+      "price": 634.22,
+      "changePct": 1.88,
+      "sma200": 476.71,
+      "sma50w": 475.71,
+      "ema50w": 491.17,
+      "distanceTo200dPct": 33.04,
+      "distanceToUpperBandPct": 29.13
     },
     {
       "ticker": "GD",
@@ -1334,13 +1336,13 @@
         "defense"
       ],
       "status": "GREEN",
-      "price": 349.95,
-      "changePct": -1.89,
-      "sma200": 317.05,
-      "sma50w": 309.06,
-      "ema50w": 319.51,
-      "distanceTo200dPct": 10.38,
-      "distanceToUpperBandPct": 9.53
+      "price": 351.09,
+      "changePct": 0.33,
+      "sma200": 317.42,
+      "sma50w": 309.08,
+      "ema50w": 319.55,
+      "distanceTo200dPct": 10.61,
+      "distanceToUpperBandPct": 9.87
     },
     {
       "ticker": "NOC",
@@ -1349,13 +1351,13 @@
         "defense"
       ],
       "status": "GREEN",
-      "price": 695.35,
-      "changePct": 0.9,
-      "sma200": 557.11,
-      "sma50w": 549.32,
-      "ema50w": 562.94,
-      "distanceTo200dPct": 24.81,
-      "distanceToUpperBandPct": 23.52
+      "price": 692.26,
+      "changePct": -0.44,
+      "sma200": 557.91,
+      "sma50w": 549.26,
+      "ema50w": 562.81,
+      "distanceTo200dPct": 24.08,
+      "distanceToUpperBandPct": 23
     },
     {
       "ticker": "UNP",
@@ -1364,13 +1366,13 @@
         "transport"
       ],
       "status": "GREEN",
-      "price": 233.58,
-      "changePct": 2.58,
-      "sma200": 225.78,
-      "sma50w": 227.45,
-      "ema50w": 229.2,
-      "distanceTo200dPct": 3.45,
-      "distanceToUpperBandPct": 1.91
+      "price": 235.1,
+      "changePct": 0.65,
+      "sma200": 225.86,
+      "sma50w": 227.48,
+      "ema50w": 229.26,
+      "distanceTo200dPct": 4.09,
+      "distanceToUpperBandPct": 2.55
     },
     {
       "ticker": "XOM",
@@ -1378,13 +1380,13 @@
         "energy"
       ],
       "status": "GREEN",
-      "price": 140.51,
-      "changePct": 2.13,
-      "sma200": 113.12,
-      "sma50w": 113.41,
-      "ema50w": 116.18,
-      "distanceTo200dPct": 24.22,
-      "distanceToUpperBandPct": 20.94
+      "price": 141.4,
+      "changePct": 0.63,
+      "sma200": 113.31,
+      "sma50w": 113.42,
+      "ema50w": 116.21,
+      "distanceTo200dPct": 24.79,
+      "distanceToUpperBandPct": 21.67
     },
     {
       "ticker": "CVX",
@@ -1392,13 +1394,13 @@
         "energy"
       ],
       "status": "GREEN",
-      "price": 171.19,
-      "changePct": 0.74,
-      "sma200": 150.81,
-      "sma50w": 152.14,
-      "ema50w": 154.21,
-      "distanceTo200dPct": 13.51,
-      "distanceToUpperBandPct": 11.01
+      "price": 176.9,
+      "changePct": 3.34,
+      "sma200": 151.02,
+      "sma50w": 152.25,
+      "ema50w": 154.44,
+      "distanceTo200dPct": 17.14,
+      "distanceToUpperBandPct": 14.55
     },
     {
       "ticker": "COP",
@@ -1406,13 +1408,13 @@
         "energy"
       ],
       "status": "GREEN",
-      "price": 102.8,
-      "changePct": 1.39,
-      "sma200": 92.23,
-      "sma50w": 93,
-      "ema50w": 95.3,
-      "distanceTo200dPct": 11.46,
-      "distanceToUpperBandPct": 7.88
+      "price": 104.22,
+      "changePct": 1.38,
+      "sma200": 92.32,
+      "sma50w": 93.03,
+      "ema50w": 95.35,
+      "distanceTo200dPct": 12.89,
+      "distanceToUpperBandPct": 9.3
     },
     {
       "ticker": "SLB",
@@ -1420,13 +1422,13 @@
         "energy"
       ],
       "status": "GREEN",
-      "price": 48.45,
-      "changePct": -0.86,
-      "sma200": 36.19,
+      "price": 48.38,
+      "changePct": -0.14,
+      "sma200": 36.26,
       "sma50w": 37.07,
       "ema50w": 38.92,
-      "distanceTo200dPct": 33.87,
-      "distanceToUpperBandPct": 24.47
+      "distanceTo200dPct": 33.41,
+      "distanceToUpperBandPct": 24.3
     },
     {
       "ticker": "EOG",
@@ -1434,13 +1436,13 @@
         "energy"
       ],
       "status": "RED",
-      "price": 112.08,
-      "changePct": 0.95,
-      "sma200": 112.99,
+      "price": 112.13,
+      "changePct": 0.04,
+      "sma200": 113.01,
       "sma50w": 114.49,
       "ema50w": 113.74,
-      "distanceTo200dPct": -0.81,
-      "distanceToUpperBandPct": -2.1
+      "distanceTo200dPct": -0.78,
+      "distanceToUpperBandPct": -2.06
     },
     {
       "ticker": "MPC",
@@ -1448,13 +1450,13 @@
         "energy"
       ],
       "status": "GREEN",
-      "price": 175.74,
-      "changePct": 2.17,
-      "sma200": 173.09,
-      "sma50w": 168.31,
-      "ema50w": 172.83,
-      "distanceTo200dPct": 1.53,
-      "distanceToUpperBandPct": 1.69
+      "price": 176.19,
+      "changePct": 0.26,
+      "sma200": 173.35,
+      "sma50w": 168.32,
+      "ema50w": 172.84,
+      "distanceTo200dPct": 1.64,
+      "distanceToUpperBandPct": 1.94
     },
     {
       "ticker": "AMT",
@@ -1463,13 +1465,13 @@
         "reits"
       ],
       "status": "RED",
-      "price": 181.34,
-      "changePct": 2.16,
-      "sma200": 199.1,
-      "sma50w": 200.74,
-      "ema50w": 193.55,
-      "distanceTo200dPct": -8.92,
-      "distanceToUpperBandPct": -9.66
+      "price": 179.3,
+      "changePct": -1.12,
+      "sma200": 198.93,
+      "sma50w": 200.69,
+      "ema50w": 193.47,
+      "distanceTo200dPct": -9.87,
+      "distanceToUpperBandPct": -10.66
     },
     {
       "ticker": "NEE",
@@ -1477,18 +1479,18 @@
         "utilities"
       ],
       "status": "GREEN",
-      "price": 88.18,
-      "changePct": 0.7,
-      "sma200": 76.16,
+      "price": 87.92,
+      "changePct": -0.29,
+      "sma200": 76.27,
       "sma50w": 75.61,
-      "ema50w": 77.8,
-      "distanceTo200dPct": 15.78,
-      "distanceToUpperBandPct": 13.34
+      "ema50w": 77.79,
+      "distanceTo200dPct": 15.27,
+      "distanceToUpperBandPct": 13.02
     }
   ],
   "health": {
-    "greenPct": 66,
-    "yellowPct": 1,
+    "greenPct": 64,
+    "yellowPct": 3,
     "redPct": 33,
     "regimeLabel": "TRANSITION"
   }

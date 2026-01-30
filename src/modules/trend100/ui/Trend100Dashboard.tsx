@@ -355,7 +355,7 @@ export function Trend100Dashboard({
                 aria-label="Metric help"
                 title="What do these metrics mean?"
               >
-                ?
+                What is this?
               </button>
               {(['3M', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
                 <button
@@ -384,7 +384,7 @@ export function Trend100Dashboard({
           </div>
           {showMetricHint && (
             <div className="mb-2 rounded border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-xs text-zinc-400">
-              Flat line? Try <span className="text-zinc-200">Heat</span>, <span className="text-zinc-200">% Upper</span>, <span className="text-zinc-200">Stretch</span>, or <span className="text-zinc-200">Med Upper</span>.
+              Chart stuck at 100%? Click Heat / % Upper / Stretch / Med Upper above the chart.
               <button
                 className="ml-3 text-zinc-300 underline hover:text-zinc-100"
                 onClick={() => setShowMetricHint(false)}
@@ -396,7 +396,7 @@ export function Trend100Dashboard({
           {showMetricHelp && (
             <div className="mb-2 rounded border border-zinc-800 bg-zinc-900/80 p-3 text-xs text-zinc-300">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-zinc-200">Chart metrics</span>
+                <span className="font-semibold text-zinc-200">Why the line won’t move</span>
                 <button
                   className="text-zinc-300 hover:text-zinc-100"
                   onClick={() => setShowMetricHelp(false)}
@@ -404,15 +404,41 @@ export function Trend100Dashboard({
                   Close
                 </button>
               </div>
-              <ul className="space-y-1 text-zinc-400">
-                <li><span className="text-zinc-200">Health</span>: % of tickers GREEN (breadth)</li>
-                <li><span className="text-zinc-200">Heat</span>: 0–100 overextension score (higher = hotter)</li>
-                <li><span className="text-zinc-200">% Upper</span>: % of tickers above upper band (breadth of overextension)</li>
-                <li><span className="text-zinc-200">Stretch</span>: median % distance above 200D baseline (magnitude vs trend)</li>
-                <li><span className="text-zinc-200">Med Upper</span>: median % above upper band (how far above, not just how many)</li>
-              </ul>
+              <p className="text-zinc-400 mb-2">
+                These buttons change what the line chart measures.
+                <br />
+                If Health is pegged at 100%, that’s not a bug — it’s a strong regime. Use the other metrics to see how ‘overcooked’ it is.
+              </p>
+              <div className="space-y-2 text-zinc-400">
+                <div>
+                  <div><span className="text-zinc-200">Health</span> — “Breadth: % GREEN tickers.”</div>
+                  <div>“Strong markets can live at 100% forever. Annoying, but honest.”</div>
+                </div>
+                <div>
+                  <div><span className="text-zinc-200">Heat</span> — “0–100 ‘how spicy is this rally?’ score.”</div>
+                  <div>“Higher = hotter = more air in the balloon.”</div>
+                </div>
+                <div>
+                  <div><span className="text-zinc-200">% Upper</span> — “% tickers above upper band.”</div>
+                  <div>“How many names are officially partying too hard.”</div>
+                </div>
+                <div>
+                  <div><span className="text-zinc-200">Stretch</span> — “Median % above 200D baseline.”</div>
+                  <div>“How far above trend the deck is. Gravity still works.”</div>
+                </div>
+                <div>
+                  <div><span className="text-zinc-200">Med Upper</span> — “Median % above upper band (only for tickers above it).”</div>
+                  <div>“Not ‘how many,’ but ‘how insane.’”</div>
+                </div>
+              </div>
+              <p className="text-zinc-400 mt-3">
+                If Health is flat, stop staring at it. Click Heat / Stretch / Med Upper. That’s where the risk hides.
+              </p>
             </div>
           )}
+          <p className="text-xs text-zinc-500 mb-2">
+            Metric: {metric === 'health' ? 'Health' : metric === 'heat' ? 'Heat' : metric === 'upper' ? '% Upper' : metric === 'stretch' ? 'Stretch' : 'Med Upper'} (click buttons above to switch)
+          </p>
           {firstValidPoint && filteredHistory.length > 0 && filteredHistory[0]!.date < firstValidPoint.date && (
             <p className="text-xs text-zinc-500 mb-2">
               Data unavailable before {firstValidPoint.date} (insufficient history)

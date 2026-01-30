@@ -1,6 +1,6 @@
 {
-  "runDate": "2026-01-29",
-  "asOfDate": "2026-01-28",
+  "runDate": "2026-01-30",
+  "asOfDate": "2026-01-29",
   "universeSize": 11,
   "tickers": [
     {
@@ -16,11 +16,10 @@
       "name": "abrdn Physical Precious Metals Basket Shares ETF",
       "status": "GREEN",
       "price": 285.22,
-      "changePct": 3.96,
-      "sma200": 163.56,
+      "sma200": 164.33,
       "sma50w": 159.53,
       "ema50w": 169.74,
-      "distanceTo200dPct": 74.39,
+      "distanceTo200dPct": 73.56,
       "distanceToUpperBandPct": 68.03
     },
     {
@@ -35,13 +34,13 @@
       "subtitle": "Gold",
       "name": "SPDR Gold MiniShares Trust",
       "status": "GREEN",
-      "price": 106.44,
-      "changePct": 3.83,
-      "sma200": 74.18,
-      "sma50w": 72.53,
-      "ema50w": 74.68,
-      "distanceTo200dPct": 43.49,
-      "distanceToUpperBandPct": 42.53
+      "price": 106.77,
+      "changePct": 0.31,
+      "sma200": 74.4,
+      "sma50w": 72.54,
+      "ema50w": 74.69,
+      "distanceTo200dPct": 43.51,
+      "distanceToUpperBandPct": 42.95
     },
     {
       "ticker": "SLV",
@@ -55,13 +54,13 @@
       "subtitle": "Silver",
       "name": "iShares Silver Trust",
       "status": "GREEN",
-      "price": 105.6,
-      "changePct": 3.95,
-      "sma200": 42.94,
+      "price": 105.57,
+      "changePct": -0.03,
+      "sma200": 43.32,
       "sma50w": 42.14,
       "ema50w": 47.55,
-      "distanceTo200dPct": 145.95,
-      "distanceToUpperBandPct": 122.09
+      "distanceTo200dPct": 143.69,
+      "distanceToUpperBandPct": 122.04
     },
     {
       "ticker": "PPLT",
@@ -75,13 +74,13 @@
       "subtitle": "Platinum",
       "name": "abrdn Physical Platinum Shares ETF",
       "status": "GREEN",
-      "price": 245.16,
-      "changePct": 3.1,
-      "sma200": 136.59,
-      "sma50w": 131.4,
-      "ema50w": 144.38,
-      "distanceTo200dPct": 79.49,
-      "distanceToUpperBandPct": 69.8
+      "price": 239.13,
+      "changePct": -2.46,
+      "sma200": 137.35,
+      "sma50w": 131.28,
+      "ema50w": 144.14,
+      "distanceTo200dPct": 74.1,
+      "distanceToUpperBandPct": 65.9
     },
     {
       "ticker": "PALL",
@@ -115,13 +114,13 @@
       "subtitle": "Gold Miners",
       "name": "VanEck Gold Miners ETF",
       "status": "GREEN",
-      "price": 112.16,
-      "changePct": 2.63,
-      "sma200": 66.71,
-      "sma50w": 64.15,
-      "ema50w": 68.94,
-      "distanceTo200dPct": 68.12,
-      "distanceToUpperBandPct": 62.68
+      "price": 107.98,
+      "changePct": -3.73,
+      "sma200": 67.02,
+      "sma50w": 64.06,
+      "ema50w": 68.78,
+      "distanceTo200dPct": 61.12,
+      "distanceToUpperBandPct": 56.99
     },
     {
       "ticker": "GDXJ",
@@ -135,13 +134,13 @@
       "subtitle": "Junior Gold",
       "name": "VanEck Junior Gold Miners ETF",
       "status": "GREEN",
-      "price": 150.42,
-      "changePct": 2.04,
-      "sma200": 86.83,
-      "sma50w": 82.93,
-      "ema50w": 89.78,
-      "distanceTo200dPct": 73.23,
-      "distanceToUpperBandPct": 67.55
+      "price": 143.68,
+      "changePct": -4.48,
+      "sma200": 87.25,
+      "sma50w": 82.8,
+      "ema50w": 89.51,
+      "distanceTo200dPct": 64.68,
+      "distanceToUpperBandPct": 60.51
     },
     {
       "ticker": "SIL",
@@ -155,13 +154,13 @@
       "subtitle": "Silver Miners",
       "name": "Global X Silver Miners ETF",
       "status": "GREEN",
-      "price": 114.52,
-      "changePct": 1.59,
-      "sma200": 61.77,
-      "sma50w": 59.3,
-      "ema50w": 65.09,
-      "distanceTo200dPct": 85.41,
-      "distanceToUpperBandPct": 75.94
+      "price": 110.66,
+      "changePct": -3.37,
+      "sma200": 62.13,
+      "sma50w": 59.22,
+      "ema50w": 64.94,
+      "distanceTo200dPct": 78.12,
+      "distanceToUpperBandPct": 70.4
     },
     {
       "ticker": "SILJ",
@@ -175,13 +174,13 @@
       "subtitle": "Junior Silver",
       "name": "ETFMG Prime Junior Silver Miners ETF",
       "status": "GREEN",
-      "price": 39.02,
-      "changePct": 1.06,
-      "sma200": 20.08,
-      "sma50w": 19.13,
-      "ema50w": 21.52,
-      "distanceTo200dPct": 94.29,
-      "distanceToUpperBandPct": 81.3
+      "price": 37.42,
+      "changePct": -4.1,
+      "sma200": 20.21,
+      "sma50w": 19.1,
+      "ema50w": 21.46,
+      "distanceTo200dPct": 85.17,
+      "distanceToUpperBandPct": 74.37
     },
     {
       "ticker": "XME",
@@ -215,13 +214,13 @@
       "subtitle": "Global Mining",
       "name": "iShares MSCI Global Metals & Mining Producers ETF",
       "status": "GREEN",
-      "price": 61.33,
-      "changePct": 0.62,
-      "sma200": 43.01,
-      "sma50w": 42.25,
-      "ema50w": 45.01,
-      "distanceTo200dPct": 42.58,
-      "distanceToUpperBandPct": 36.25
+      "price": 61.95,
+      "changePct": 1.01,
+      "sma200": 43.16,
+      "sma50w": 42.26,
+      "ema50w": 45.04,
+      "distanceTo200dPct": 43.55,
+      "distanceToUpperBandPct": 37.56
     }
   ],
   "health": {

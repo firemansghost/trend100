@@ -113,6 +113,7 @@ export interface TrendHealthHistoryPoint {
 
   // Overextension / peak-risk metrics (finite numbers; UNKNOWN points use 0)
   pctAboveUpperBand: number; // 0-100
+  medianDistanceAboveUpperBandPct: number; // median distanceToUpperBandPct among tickers > 0
   stretch200MedianPct: number; // median distanceTo200dPct, can exceed 100
   heatScore: number; // 0-100 composite
 

@@ -103,6 +103,7 @@ export function buildMockHealthHistory(
     const knownCount = totalTickers;
     const unknownCount = 0;
     const pctAboveUpperBand = Math.round(greenPct * 10) / 10;
+    const medianDistanceAboveUpperBandPct = Math.round(((pctAboveUpperBand / 100) * 12) * 10) / 10;
     const stretch200MedianPct = Math.round(((greenPct / 100) * 60) * 10) / 10;
     const stretchScore = clamp((stretch200MedianPct / 60) * 100, 0, 100);
     const heatScore = Math.round(0.6 * pctAboveUpperBand + 0.4 * stretchScore);
@@ -117,6 +118,7 @@ export function buildMockHealthHistory(
       diffusionCount: 0,
       diffusionTotalCompared: totalTickers,
       pctAboveUpperBand,
+      medianDistanceAboveUpperBandPct,
       stretch200MedianPct,
       heatScore,
       knownCount,

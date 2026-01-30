@@ -62,6 +62,7 @@ function makeUnknownPoint(
     diffusionCount: 0,
     diffusionTotalCompared: totalTickers,
     pctAboveUpperBand: 0,
+    medianDistanceAboveUpperBandPct: 0,
     stretch200MedianPct: 0,
     heatScore: 0,
     eligibleCount,
@@ -403,6 +404,7 @@ function computeHealthForDate(
   const aboveUpperCount = upperVals.filter((v) => v > 0).length;
   const pctAboveUpperBand =
     eligibleUpper === 0 ? 0 : round1((100 * aboveUpperCount) / eligibleUpper);
+  const medianDistanceAboveUpperBandPct = round1(median(upperVals.filter((v) => v > 0)));
 
   const stretchVals = tickers
     .filter((t) => t.status !== 'UNKNOWN' && Number.isFinite(t.distanceTo200dPct as number))
@@ -422,6 +424,7 @@ function computeHealthForDate(
       diffusionCount: 0,
       diffusionTotalCompared: totalTickers,
       pctAboveUpperBand,
+      medianDistanceAboveUpperBandPct,
       stretch200MedianPct,
       heatScore,
       knownCount,

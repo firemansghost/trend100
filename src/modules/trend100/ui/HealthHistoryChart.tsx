@@ -17,7 +17,12 @@ import {
 } from 'recharts';
 import type { TrendHealthHistoryPoint } from '../types';
 
-type MetricKey = 'greenPct' | 'heatScore' | 'pctAboveUpperBand' | 'stretch200MedianPct';
+type MetricKey =
+  | 'greenPct'
+  | 'heatScore'
+  | 'pctAboveUpperBand'
+  | 'stretch200MedianPct'
+  | 'medianDistanceAboveUpperBandPct';
 
 interface HealthHistoryChartProps {
   data: TrendHealthHistoryPoint[];

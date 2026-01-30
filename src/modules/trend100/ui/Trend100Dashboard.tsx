@@ -23,7 +23,7 @@ import { SectionPills } from './SectionPills';
 import type { TrendDeckSection } from '../types';
 
 type Timeframe = '3M' | '1Y' | 'ALL';
-type MetricChoice = 'health' | 'heat' | 'upper' | 'stretch';
+type MetricChoice = 'health' | 'heat' | 'upper' | 'stretch' | 'medUpper';
 
 interface Trend100DashboardProps {
   snapshot: TrendSnapshot;
@@ -59,6 +59,27 @@ export function Trend100Dashboard({
     useState<TrendTickerSnapshot | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showDiffusion, setShowDiffusion] = useState(false);
+  const [showMetricHelp, setShowMetricHelp] = useState(false);
+  const [showMetricHint, setShowMetricHint] = useState(false);
+
+  useEffect(() => {
+    // One-time hint for metric discoverability (client-only)
+    try {
+      const key = 'trend100_metric_hint_seen_v1';
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const seen = window.localStorage.getItem(key);
+        if (!seen) {
+          setShowMetricHint(true);
+          window.localStorage.setItem(key, '1');
+          const t = window.setTimeout(() => setShowMetricHint(false), 8000);
+          return () => window.clearTimeout(t);
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return;
+  }, []);
 
   // Compute deck-specific tags and counts from current deck's tickers
   const availableTags = useMemo(
@@ -212,6 +233,8 @@ export function Trend100Dashboard({
         return { metricKey: 'pctAboveUpperBand' as const, label: '% Above Upper Band', yDomain: [0, 100] as const };
       case 'stretch':
         return { metricKey: 'stretch200MedianPct' as const, label: 'Stretch vs 200D (Median %)', yDomain: ['auto', 'auto'] as const };
+      case 'medUpper':
+        return { metricKey: 'medianDistanceAboveUpperBandPct' as const, label: 'Median > Upper (%)', yDomain: ['auto', 'auto'] as const };
       default:
         return { metricKey: 'greenPct' as const, label: 'Health (Green %)', yDomain: [0, 100] as const };
     }
@@ -312,6 +335,7 @@ export function Trend100Dashboard({
                 { key: 'heat', label: 'Heat' },
                 { key: 'upper', label: '% Upper' },
                 { key: 'stretch', label: 'Stretch' },
+                { key: 'medUpper', label: 'Med Upper' },
               ] as Array<{ key: MetricChoice; label: string }>).map((m) => (
                 <button
                   key={m.key}
@@ -325,6 +349,14 @@ export function Trend100Dashboard({
                   {m.label}
                 </button>
               ))}
+              <button
+                onClick={() => setShowMetricHelp((v) => !v)}
+                className="px-2 py-1 text-xs rounded border bg-zinc-900 text-zinc-300 border-zinc-700 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                aria-label="Metric help"
+                title="What do these metrics mean?"
+              >
+                ?
+              </button>
               {(['3M', '1Y', 'ALL'] as Timeframe[]).map((tf) => (
                 <button
                   key={tf}
@@ -350,6 +382,37 @@ export function Trend100Dashboard({
               </button>
             </div>
           </div>
+          {showMetricHint && (
+            <div className="mb-2 rounded border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-xs text-zinc-400">
+              Flat line? Try <span className="text-zinc-200">Heat</span>, <span className="text-zinc-200">% Upper</span>, <span className="text-zinc-200">Stretch</span>, or <span className="text-zinc-200">Med Upper</span>.
+              <button
+                className="ml-3 text-zinc-300 underline hover:text-zinc-100"
+                onClick={() => setShowMetricHint(false)}
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+          {showMetricHelp && (
+            <div className="mb-2 rounded border border-zinc-800 bg-zinc-900/80 p-3 text-xs text-zinc-300">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-semibold text-zinc-200">Chart metrics</span>
+                <button
+                  className="text-zinc-300 hover:text-zinc-100"
+                  onClick={() => setShowMetricHelp(false)}
+                >
+                  Close
+                </button>
+              </div>
+              <ul className="space-y-1 text-zinc-400">
+                <li><span className="text-zinc-200">Health</span>: % of tickers GREEN (breadth)</li>
+                <li><span className="text-zinc-200">Heat</span>: 0–100 overextension score (higher = hotter)</li>
+                <li><span className="text-zinc-200">% Upper</span>: % of tickers above upper band (breadth of overextension)</li>
+                <li><span className="text-zinc-200">Stretch</span>: median % distance above 200D baseline (magnitude vs trend)</li>
+                <li><span className="text-zinc-200">Med Upper</span>: median % above upper band (how far above, not just how many)</li>
+              </ul>
+            </div>
+          )}
           {firstValidPoint && filteredHistory.length > 0 && filteredHistory[0]!.date < firstValidPoint.date && (
             <p className="text-xs text-zinc-500 mb-2">
               Data unavailable before {firstValidPoint.date} (insufficient history)

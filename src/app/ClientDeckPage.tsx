@@ -38,7 +38,9 @@ function ClientDeckPageContent() {
     groupKeyLower === 'metals' ? 'METALS' : groupKeyLower === 'miners' ? 'MINERS' : null;
 
   const metricKey =
-    rawMetric === 'heat' || rawMetric === 'upper' || rawMetric === 'stretch' ? rawMetric : 'health';
+    rawMetric === 'heat' || rawMetric === 'upper' || rawMetric === 'stretch' || rawMetric === 'medUpper'
+      ? rawMetric
+      : 'health';
 
   // Snapshot state
   const [snapshot, setSnapshot] = useState<ReturnType<typeof getLatestSnapshot> | null>(null);

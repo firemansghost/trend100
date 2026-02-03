@@ -136,6 +136,11 @@ export function Trend100Dashboard({
     return Array.from(groups).sort();
   }, [snapshot.tickers]);
 
+  // Sync selectedGroup from URL (single source of truth when user navigates or loads with ?group=)
+  useEffect(() => {
+    setSelectedGroup(initialGroupFilter ?? null);
+  }, [initialGroupFilter]);
+
   // Update URL when group filter changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -162,12 +167,13 @@ export function Trend100Dashboard({
     }
   }, [metric]);
 
-  // Apply filters first (section -> group -> search -> tags)
+  // Apply filters: for grouped decks only group drives filter; for others section + group
+  const effectiveSection = hasGroups ? null : selectedSection;
   const filteredTickers = applyFilters(
     snapshot.tickers,
     searchQuery,
     selectedTags,
-    selectedSection,
+    effectiveSection,
     selectedGroup
   );
 
@@ -269,46 +275,21 @@ export function Trend100Dashboard({
         tagCounts={tagCounts}
         isDemoMode={isDemoMode}
       />
-      {/* Group Toggle - show if deck has grouped tickers */}
-      {hasGroups && availableGroups.length > 0 && (
-        <div className="container mx-auto px-4 py-3 border-b border-zinc-800">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm font-medium text-zinc-300">Filter:</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSelectedGroup(null)}
-                className={`px-3 py-1 text-xs rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 ${
-                  selectedGroup === null
-                    ? 'bg-zinc-700 text-zinc-100 border-zinc-600'
-                    : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'
-                }`}
-              >
-                All
-              </button>
-              {availableGroups.map((group) => (
-                <button
-                  key={group}
-                  onClick={() => setSelectedGroup(group)}
-                  className={`px-3 py-1 text-xs rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 ${
-                    selectedGroup === group
-                      ? 'bg-zinc-700 text-zinc-100 border-zinc-600'
-                      : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'
-                  }`}
-                >
-                  {group === 'METALS' ? 'Metals' : group === 'MINERS' ? 'Miners' : group}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Section Pills - between TopBar and chart */}
+      {/* Single group/section filter: counted tabs (All | Metals (5) | Miners (6)); for grouped decks this drives URL group= and chart + heatmap */}
       {deckSections.length > 0 && (
         <div className="container mx-auto px-4 py-3 border-b border-zinc-800">
           <SectionPills
             sections={deckSections}
-            selectedSection={selectedSection}
-            onChange={setSelectedSection}
+            selectedSection={
+              hasGroups
+                ? (selectedGroup ? deckSections.find((s) => s.id.toUpperCase() === selectedGroup)?.id ?? null : null)
+                : selectedSection
+            }
+            onChange={
+              hasGroups
+                ? (sectionId) => setSelectedGroup(sectionId ? sectionId.toUpperCase() : null)
+                : setSelectedSection
+            }
             counts={sectionCounts}
           />
         </div>

@@ -42,6 +42,15 @@ function ClientDeckPageContent() {
   const sectionKeyFromUrl: string | null =
     rawSection != null && rawSection.trim() !== '' ? rawSection.trim().toLowerCase() : null;
 
+  // Chart history variant: grouped decks use group= only; non-grouped use section= only (ignore group so tag chips etc. don't hijack chart).
+  const deckHasGroups = useMemo(
+    () => deck.universe.some((item) => item.group != null),
+    [deck.universe]
+  );
+  const historyVariantKey: string | null = deckHasGroups
+    ? groupKeyLower
+    : sectionKeyFromUrl;
+
   const metricKey =
     rawMetric === 'heat' || rawMetric === 'upper' || rawMetric === 'stretch' || rawMetric === 'medUpper'
       ? rawMetric
@@ -88,43 +97,44 @@ function ClientDeckPageContent() {
   const [historySource, setHistorySource] = useState<'file' | 'mock'>('mock');
   const [historyLoading, setHistoryLoading] = useState(true);
 
-  // Which variant file to load: group (grouped decks) or section (non-grouped multi-section)
-  const historyVariantKey = groupKeyLower ?? sectionKeyFromUrl;
-
-  // Load history when deckId or variant (group/section) changes
+  // Load history when deckId or variant (group/section) changes. Fall back to base if variant 404s, fails to parse, or is empty.
   useEffect(() => {
     async function loadHistory() {
       setHistoryLoading(true);
-      try {
-        const baseFileName = `health-history.${deckId}.json`;
-        const variantFileName = historyVariantKey ? `health-history.${deckId}.${historyVariantKey}.json` : null;
+      const baseFileName = `health-history.${deckId}.json`;
 
-        let res = await fetch(`/${variantFileName ?? baseFileName}`, { cache: 'no-store' });
-        if (!res.ok && variantFileName) {
-          res = await fetch(`/${baseFileName}`, { cache: 'no-store' });
+      async function tryLoad(fileName: string): Promise<TrendHealthHistoryPoint[] | null> {
+        try {
+          const res = await fetch(`/${fileName}`, { cache: 'no-store' });
+          if (!res.ok) return null;
+          const data = (await res.json()) as unknown;
+          if (!Array.isArray(data) || data.length === 0) return null;
+          const points = data as TrendHealthHistoryPoint[];
+          return [...points].sort((a, b) => a.date.localeCompare(b.date));
+        } catch {
+          return null;
         }
-        if (!res.ok) {
-          throw new Error('File not found');
-        }
+      }
 
-        const data = (await res.json()) as TrendHealthHistoryPoint[];
-        if (Array.isArray(data)) {
-          const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
-          setHistory(sorted);
-          setHistorySource('file');
-        } else {
-          throw new Error('Invalid data format');
-        }
-      } catch (error) {
-        const mockHistory = buildMockHealthHistory({
-          deckId,
-          days: 730,
-        });
+      const variantFileName = historyVariantKey ? `health-history.${deckId}.${historyVariantKey}.json` : null;
+      let points: TrendHealthHistoryPoint[] | null = null;
+
+      if (variantFileName) {
+        points = await tryLoad(variantFileName);
+      }
+      if (points == null) {
+        points = await tryLoad(baseFileName);
+      }
+      if (points != null) {
+        setHistory(points);
+        setHistorySource('file');
+      } else {
+        const mockHistory = buildMockHealthHistory({ deckId, days: 730 });
         setHistory(mockHistory);
         setHistorySource('mock');
-      } finally {
-        setHistoryLoading(false);
       }
+
+      setHistoryLoading(false);
     }
 
     loadHistory();

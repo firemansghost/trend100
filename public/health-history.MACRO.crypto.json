@@ -10218,5 +10218,25 @@
     "eligibleCount": 2,
     "ineligibleCount": 0,
     "missingCount": 0
+  },
+  {
+    "date": "2026-02-03",
+    "regimeLabel": "UNKNOWN",
+    "greenPct": 0,
+    "yellowPct": 0,
+    "redPct": 0,
+    "knownCount": 2,
+    "unknownCount": 0,
+    "totalTickers": 2,
+    "diffusionPct": 0,
+    "diffusionCount": 0,
+    "diffusionTotalCompared": 2,
+    "pctAboveUpperBand": 0,
+    "medianDistanceAboveUpperBandPct": 0,
+    "stretch200MedianPct": 0,
+    "heatScore": 0,
+    "eligibleCount": 2,
+    "ineligibleCount": 0,
+    "missingCount": 0
   }
 ]

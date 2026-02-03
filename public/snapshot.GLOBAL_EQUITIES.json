@@ -1,6 +1,6 @@
 {
   "runDate": "2026-02-03",
-  "asOfDate": "2026-02-02",
+  "asOfDate": "2026-02-03",
   "universeSize": 11,
   "tickers": [
     {
@@ -14,13 +14,13 @@
       "subtitle": "ACWI ex-US",
       "name": "iShares MSCI ACWI ex US ETF",
       "status": "GREEN",
-      "price": 71.22,
-      "changePct": 0.62,
-      "sma200": 63.46,
+      "price": 71.34,
+      "changePct": 0.17,
+      "sma200": 63.54,
       "sma50w": 62.49,
       "ema50w": 63.45,
-      "distanceTo200dPct": 12.23,
-      "distanceToUpperBandPct": 12.25
+      "distanceTo200dPct": 12.27,
+      "distanceToUpperBandPct": 12.43
     },
     {
       "ticker": "EEM",
@@ -33,13 +33,13 @@
       "subtitle": "Emerging",
       "name": "iShares MSCI Emerging Markets ETF",
       "status": "GREEN",
-      "price": 59.28,
-      "changePct": 0.27,
-      "sma200": 51.16,
+      "price": 59.6,
+      "changePct": 0.54,
+      "sma200": 51.25,
       "sma50w": 50.21,
-      "ema50w": 51.48,
-      "distanceTo200dPct": 15.87,
-      "distanceToUpperBandPct": 15.16
+      "ema50w": 51.49,
+      "distanceTo200dPct": 16.3,
+      "distanceToUpperBandPct": 15.75
     },
     {
       "ticker": "EWA",
@@ -52,13 +52,13 @@
       "subtitle": "Australia",
       "name": "iShares MSCI Australia ETF",
       "status": "GREEN",
-      "price": 27.95,
-      "changePct": 0.68,
-      "sma200": 26.31,
-      "sma50w": 25.9,
-      "ema50w": 26.16,
-      "distanceTo200dPct": 6.24,
-      "distanceToUpperBandPct": 6.84
+      "price": 28.12,
+      "changePct": 0.61,
+      "sma200": 26.33,
+      "sma50w": 25.91,
+      "ema50w": 26.17,
+      "distanceTo200dPct": 6.79,
+      "distanceToUpperBandPct": 7.46
     },
     {
       "ticker": "EWC",
@@ -71,13 +71,13 @@
       "subtitle": "Canada",
       "name": "iShares MSCI Canada ETF",
       "status": "GREEN",
-      "price": 54.55,
+      "price": 54.84,
       "changePct": 0.53,
-      "sma200": 48.81,
-      "sma50w": 47.79,
-      "ema50w": 48.88,
-      "distanceTo200dPct": 11.76,
-      "distanceToUpperBandPct": 11.59
+      "sma200": 48.88,
+      "sma50w": 47.8,
+      "ema50w": 48.89,
+      "distanceTo200dPct": 12.19,
+      "distanceToUpperBandPct": 12.16
     },
     {
       "ticker": "EWJ",
@@ -90,13 +90,13 @@
       "subtitle": "Japan",
       "name": "iShares MSCI Japan ETF",
       "status": "GREEN",
-      "price": 85.89,
-      "changePct": 0.22,
-      "sma200": 78.3,
-      "sma50w": 77.13,
-      "ema50w": 78.41,
-      "distanceTo200dPct": 9.69,
-      "distanceToUpperBandPct": 9.54
+      "price": 86.68,
+      "changePct": 0.92,
+      "sma200": 78.4,
+      "sma50w": 77.15,
+      "ema50w": 78.44,
+      "distanceTo200dPct": 10.57,
+      "distanceToUpperBandPct": 10.5
     },
     {
       "ticker": "EWU",
@@ -109,13 +109,13 @@
       "subtitle": "UK",
       "name": "iShares MSCI United Kingdom ETF",
       "status": "GREEN",
-      "price": 46.54,
-      "changePct": 0.82,
-      "sma200": 41.47,
+      "price": 46.47,
+      "changePct": -0.15,
+      "sma200": 41.52,
       "sma50w": 40.98,
-      "ema50w": 41.4,
-      "distanceTo200dPct": 12.22,
-      "distanceToUpperBandPct": 12.42
+      "ema50w": 41.39,
+      "distanceTo200dPct": 11.92,
+      "distanceToUpperBandPct": 12.26
     },
     {
       "ticker": "EWZ",
@@ -128,13 +128,13 @@
       "subtitle": "Brazil",
       "name": "iShares MSCI Brazil ETF",
       "status": "GREEN",
-      "price": 37.45,
-      "changePct": 1.11,
-      "sma200": 29.86,
-      "sma50w": 29.4,
-      "ema50w": 30.59,
-      "distanceTo200dPct": 25.41,
-      "distanceToUpperBandPct": 22.43
+      "price": 38.04,
+      "changePct": 1.58,
+      "sma200": 29.93,
+      "sma50w": 29.41,
+      "ema50w": 30.61,
+      "distanceTo200dPct": 27.11,
+      "distanceToUpperBandPct": 24.26
     },
     {
       "ticker": "EZU",
@@ -147,13 +147,13 @@
       "subtitle": "Eurozone",
       "name": "iShares MSCI Eurozone ETF",
       "status": "GREEN",
-      "price": 67.27,
-      "changePct": 1.06,
-      "sma200": 60.86,
-      "sma50w": 60,
-      "ema50w": 60.26,
-      "distanceTo200dPct": 10.54,
-      "distanceToUpperBandPct": 11.64
+      "price": 67.07,
+      "changePct": -0.3,
+      "sma200": 60.93,
+      "sma50w": 59.99,
+      "ema50w": 60.25,
+      "distanceTo200dPct": 10.08,
+      "distanceToUpperBandPct": 11.32
     },
     {
       "ticker": "FXI",
@@ -166,13 +166,13 @@
       "subtitle": "China LC",
       "name": "iShares China Large-Cap ETF",
       "status": "GREEN",
-      "price": 39.17,
-      "changePct": -1.17,
-      "sma200": 38.26,
-      "sma50w": 37.78,
-      "ema50w": 37.4,
-      "distanceTo200dPct": 2.38,
-      "distanceToUpperBandPct": 3.69
+      "price": 38.72,
+      "changePct": -1.15,
+      "sma200": 38.29,
+      "sma50w": 37.77,
+      "ema50w": 37.38,
+      "distanceTo200dPct": 1.13,
+      "distanceToUpperBandPct": 2.52
     },
     {
       "ticker": "GNR",
@@ -185,13 +185,13 @@
       "subtitle": "Nat Resources",
       "name": "SPDR S&P Global Natural Resources ETF",
       "status": "GREEN",
-      "price": 68.18,
-      "changePct": 0.04,
-      "sma200": 57.85,
-      "sma50w": 57.3,
-      "ema50w": 59.14,
-      "distanceTo200dPct": 17.87,
-      "distanceToUpperBandPct": 15.29
+      "price": 70.27,
+      "changePct": 3.07,
+      "sma200": 57.95,
+      "sma50w": 57.34,
+      "ema50w": 59.22,
+      "distanceTo200dPct": 21.27,
+      "distanceToUpperBandPct": 18.66
     },
     {
       "ticker": "INDA",
@@ -204,13 +204,13 @@
       "subtitle": "India",
       "name": "iShares MSCI India ETF",
       "status": "RED",
-      "price": 53.28,
-      "changePct": 2.98,
-      "sma200": 53.68,
-      "sma50w": 53.09,
-      "ema50w": 53.25,
-      "distanceTo200dPct": -0.74,
-      "distanceToUpperBandPct": 0.06
+      "price": 53.15,
+      "changePct": -0.24,
+      "sma200": 53.69,
+      "sma50w": 53.08,
+      "ema50w": 53.24,
+      "distanceTo200dPct": -1,
+      "distanceToUpperBandPct": -0.18
     }
   ],
   "health": {

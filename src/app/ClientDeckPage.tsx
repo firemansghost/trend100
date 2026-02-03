@@ -23,6 +23,7 @@ function ClientDeckPageContent() {
   const searchParams = useSearchParams();
   const rawDeck = searchParams.get('deck');
   const rawGroup = searchParams.get('group');
+  const rawSection = searchParams.get('section');
   const rawMetric = searchParams.get('metric');
   const debug = searchParams.get('debug') === '1';
 
@@ -30,12 +31,16 @@ function ClientDeckPageContent() {
   const deckId: TrendDeckId = isDeckId(rawDeck) ? rawDeck : 'LEADERSHIP';
   const deck = getDeck(deckId);
 
-  // Resolve group filter from URL (used for heatmap filtering + selecting chart series file)
+  // Resolve group filter from URL (grouped decks only: METALS_MINING)
   const rawGroupLower = rawGroup?.toLowerCase() ?? null;
   const groupKeyLower: 'metals' | 'miners' | null =
     rawGroupLower === 'metals' ? 'metals' : rawGroupLower === 'miners' ? 'miners' : null;
   const groupFilter: string | null =
     groupKeyLower === 'metals' ? 'METALS' : groupKeyLower === 'miners' ? 'MINERS' : null;
+
+  // Resolve section filter from URL (non-grouped multi-section decks). section param is sectionKey (e.g. quality-lowvol).
+  const sectionKeyFromUrl: string | null =
+    rawSection != null && rawSection.trim() !== '' ? rawSection.trim().toLowerCase() : null;
 
   const metricKey =
     rawMetric === 'heat' || rawMetric === 'upper' || rawMetric === 'stretch' || rawMetric === 'medUpper'
@@ -83,17 +88,19 @@ function ClientDeckPageContent() {
   const [historySource, setHistorySource] = useState<'file' | 'mock'>('mock');
   const [historyLoading, setHistoryLoading] = useState(true);
 
-  // Load history when deckId or group changes
+  // Which variant file to load: group (grouped decks) or section (non-grouped multi-section)
+  const historyVariantKey = groupKeyLower ?? sectionKeyFromUrl;
+
+  // Load history when deckId or variant (group/section) changes
   useEffect(() => {
     async function loadHistory() {
       setHistoryLoading(true);
       try {
         const baseFileName = `health-history.${deckId}.json`;
-        const groupFileName = groupKeyLower ? `health-history.${deckId}.${groupKeyLower}.json` : null;
+        const variantFileName = historyVariantKey ? `health-history.${deckId}.${historyVariantKey}.json` : null;
 
-        // If group selected, try group series first; fall back to ALL if missing
-        let res = await fetch(`/${groupFileName ?? baseFileName}`, { cache: 'no-store' });
-        if (!res.ok && groupFileName) {
+        let res = await fetch(`/${variantFileName ?? baseFileName}`, { cache: 'no-store' });
+        if (!res.ok && variantFileName) {
           res = await fetch(`/${baseFileName}`, { cache: 'no-store' });
         }
         if (!res.ok) {
@@ -101,9 +108,7 @@ function ClientDeckPageContent() {
         }
 
         const data = (await res.json()) as TrendHealthHistoryPoint[];
-        // Validate it's an array
         if (Array.isArray(data)) {
-          // Sort by date ascending
           const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
           setHistory(sorted);
           setHistorySource('file');
@@ -111,7 +116,6 @@ function ClientDeckPageContent() {
           throw new Error('Invalid data format');
         }
       } catch (error) {
-        // Fallback to mock history
         const mockHistory = buildMockHealthHistory({
           deckId,
           days: 730,
@@ -124,7 +128,7 @@ function ClientDeckPageContent() {
     }
 
     loadHistory();
-  }, [deckId, groupKeyLower]);
+  }, [deckId, historyVariantKey]);
 
   // Debug panel
   const debugPanel = debug && (
@@ -172,6 +176,7 @@ function ClientDeckPageContent() {
         deckSections={deck.sections ?? []}
         isDemoMode={snapshotSource === 'mock'}
         initialGroupFilter={groupFilter}
+        initialSectionKey={sectionKeyFromUrl}
         initialMetric={metricKey as any}
       />
     </>

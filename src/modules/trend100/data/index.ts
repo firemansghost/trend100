@@ -9,4 +9,5 @@ export { getHealthHistory } from './getHealthHistory';
 export { getTickerSeries } from './getTickerSeries';
 export type { TickerSeries, TickerSeriesPoint } from './getTickerSeries';
 export { DECKS, getDeck, getAllDeckIds, isDeckId } from './decks';
+export { toSectionKey } from './sectionKey';
 export type { TrendDeck, TrendDeckId } from '../types';

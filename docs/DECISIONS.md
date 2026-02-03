@@ -16,6 +16,21 @@ The UI chart loads the group-specific file when the user selects a group, with f
 
 ---
 
+### 2026-01-29 — (Data/UI) Section-specific health-history for non-grouped multi-section decks
+**Choice:** For decks that do **not** have `group` but have **≥2 sections** (e.g., US_FACTORS, GLOBAL_EQUITIES, FIXED_INCOME, MACRO), the pipeline generates section-variant health-history files:
+- `public/health-history.<DECK>.json` (ALL)
+- `public/health-history.<DECK>.<sectionKey>.json` per section
+
+**Section key naming (single source of truth: `toSectionKey(label)`):** lower-case, trim, `&` → `and`, `/` and whitespace → `-`, strip non-`[a-z0-9-]`, collapse `-`. Examples: `Quality/LowVol` → `quality-lowvol`, `Global ex-US` → `global-ex-us`, `Loans/BDC` → `loans-bdc`, `EM Debt` → `em-debt`.
+
+The UI persists section selection in `?section=<sectionKey>` and fetches `health-history.<DECK>.<sectionKey>.json` (fallback to base on 404), so the chart swaps history when a section pill is selected. Pills row is hidden when unique section count ≤ 1 (LEADERSHIP, US_SECTORS). Label is "Group:" for grouped decks, "Section:" for non-grouped.
+
+**Why:** Section pills previously only filtered the heatmap; the chart stayed on "All". Section variants make the chart reflect the selected section. Same pattern as group variants, without changing data schemas.
+
+**Troubleshooting:** "Pills change heatmap but not chart" → missing section history files or sectionKey mismatch. Run `pnpm verify:artifacts` to ensure all `health-history.<DECK>.<sectionKey>.json` files exist; ensure URL uses the same `toSectionKey` (e.g. `?section=quality-lowvol`).
+
+---
+
 ### 2026-01-29 — (Data/UI) Add overextension metrics to mitigate 100% GREEN flatlines
 **Choice:** Keep the existing GREEN% health metric unchanged, and add three additional per-day metrics to every health-history point:
 - `pctAboveUpperBand`: breadth above the upper band (0–100)

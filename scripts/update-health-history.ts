@@ -23,6 +23,7 @@ import type {
 } from '../src/modules/trend100/types';
 import { getLatestSnapshot } from '../src/modules/trend100/data/getLatestSnapshot';
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
+import { toSectionKey } from '../src/modules/trend100/data/sectionKey';
 import { mergeAndTrimTimeSeries } from './timeSeriesUtils';
 import { buildTickerMetaIndex, enrichUniverseItemMeta } from '../src/modules/trend100/data/tickerMeta';
 import { getMinKnownPctForDeck, getKnownDenominatorMode, getMinEligibleCountForDeck } from '../src/modules/trend100/data/deckConfig';
@@ -109,13 +110,16 @@ function getHealthHistoryRetentionDays(): number {
   return Math.max(0, parsed);
 }
 
-function getHistoryFilePath(deckId: TrendDeckId, groupKey?: HistoryGroupKey): string {
-  const suffix = groupKey ? `.${groupKey}` : '';
+/** Variant key for file path: group key (metals, miners) or section key (e.g. quality-lowvol) */
+type HistoryVariantKey = string;
+
+function getHistoryFilePath(deckId: TrendDeckId, variantKey?: HistoryVariantKey): string {
+  const suffix = variantKey ? `.${variantKey}` : '';
   return join(process.cwd(), 'public', `health-history.${deckId}${suffix}.json`);
 }
 
-function loadHistory(deckId: TrendDeckId, groupKey?: HistoryGroupKey): TrendHealthHistoryPoint[] {
-  const filePath = getHistoryFilePath(deckId, groupKey);
+function loadHistory(deckId: TrendDeckId, variantKey?: HistoryVariantKey): TrendHealthHistoryPoint[] {
+  const filePath = getHistoryFilePath(deckId, variantKey);
   try {
     const content = readFileSync(filePath, 'utf-8');
     const history = JSON.parse(content) as TrendHealthHistoryPoint[];
@@ -127,7 +131,7 @@ function loadHistory(deckId: TrendDeckId, groupKey?: HistoryGroupKey): TrendHeal
     const { sanitized, removedWeekend, removedPartial } = sanitizeHealthHistory(history);
     
     if (removedWeekend > 0 || removedPartial > 0) {
-      const label = groupKey ? `${deckId}.${groupKey}` : deckId;
+      const label = variantKey ? `${deckId}.${variantKey}` : deckId;
       console.log(
         `  🧹 Sanitized health history for ${label}: removed ${removedWeekend} weekend point(s), removed ${removedPartial} partial-schema point(s)`
       );
@@ -140,12 +144,12 @@ function loadHistory(deckId: TrendDeckId, groupKey?: HistoryGroupKey): TrendHeal
   }
 }
 
-function saveHistory(deckId: TrendDeckId, history: TrendHealthHistoryPoint[], groupKey?: HistoryGroupKey): void {
+function saveHistory(deckId: TrendDeckId, history: TrendHealthHistoryPoint[], variantKey?: HistoryVariantKey): void {
   // Sort by date ascending
   const sorted = [...history].sort((a, b) => a.date.localeCompare(b.date));
 
   // Write with pretty formatting (2 spaces)
-  const filePath = getHistoryFilePath(deckId, groupKey);
+  const filePath = getHistoryFilePath(deckId, variantKey);
   writeFileSync(filePath, JSON.stringify(sorted, null, 2) + '\n', 'utf-8');
 }
 
@@ -549,6 +553,25 @@ function getUniverseForGroup(deckId: TrendDeckId, groupKey?: HistoryGroupKey): T
   return deck.universe.filter((item) => (item.group ?? '').toLowerCase() === groupKey);
 }
 
+/** True if deck has any ticker with group set (e.g. METALS_MINING). */
+function deckHasGroups(deckId: TrendDeckId): boolean {
+  return getGroupKeysForDeck(deckId).length > 0;
+}
+
+/** Section keys for non-grouped decks with >=2 sections. Uses toSectionKey(section.id). */
+function getSectionKeysForDeck(deckId: TrendDeckId): HistoryVariantKey[] {
+  const deck = getDeck(deckId);
+  if (deckHasGroups(deckId) || !deck.sections || deck.sections.length < 2) {
+    return [];
+  }
+  return deck.sections.map((s) => toSectionKey(s.id)).sort((a, b) => a.localeCompare(b));
+}
+
+function getUniverseForSection(deckId: TrendDeckId, sectionKey: HistoryVariantKey): TrendUniverseItem[] {
+  const deck = getDeck(deckId);
+  return deck.universe.filter((item) => item.section != null && toSectionKey(item.section) === sectionKey);
+}
+
 /**
  * Backfill health history for a date range
  */
@@ -576,16 +599,23 @@ function backfillDeckHistory(
   const deckMinKnownPct = getMinKnownPctForDeck(deckId, envDefault);
   console.log(`  Deck MIN_KNOWN_PCT: ${deckMinKnownPct.toFixed(2)} (envDefault=${envDefault.toFixed(2)})`);
 
+  const deck = getDeck(deckId);
   const groupKeys = getGroupKeysForDeck(deckId);
-  const variants: Array<{ groupKey?: HistoryGroupKey }> = [{}, ...groupKeys.map((g) => ({ groupKey: g }))];
+  const sectionKeys = getSectionKeysForDeck(deckId);
+  const variants: Array<{ variantKey?: HistoryVariantKey; universe: TrendUniverseItem[] }> =
+    groupKeys.length > 0
+      ? [{ universe: deck.universe }, ...groupKeys.map((g) => ({ variantKey: g, universe: getUniverseForGroup(deckId, g) }))]
+      : sectionKeys.length > 0
+        ? [{ universe: deck.universe }, ...sectionKeys.map((s) => ({ variantKey: s, universe: getUniverseForSection(deckId, s) }))]
+        : [{ universe: deck.universe }];
 
   const retentionDays = getHealthHistoryRetentionDays();
   let mergedAll: TrendHealthHistoryPoint[] = [];
 
   for (const variant of variants) {
-    const groupKey = variant.groupKey;
-    const label = groupKey ? `${deckId}.${groupKey}` : deckId;
-    const universe = getUniverseForGroup(deckId, groupKey);
+    const variantKey = variant.variantKey;
+    const universe = variant.universe;
+    const label = variantKey ? `${deckId}.${variantKey}` : deckId;
 
     // Get trading days in range for this variant
     const tradingDays = getTradingDaysInRange(startDate, endDate, deckId, universe);
@@ -642,7 +672,7 @@ function backfillDeckHistory(
 
     console.log(`  [${label}] Computed ${computed} valid points, ${unknown} UNKNOWN (insufficient history)`);
 
-    const existingHistory = loadHistory(deckId, groupKey);
+    const existingHistory = loadHistory(deckId, variantKey);
     const mergedHistory = mergeAndTrimTimeSeries(
       existingHistory,
       newPoints,
@@ -650,12 +680,12 @@ function backfillDeckHistory(
       retentionDays
     );
 
-    saveHistory(deckId, mergedHistory, groupKey);
+    saveHistory(deckId, mergedHistory, variantKey);
     console.log(
       `  ✓ [${label}] Backfilled: ${newPoints.length} new points, total: ${mergedHistory.length} (retention: ${retentionDays === 0 ? 'none' : `${retentionDays} days`})`
     );
 
-    if (!groupKey) {
+    if (!variantKey) {
       mergedAll = mergedHistory;
     }
   }
@@ -679,17 +709,24 @@ function updateDeckHistory(deckId: TrendDeckId): void {
   // Build metadata index for recomputing previous day
   const metaIndex = buildTickerMetaIndex();
 
+  const deck = getDeck(deckId);
   const groupKeys = getGroupKeysForDeck(deckId);
-  const variants: Array<{ groupKey?: HistoryGroupKey }> = [{}, ...groupKeys.map((g) => ({ groupKey: g }))];
+  const sectionKeys = getSectionKeysForDeck(deckId);
+  const variants: Array<{ variantKey?: HistoryVariantKey; universe: TrendUniverseItem[] }> =
+    groupKeys.length > 0
+      ? [{ universe: deck.universe }, ...groupKeys.map((g) => ({ variantKey: g, universe: getUniverseForGroup(deckId, g) }))]
+      : sectionKeys.length > 0
+        ? [{ universe: deck.universe }, ...sectionKeys.map((s) => ({ variantKey: s, universe: getUniverseForSection(deckId, s) }))]
+        : [{ universe: deck.universe }];
 
   const retentionDays = getHealthHistoryRetentionDays();
 
   for (const variant of variants) {
-    const groupKey = variant.groupKey;
-    const label = groupKey ? `${deckId}.${groupKey}` : deckId;
-    const universe = getUniverseForGroup(deckId, groupKey);
+    const variantKey = variant.variantKey;
+    const universe = variant.universe;
+    const label = variantKey ? `${deckId}.${variantKey}` : deckId;
 
-    const existingHistory = loadHistory(deckId, groupKey);
+    const existingHistory = loadHistory(deckId, variantKey);
 
     const todayResult = computeHealthForDate(deckId, asOfDate, metaIndex, universe);
     let entry = todayResult.point;
@@ -729,7 +766,7 @@ function updateDeckHistory(deckId: TrendDeckId): void {
       retentionDays
     );
 
-    saveHistory(deckId, mergedHistory, groupKey);
+    saveHistory(deckId, mergedHistory, variantKey);
 
     const wasNew = existingHistory.findIndex((p) => p.date === asOfDate) < 0;
     const statusLabel = entry.regimeLabel === 'UNKNOWN' ? 'UNKNOWN' : 'valid';

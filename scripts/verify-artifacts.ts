@@ -12,6 +12,7 @@ import { join } from 'path';
 import type { TrendHealthHistoryPoint, TrendDeckId } from '../src/modules/trend100/types';
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
 import { getMinKnownPctForDeck } from '../src/modules/trend100/data/deckConfig';
+import { toSectionKey } from '../src/modules/trend100/data/sectionKey';
 import { isWeekend, hasFullHealthSchema } from './healthHistorySanitize';
 
 const PUBLIC_DIR = join(process.cwd(), 'public');
@@ -164,6 +165,19 @@ function getGroupKeysForDeck(deckId: TrendDeckId): string[] {
   return Array.from(keys).sort((a, b) => a.localeCompare(b));
 }
 
+function deckHasGroups(deckId: TrendDeckId): boolean {
+  return getGroupKeysForDeck(deckId).length > 0;
+}
+
+/** Section keys for non-grouped decks with >=2 sections. */
+function getSectionKeysForDeck(deckId: TrendDeckId): string[] {
+  const deck = getDeck(deckId);
+  if (deckHasGroups(deckId) || !deck.sections || deck.sections.length < 2) {
+    return [];
+  }
+  return deck.sections.map((s) => toSectionKey(s.id)).sort((a, b) => a.localeCompare(b));
+}
+
 /**
  * Print EOD cache stats for a sample of symbols
  */
@@ -262,9 +276,10 @@ function main() {
   let validationFailed = false;
   for (const deckId of deckIds) {
     const groupKeys = getGroupKeysForDeck(deckId);
+    const sectionKeys = getSectionKeysForDeck(deckId);
 
-    // Always validate the base (ALL) file.
-    const requireBase = groupKeys.length > 0;
+    // Always validate the base (ALL) file. Require it if deck has group or section variants.
+    const requireBase = groupKeys.length > 0 || sectionKeys.length > 0;
     const baseOk = printHealthHistoryStatsForFile(
       deckId,
       `health-history.${deckId}.json`,
@@ -276,6 +291,20 @@ function main() {
     // For grouped decks, require and validate per-group series files.
     if (groupKeys.length > 0) {
       for (const key of groupKeys) {
+        const label = `${deckId}.${key}`;
+        const ok = printHealthHistoryStatsForFile(
+          label,
+          `health-history.${deckId}.${key}.json`,
+          deckId,
+          true
+        );
+        if (!ok) validationFailed = true;
+      }
+    }
+
+    // For non-grouped decks with multiple sections, require and validate per-section series files.
+    if (sectionKeys.length > 0) {
+      for (const key of sectionKeys) {
         const label = `${deckId}.${key}`;
         const ok = printHealthHistoryStatsForFile(
           label,

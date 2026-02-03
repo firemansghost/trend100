@@ -50,6 +50,8 @@
 - **Grouped decks:** If a deck has grouped tickers (e.g., METALS_MINING), `verify:artifacts` also requires and validates:
   - `public/health-history.<DECK>.metals.json`
   - `public/health-history.<DECK>.miners.json`
+- **Non-grouped multi-section decks:** If a deck has no groups but has ≥2 sections (e.g., US_FACTORS, FIXED_INCOME, MACRO), `verify:artifacts` also requires and validates:
+  - `public/health-history.<DECK>.<sectionKey>.json` for each section (sectionKey from `toSectionKey(section.id)`, e.g. `quality-lowvol`, `global-ex-us`, `loans-bdc`, `em-debt`). Weekend and partial-schema rules apply to all section files.
 
 ## Troubleshooting
 
@@ -70,6 +72,14 @@
   - Run `pnpm verify:artifacts` to check for weekend/partial points
   - If found, regenerate health history: `pnpm update:snapshots` (sanitization runs on load)
   - Verify: `grep -E '"date": "202[0-9]-[0-9]{2}-(0[6]|1[0-9]|2[0-9]|3[01])"' public/health-history.*.json` should return nothing (no Sat/Sun dates)
+
+### "Pills change heatmap but not chart"
+- **Symptom:** Selecting a section pill (e.g., Quality/LowVol) filters the ticker list but the chart still shows the full-deck series.
+- **Cause:** Section-variant health-history files are missing or URL `section=` does not match the file naming (sectionKey).
+- **Fix:**
+  - Run `MARKETSTACK_OFFLINE=1 pnpm update:health-history -- --backfill-days 30` (or `pnpm update:snapshots`) so that `public/health-history.<DECK>.<sectionKey>.json` are generated for each section.
+  - Run `pnpm verify:artifacts` to confirm all required section files exist and pass validation.
+  - Section key must match `toSectionKey(section.id)` (e.g. `Quality/LowVol` → `quality-lowvol`). If you added a new section, ensure deck `sections` use the same `id` as ticker `section` and that writers use `toSectionKey` from `@/modules/trend100/data/sectionKey`.
 
 ### "Missing symbols in new deck"
 - **Symptom:** New deck (e.g., METALS_MINING) shows fewer tickers than expected in UI or verify:artifacts reports missing EOD cache.

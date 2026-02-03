@@ -29,6 +29,7 @@ import type {
   TrendUniverseItem,
 } from '../src/modules/trend100/types';
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
+import { toSectionKey } from '../src/modules/trend100/data/sectionKey';
 import { ensureHistoryBatch } from './marketstack-cache';
 import { calcSMA, calcEMA, resampleDailyToWeekly } from '../src/modules/trend100/engine/movingAverages';
 import { classifyTrend } from '../src/modules/trend100/engine/classifyTrend';
@@ -448,6 +449,23 @@ function getUniverseForGroup(deckId: TrendDeckId, groupKey?: HistoryGroupKey): T
   return deck.universe.filter((item) => (item.group ?? '').toLowerCase() === groupKey);
 }
 
+function deckHasGroups(deckId: TrendDeckId): boolean {
+  return getGroupKeysForDeck(deckId).length > 0;
+}
+
+function getSectionKeysForDeck(deckId: TrendDeckId): HistoryVariantKey[] {
+  const deck = getDeck(deckId);
+  if (deckHasGroups(deckId) || !deck.sections || deck.sections.length < 2) {
+    return [];
+  }
+  return deck.sections.map((s) => toSectionKey(s.id)).sort((a, b) => a.localeCompare(b));
+}
+
+function getUniverseForSection(deckId: TrendDeckId, sectionKey: HistoryVariantKey): TrendUniverseItem[] {
+  const deck = getDeck(deckId);
+  return deck.universe.filter((item) => item.section != null && toSectionKey(item.section) === sectionKey);
+}
+
 // Get today's date in YYYY-MM-DD format
 function getTodayDate(): string {
   return new Date().toISOString().split('T')[0]!;
@@ -459,14 +477,16 @@ function getSnapshotFilePath(deckId: TrendDeckId): string {
 }
 
 // Get history file path
-function getHistoryFilePath(deckId: TrendDeckId, groupKey?: HistoryGroupKey): string {
-  const suffix = groupKey ? `.${groupKey}` : '';
+type HistoryVariantKey = string;
+
+function getHistoryFilePath(deckId: TrendDeckId, variantKey?: HistoryVariantKey): string {
+  const suffix = variantKey ? `.${variantKey}` : '';
   return join(process.cwd(), 'public', `health-history.${deckId}${suffix}.json`);
 }
 
 // Load existing history (with sanitization)
-function loadHistory(deckId: TrendDeckId, groupKey?: HistoryGroupKey): TrendHealthHistoryPoint[] {
-  const filePath = getHistoryFilePath(deckId, groupKey);
+function loadHistory(deckId: TrendDeckId, variantKey?: HistoryVariantKey): TrendHealthHistoryPoint[] {
+  const filePath = getHistoryFilePath(deckId, variantKey);
   try {
     const content = readFileSync(filePath, 'utf-8');
     const history = JSON.parse(content) as TrendHealthHistoryPoint[];
@@ -478,7 +498,7 @@ function loadHistory(deckId: TrendDeckId, groupKey?: HistoryGroupKey): TrendHeal
     const { sanitized, removedWeekend, removedPartial } = sanitizeHealthHistory(history);
     
     if (removedWeekend > 0 || removedPartial > 0) {
-      const label = groupKey ? `${deckId}.${groupKey}` : deckId;
+      const label = variantKey ? `${deckId}.${variantKey}` : deckId;
       console.log(
         `  🧹 Sanitized health history for ${label}: removed ${removedWeekend} weekend point(s), removed ${removedPartial} partial-schema point(s)`
       );
@@ -491,9 +511,9 @@ function loadHistory(deckId: TrendDeckId, groupKey?: HistoryGroupKey): TrendHeal
 }
 
 // Save history
-function saveHistory(deckId: TrendDeckId, history: TrendHealthHistoryPoint[], groupKey?: HistoryGroupKey): void {
+function saveHistory(deckId: TrendDeckId, history: TrendHealthHistoryPoint[], variantKey?: HistoryVariantKey): void {
   const sorted = [...history].sort((a, b) => a.date.localeCompare(b.date));
-  const filePath = getHistoryFilePath(deckId, groupKey);
+  const filePath = getHistoryFilePath(deckId, variantKey);
   writeFileSync(filePath, JSON.stringify(sorted, null, 2) + '\n', 'utf-8');
 }
 
@@ -752,15 +772,22 @@ async function main() {
       continue;
     }
 
+    const deck = getDeck(deckId);
     const groupKeys = getGroupKeysForDeck(deckId);
-    const variants: Array<{ groupKey?: HistoryGroupKey }> = [{}, ...groupKeys.map((g) => ({ groupKey: g }))];
+    const sectionKeys = getSectionKeysForDeck(deckId);
+    const variants: Array<{ variantKey?: HistoryVariantKey; universe: TrendUniverseItem[] }> =
+      groupKeys.length > 0
+        ? [{ universe: deck.universe }, ...groupKeys.map((g) => ({ variantKey: g, universe: getUniverseForGroup(deckId, g) }))]
+        : sectionKeys.length > 0
+          ? [{ universe: deck.universe }, ...sectionKeys.map((s) => ({ variantKey: s, universe: getUniverseForSection(deckId, s) }))]
+          : [{ universe: deck.universe }];
 
     for (const variant of variants) {
-      const groupKey = variant.groupKey;
-      const label = groupKey ? `${deckId}.${groupKey}` : deckId;
-      const universe = getUniverseForGroup(deckId, groupKey);
+      const variantKey = variant.variantKey;
+      const universe = variant.universe;
+      const label = variantKey ? `${deckId}.${variantKey}` : deckId;
 
-      const existingHistory = loadHistory(deckId, groupKey);
+      const existingHistory = loadHistory(deckId, variantKey);
 
       const todayResult = computeHealthForDate(deckId, snapshot.asOfDate, metaIndex, universe);
       let entry = todayResult.point;
@@ -801,7 +828,7 @@ async function main() {
         retentionDays
       );
 
-      saveHistory(deckId, mergedHistory, groupKey);
+      saveHistory(deckId, mergedHistory, variantKey);
       const statusLabel = entry.regimeLabel === 'UNKNOWN' ? 'UNKNOWN' : 'valid';
       console.log(
         `  ✓ Updated health history for ${label}: ${mergedHistory.length} points (${statusLabel}, retention: ${retentionDays === 0 ? 'none' : `${retentionDays} days`})`

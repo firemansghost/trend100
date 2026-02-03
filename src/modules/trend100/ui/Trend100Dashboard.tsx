@@ -21,6 +21,14 @@ import { applyFilters, getAllTags, getTagCounts } from './tagUtils';
 import { sortTickers, type SortKey } from './sortUtils';
 import { SectionPills } from './SectionPills';
 import type { TrendDeckSection } from '../types';
+import { toSectionKey } from '../data/sectionKey';
+
+/** Resolve section id from URL sectionKey (e.g. quality-lowvol -> Quality/LowVol section id). */
+function sectionIdFromSectionKey(sections: TrendDeckSection[], sectionKey: string): string | null {
+  const key = sectionKey.toLowerCase().trim();
+  const found = sections.find((s) => toSectionKey(s.id) === key);
+  return found?.id ?? null;
+}
 
 type Timeframe = '3M' | '1Y' | 'ALL';
 type MetricChoice = 'health' | 'heat' | 'upper' | 'stretch' | 'medUpper';
@@ -34,6 +42,7 @@ interface Trend100DashboardProps {
   deckSections?: TrendDeckSection[];
   isDemoMode?: boolean;
   initialGroupFilter?: string | null;
+  initialSectionKey?: string | null;
   initialMetric?: MetricChoice;
 }
 
@@ -46,11 +55,14 @@ export function Trend100Dashboard({
   deckSections = [],
   isDemoMode = false,
   initialGroupFilter = null,
+  initialSectionKey = null,
   initialMetric = 'health',
 }: Trend100DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const [selectedSection, setSelectedSection] = useState<string | null>(() =>
+    initialSectionKey ? sectionIdFromSectionKey(deckSections, initialSectionKey) : null
+  );
   const [selectedGroup, setSelectedGroup] = useState<string | null>(initialGroupFilter);
   const [metric, setMetric] = useState<MetricChoice>(initialMetric);
   const [sortKey, setSortKey] = useState<SortKey>('UNIVERSE');
@@ -136,23 +148,39 @@ export function Trend100Dashboard({
     return Array.from(groups).sort();
   }, [snapshot.tickers]);
 
-  // Sync selectedGroup from URL (single source of truth when user navigates or loads with ?group=)
+  // Sync from URL when user navigates or loads with ?group= or ?section=
   useEffect(() => {
     setSelectedGroup(initialGroupFilter ?? null);
   }, [initialGroupFilter]);
-
-  // Update URL when group filter changes
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
+    if (initialSectionKey == null || initialSectionKey.trim() === '') {
+      setSelectedSection(null);
+    } else {
+      setSelectedSection(sectionIdFromSectionKey(deckSections, initialSectionKey) ?? null);
+    }
+  }, [initialSectionKey, deckSections]);
+
+  // Update URL when group or section filter changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (hasGroups) {
+      url.searchParams.delete('section');
       if (selectedGroup === null || selectedGroup === 'all') {
         url.searchParams.delete('group');
       } else {
         url.searchParams.set('group', selectedGroup.toLowerCase());
       }
-      window.history.replaceState({}, '', url.toString());
+    } else {
+      url.searchParams.delete('group');
+      if (selectedSection === null) {
+        url.searchParams.delete('section');
+      } else {
+        url.searchParams.set('section', toSectionKey(selectedSection));
+      }
     }
-  }, [selectedGroup]);
+    window.history.replaceState({}, '', url.toString());
+  }, [hasGroups, selectedGroup, selectedSection]);
 
   // Update URL when metric changes
   useEffect(() => {
@@ -275,23 +303,28 @@ export function Trend100Dashboard({
         tagCounts={tagCounts}
         isDemoMode={isDemoMode}
       />
-      {/* Single group/section filter: counted tabs (All | Metals (5) | Miners (6)); for grouped decks this drives URL group= and chart + heatmap */}
-      {deckSections.length > 0 && (
+      {/* Group or section filter: show only when deck has >=2 sections (hide for LEADERSHIP, US_SECTORS). Grouped decks use group=; others use section= and swap chart history. */}
+      {deckSections.length >= 2 && (
         <div className="container mx-auto px-4 py-3 border-b border-zinc-800">
-          <SectionPills
-            sections={deckSections}
-            selectedSection={
-              hasGroups
-                ? (selectedGroup ? deckSections.find((s) => s.id.toUpperCase() === selectedGroup)?.id ?? null : null)
-                : selectedSection
-            }
-            onChange={
-              hasGroups
-                ? (sectionId) => setSelectedGroup(sectionId ? sectionId.toUpperCase() : null)
-                : setSelectedSection
-            }
-            counts={sectionCounts}
-          />
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm font-medium text-zinc-300">
+              {hasGroups ? 'Group:' : 'Section:'}
+            </span>
+            <SectionPills
+              sections={deckSections}
+              selectedSection={
+                hasGroups
+                  ? (selectedGroup ? deckSections.find((s) => s.id.toUpperCase() === selectedGroup)?.id ?? null : null)
+                  : selectedSection
+              }
+              onChange={
+                hasGroups
+                  ? (sectionId) => setSelectedGroup(sectionId ? sectionId.toUpperCase() : null)
+                  : setSelectedSection
+              }
+              counts={sectionCounts}
+            />
+          </div>
         </div>
       )}
 

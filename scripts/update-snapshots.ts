@@ -453,17 +453,19 @@ function deckHasGroups(deckId: TrendDeckId): boolean {
   return getGroupKeysForDeck(deckId).length > 0;
 }
 
-function getSectionKeysForDeck(deckId: TrendDeckId): HistoryVariantKey[] {
+/** Section variants for non-grouped decks with >=2 sections. Filter by section.id so universeOverride matches deck. */
+function getSectionVariantsForDeck(deckId: TrendDeckId): Array<{ sectionId: string; sectionKey: HistoryVariantKey }> {
   const deck = getDeck(deckId);
   if (deckHasGroups(deckId) || !deck.sections || deck.sections.length < 2) {
     return [];
   }
-  return deck.sections.map((s) => toSectionKey(s.id)).sort((a, b) => a.localeCompare(b));
+  return deck.sections.map((s) => ({ sectionId: s.id, sectionKey: toSectionKey(s.id) }));
 }
 
-function getUniverseForSection(deckId: TrendDeckId, sectionKey: HistoryVariantKey): TrendUniverseItem[] {
+/** Filter universe by exact section id (deck.sections[].id); item.section must match. */
+function getUniverseForSectionById(deckId: TrendDeckId, sectionId: string): TrendUniverseItem[] {
   const deck = getDeck(deckId);
-  return deck.universe.filter((item) => item.section != null && toSectionKey(item.section) === sectionKey);
+  return deck.universe.filter((item) => item.section === sectionId);
 }
 
 // Get today's date in YYYY-MM-DD format
@@ -774,12 +776,12 @@ async function main() {
 
     const deck = getDeck(deckId);
     const groupKeys = getGroupKeysForDeck(deckId);
-    const sectionKeys = getSectionKeysForDeck(deckId);
+    const sectionVariants = getSectionVariantsForDeck(deckId);
     const variants: Array<{ variantKey?: HistoryVariantKey; universe: TrendUniverseItem[] }> =
       groupKeys.length > 0
         ? [{ universe: deck.universe }, ...groupKeys.map((g) => ({ variantKey: g, universe: getUniverseForGroup(deckId, g) }))]
-        : sectionKeys.length > 0
-          ? [{ universe: deck.universe }, ...sectionKeys.map((s) => ({ variantKey: s, universe: getUniverseForSection(deckId, s) }))]
+        : sectionVariants.length > 0
+          ? [{ universe: deck.universe }, ...sectionVariants.map(({ sectionId, sectionKey }) => ({ variantKey: sectionKey, universe: getUniverseForSectionById(deckId, sectionId) }))]
           : [{ universe: deck.universe }];
 
     for (const variant of variants) {

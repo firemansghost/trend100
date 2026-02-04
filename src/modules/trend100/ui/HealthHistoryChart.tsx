@@ -119,11 +119,18 @@ export function HealthHistoryChart({
     dateTs: new Date(point.date).getTime(), // Numeric timestamp for X-axis (unique per day)
   }));
 
+  const isEmpty = chartData.length === 0;
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
       <h3 className="text-sm font-semibold text-zinc-300 mb-4">
         {metricLabel}
       </h3>
+      {isEmpty ? (
+        <div className="flex items-center justify-center h-[300px] rounded border border-zinc-700/50 bg-zinc-800/30 text-zinc-500 text-sm">
+          No history data to display.
+        </div>
+      ) : (
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
@@ -181,6 +188,7 @@ export function HealthHistoryChart({
           )}
         </LineChart>
       </ResponsiveContainer>
+      )}
     </div>
   );
 }

@@ -176,18 +176,20 @@ export function TopBar({
           </select>
         </div>
 
-        {/* Tag Filters */}
+        {/* Tag Filters — heatmap only; chart is driven by Section/Group pills */}
         {availableTags.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            {(selectedTags.length > 0 || searchQuery) && (
-              <button
-                onClick={clearFilters}
-                className="px-3 py-1 text-xs bg-zinc-800 text-zinc-300 rounded border border-zinc-700 hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500"
-              >
-                Clear
-              </button>
-            )}
-            <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-zinc-400 whitespace-nowrap">Tags:</span>
+              {(selectedTags.length > 0 || searchQuery) && (
+                <button
+                  onClick={clearFilters}
+                  className="px-3 py-1 text-xs bg-zinc-800 text-zinc-300 rounded border border-zinc-700 hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                >
+                  Clear
+                </button>
+              )}
+              <div className="flex flex-wrap gap-2">
               {availableTags.slice(0, 12).map((tag) => {
               const isSelected = selectedTags.includes(tag);
               return (
@@ -213,7 +215,9 @@ export function TopBar({
                 +{availableTags.length - 12} more
               </button>
             )}
+              </div>
             </div>
+            <p className="text-[11px] text-zinc-500">Tags filter the heatmap. Chart uses Section/Group.</p>
           </div>
         )}
       </div>

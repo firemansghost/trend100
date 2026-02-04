@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useMemo, useEffect, useState, Suspense } from 'react';
+import { useMemo, useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { TrendHealthHistoryPoint, TrendDeckId } from '@/modules/trend100/types';
 import { Trend100Dashboard } from '@/modules/trend100/ui';
@@ -92,52 +92,67 @@ function ClientDeckPageContent() {
     loadSnapshot();
   }, [deckId]);
 
-  // History state
+  // History state: keep previous history visible while loading; never set to [] unless base/mock fail.
   const [history, setHistory] = useState<TrendHealthHistoryPoint[]>([]);
   const [historySource, setHistorySource] = useState<'file' | 'mock'>('mock');
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyVariantFallback, setHistoryVariantFallback] = useState(false); // true when variant was all UNKNOWN and we show base
+  const historyRequestIdRef = useRef(0);
 
-  // Load history when deckId or variant (group/section) changes. Fall back to base if variant 404s, fails to parse, or is empty.
+  // Load history when deckId or variant (group/section) changes. Fall back to base if variant 404s, fails to parse, is empty, or is all UNKNOWN. Guard against stale async responses.
   useEffect(() => {
-    async function loadHistory() {
-      setHistoryLoading(true);
-      const baseFileName = `health-history.${deckId}.json`;
+    const requestId = ++historyRequestIdRef.current;
+    setHistoryLoading(true);
+    setHistoryVariantFallback(false);
 
-      async function tryLoad(fileName: string): Promise<TrendHealthHistoryPoint[] | null> {
-        try {
-          const res = await fetch(`/${fileName}`, { cache: 'no-store' });
-          if (!res.ok) return null;
-          const data = (await res.json()) as unknown;
-          if (!Array.isArray(data) || data.length === 0) return null;
-          const points = data as TrendHealthHistoryPoint[];
-          return [...points].sort((a, b) => a.date.localeCompare(b.date));
-        } catch {
-          return null;
-        }
-      }
+    const baseFileName = `health-history.${deckId}.json`;
 
-      const variantFileName = historyVariantKey ? `health-history.${deckId}.${historyVariantKey}.json` : null;
-      let points: TrendHealthHistoryPoint[] | null = null;
-
-      if (variantFileName) {
-        points = await tryLoad(variantFileName);
+    async function tryLoad(fileName: string): Promise<TrendHealthHistoryPoint[] | null> {
+      try {
+        const res = await fetch(`/${fileName}`, { cache: 'no-store' });
+        if (!res.ok) return null;
+        const data = (await res.json()) as unknown;
+        if (!Array.isArray(data) || data.length === 0) return null;
+        const points = data as TrendHealthHistoryPoint[];
+        return [...points].sort((a, b) => a.date.localeCompare(b.date));
+      } catch {
+        return null;
       }
-      if (points == null) {
-        points = await tryLoad(baseFileName);
-      }
-      if (points != null) {
-        setHistory(points);
-        setHistorySource('file');
-      } else {
-        const mockHistory = buildMockHealthHistory({ deckId, days: 730 });
-        setHistory(mockHistory);
-        setHistorySource('mock');
-      }
-
-      setHistoryLoading(false);
     }
 
-    loadHistory();
+    /** Treat variant as invalid when every point has regimeLabel === 'UNKNOWN' (health-history points have regimeLabel, not status). */
+    function isAllUnknown(points: TrendHealthHistoryPoint[]): boolean {
+      return points.length > 0 && points.every((p) => p.regimeLabel === 'UNKNOWN');
+    }
+
+    (async () => {
+      const variantFileName = historyVariantKey ? `health-history.${deckId}.${historyVariantKey}.json` : null;
+      let points: TrendHealthHistoryPoint[] | null = null;
+      let usedMock = false;
+      let variantWasInvalid = false;
+
+      if (variantFileName) {
+        const variantPoints = await tryLoad(variantFileName);
+        if (variantPoints != null && !isAllUnknown(variantPoints)) {
+          points = variantPoints;
+        } else if (variantPoints != null && isAllUnknown(variantPoints)) {
+          variantWasInvalid = true;
+        }
+      }
+      if (points == null || points.length === 0) {
+        points = await tryLoad(baseFileName);
+      }
+      if (points == null || points.length === 0) {
+        points = buildMockHealthHistory({ deckId, days: 730 });
+        usedMock = true;
+      }
+
+      if (requestId !== historyRequestIdRef.current) return;
+      setHistory(points);
+      setHistorySource(usedMock ? 'mock' : 'file');
+      setHistoryVariantFallback(variantWasInvalid);
+      setHistoryLoading(false);
+    })();
   }, [deckId, historyVariantKey]);
 
   // Debug panel
@@ -188,6 +203,7 @@ function ClientDeckPageContent() {
         initialGroupFilter={groupFilter}
         initialSectionKey={sectionKeyFromUrl}
         initialMetric={metricKey as any}
+        historyVariantFallback={historyVariantFallback}
       />
     </>
   );

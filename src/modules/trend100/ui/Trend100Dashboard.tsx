@@ -44,6 +44,8 @@ interface Trend100DashboardProps {
   initialGroupFilter?: string | null;
   initialSectionKey?: string | null;
   initialMetric?: MetricChoice;
+  /** When true, variant file was all UNKNOWN so we show base history and this banner. */
+  historyVariantFallback?: boolean;
 }
 
 export function Trend100Dashboard({
@@ -57,6 +59,7 @@ export function Trend100Dashboard({
   initialGroupFilter = null,
   initialSectionKey = null,
   initialMetric = 'health',
+  historyVariantFallback = false,
 }: Trend100DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -449,6 +452,11 @@ export function Trend100Dashboard({
                 If Health is flat, stop staring at it. Click Heat / Stretch / Med Upper. That’s where the risk hides.
               </p>
             </div>
+          )}
+          {historyVariantFallback && (
+            <p className="text-xs text-amber-400/90 mb-2 rounded border border-amber-600/40 bg-amber-950/30 px-3 py-2">
+              Section history not ready/invalid — showing All history.
+            </p>
           )}
           <p className="text-xs text-zinc-500 mb-2">
             Metric: {metric === 'health' ? 'Health' : metric === 'heat' ? 'Heat' : metric === 'upper' ? '% Upper' : metric === 'stretch' ? 'Stretch' : 'Med Upper'} (click buttons above to switch)

@@ -1,6 +1,6 @@
 {
-  "runDate": "2026-02-11",
-  "asOfDate": "2026-02-10",
+  "runDate": "2026-02-12",
+  "asOfDate": "2026-02-11",
   "universeSize": 11,
   "tickers": [
     {
@@ -14,13 +14,13 @@
       "subtitle": "ACWI ex-US",
       "name": "iShares MSCI ACWI ex US ETF",
       "status": "GREEN",
-      "price": 73.16,
-      "changePct": 0.29,
-      "sma200": 63.97,
-      "sma50w": 62.86,
-      "ema50w": 63.86,
-      "distanceTo200dPct": 14.37,
-      "distanceToUpperBandPct": 14.56
+      "price": 73.76,
+      "changePct": 0.82,
+      "sma200": 64.05,
+      "sma50w": 62.88,
+      "ema50w": 63.89,
+      "distanceTo200dPct": 15.15,
+      "distanceToUpperBandPct": 15.46
     },
     {
       "ticker": "EEM",
@@ -33,13 +33,13 @@
       "subtitle": "Emerging",
       "name": "iShares MSCI Emerging Markets ETF",
       "status": "GREEN",
-      "price": 60.6,
-      "changePct": 0.15,
-      "sma200": 51.68,
-      "sma50w": 50.57,
-      "ema50w": 51.86,
-      "distanceTo200dPct": 17.25,
-      "distanceToUpperBandPct": 16.85
+      "price": 61.56,
+      "changePct": 1.58,
+      "sma200": 51.77,
+      "sma50w": 50.59,
+      "ema50w": 51.9,
+      "distanceTo200dPct": 18.9,
+      "distanceToUpperBandPct": 18.61
     },
     {
       "ticker": "EWA",
@@ -52,13 +52,13 @@
       "subtitle": "Australia",
       "name": "iShares MSCI Australia ETF",
       "status": "GREEN",
-      "price": 28.64,
-      "changePct": -0.66,
-      "sma200": 26.45,
-      "sma50w": 26,
-      "ema50w": 26.27,
-      "distanceTo200dPct": 8.28,
-      "distanceToUpperBandPct": 9.03
+      "price": 29.3,
+      "changePct": 2.3,
+      "sma200": 26.47,
+      "sma50w": 26.01,
+      "ema50w": 26.29,
+      "distanceTo200dPct": 10.68,
+      "distanceToUpperBandPct": 11.43
     },
     {
       "ticker": "EWC",
@@ -71,13 +71,13 @@
       "subtitle": "Canada",
       "name": "iShares MSCI Canada ETF",
       "status": "GREEN",
-      "price": 56.72,
-      "changePct": 0.8,
-      "sma200": 49.24,
+      "price": 56.58,
+      "changePct": -0.25,
+      "sma200": 49.31,
       "sma50w": 48.11,
-      "ema50w": 49.21,
-      "distanceTo200dPct": 15.2,
-      "distanceToUpperBandPct": 15.27
+      "ema50w": 49.2,
+      "distanceTo200dPct": 14.74,
+      "distanceToUpperBandPct": 15
     },
     {
       "ticker": "EWJ",
@@ -90,13 +90,13 @@
       "subtitle": "Japan",
       "name": "iShares MSCI Japan ETF",
       "status": "GREEN",
-      "price": 93.1,
-      "changePct": 1.98,
-      "sma200": 78.93,
-      "sma50w": 77.69,
-      "ema50w": 79.12,
-      "distanceTo200dPct": 17.96,
-      "distanceToUpperBandPct": 17.67
+      "price": 93.97,
+      "changePct": 0.93,
+      "sma200": 79.04,
+      "sma50w": 77.71,
+      "ema50w": 79.16,
+      "distanceTo200dPct": 18.88,
+      "distanceToUpperBandPct": 18.72
     },
     {
       "ticker": "EWU",
@@ -109,13 +109,13 @@
       "subtitle": "UK",
       "name": "iShares MSCI United Kingdom ETF",
       "status": "GREEN",
-      "price": 46.74,
-      "changePct": -0.6,
-      "sma200": 41.76,
-      "sma50w": 41.18,
-      "ema50w": 41.62,
-      "distanceTo200dPct": 11.92,
-      "distanceToUpperBandPct": 12.3
+      "price": 47.43,
+      "changePct": 1.48,
+      "sma200": 41.81,
+      "sma50w": 41.19,
+      "ema50w": 41.65,
+      "distanceTo200dPct": 13.44,
+      "distanceToUpperBandPct": 13.89
     },
     {
       "ticker": "EWZ",
@@ -128,13 +128,13 @@
       "subtitle": "Brazil",
       "name": "iShares MSCI Brazil ETF",
       "status": "GREEN",
-      "price": 38.32,
-      "changePct": -0.26,
-      "sma200": 30.23,
-      "sma50w": 29.68,
-      "ema50w": 30.9,
-      "distanceTo200dPct": 26.76,
-      "distanceToUpperBandPct": 24.03
+      "price": 39.16,
+      "changePct": 2.19,
+      "sma200": 30.29,
+      "sma50w": 29.7,
+      "ema50w": 30.93,
+      "distanceTo200dPct": 29.27,
+      "distanceToUpperBandPct": 26.61
     },
     {
       "ticker": "EZU",
@@ -147,13 +147,13 @@
       "subtitle": "Eurozone",
       "name": "iShares MSCI Eurozone ETF",
       "status": "GREEN",
-      "price": 68.2,
-      "changePct": -0.28,
-      "sma200": 61.27,
+      "price": 68.26,
+      "changePct": 0.09,
+      "sma200": 61.34,
       "sma50w": 60.31,
-      "ema50w": 60.57,
-      "distanceTo200dPct": 11.31,
-      "distanceToUpperBandPct": 12.59
+      "ema50w": 60.58,
+      "distanceTo200dPct": 11.29,
+      "distanceToUpperBandPct": 12.69
     },
     {
       "ticker": "FXI",
@@ -166,13 +166,13 @@
       "subtitle": "China LC",
       "name": "iShares China Large-Cap ETF",
       "status": "GREEN",
-      "price": 39.53,
-      "changePct": 0.33,
-      "sma200": 38.44,
+      "price": 39.47,
+      "changePct": -0.15,
+      "sma200": 38.46,
       "sma50w": 37.86,
       "ema50w": 37.49,
-      "distanceTo200dPct": 2.85,
-      "distanceToUpperBandPct": 4.4
+      "distanceTo200dPct": 2.62,
+      "distanceToUpperBandPct": 4.25
     },
     {
       "ticker": "GNR",
@@ -185,13 +185,13 @@
       "subtitle": "Nat Resources",
       "name": "SPDR S&P Global Natural Resources ETF",
       "status": "GREEN",
-      "price": 72.21,
-      "changePct": 0.42,
-      "sma200": 58.45,
-      "sma50w": 57.73,
-      "ema50w": 59.73,
-      "distanceTo200dPct": 23.54,
-      "distanceToUpperBandPct": 20.9
+      "price": 74.21,
+      "changePct": 2.77,
+      "sma200": 58.56,
+      "sma50w": 57.77,
+      "ema50w": 59.81,
+      "distanceTo200dPct": 26.72,
+      "distanceToUpperBandPct": 24.09
     },
     {
       "ticker": "INDA",
@@ -203,20 +203,20 @@
       "section": "Emerging",
       "subtitle": "India",
       "name": "iShares MSCI India ETF",
-      "status": "GREEN",
-      "price": 53.74,
-      "changePct": 0.56,
+      "status": "RED",
+      "price": 53.53,
+      "changePct": -0.39,
       "sma200": 53.71,
-      "sma50w": 53.2,
-      "ema50w": 53.27,
-      "distanceTo200dPct": 0.06,
-      "distanceToUpperBandPct": 0.88
+      "sma50w": 53.19,
+      "ema50w": 53.26,
+      "distanceTo200dPct": -0.33,
+      "distanceToUpperBandPct": 0.51
     }
   ],
   "health": {
-    "greenPct": 100,
+    "greenPct": 90.9,
     "yellowPct": 0,
-    "redPct": 0,
+    "redPct": 9.1,
     "regimeLabel": "RISK_ON"
   }
 }

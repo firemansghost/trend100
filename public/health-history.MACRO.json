@@ -31838,5 +31838,25 @@
     "eligibleCount": 17,
     "ineligibleCount": 0,
     "missingCount": 0
+  },
+  {
+    "date": "2026-02-12",
+    "greenPct": 70.6,
+    "yellowPct": 0,
+    "redPct": 29.4,
+    "regimeLabel": "RISK_ON",
+    "diffusionPct": 0,
+    "diffusionCount": 0,
+    "diffusionTotalCompared": 17,
+    "pctAboveUpperBand": 70.6,
+    "medianDistanceAboveUpperBandPct": 9.3,
+    "stretch200MedianPct": 5.77,
+    "heatScore": 46,
+    "knownCount": 17,
+    "unknownCount": 0,
+    "totalTickers": 17,
+    "eligibleCount": 17,
+    "ineligibleCount": 0,
+    "missingCount": 0
   }
 ]

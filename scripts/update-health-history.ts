@@ -356,18 +356,17 @@ function computeHealthForDate(
       ? ineligibleCount
       : Math.max(0, totalTickers - knownCount);
   
-  // Check minEligibleCount threshold (MACRO only)
-  const minEligibleCount = getMinEligibleCountForDeck(deckId);
+  // Check minEligibleCount threshold (MACRO only). For variants (universeOverride), cap at universe size so small sections can produce valid points.
+  const deckMinEligible = getMinEligibleCountForDeck(deckId);
+  const minEligibleCount = universeOverride ? Math.min(deckMinEligible, universe.length) : deckMinEligible;
   if (denominatorMode === 'eligible') {
     if (eligibleCount === 0) {
-      // No eligible tickers - return UNKNOWN
       return {
         point: makeUnknownPoint(targetDate, totalTickers, knownCount, unknownCount, 0, 0, missingCount),
         tickers,
       };
     }
     if (eligibleCount < minEligibleCount) {
-      // Too few eligible tickers - return UNKNOWN
       return {
         point: makeUnknownPoint(targetDate, totalTickers, knownCount, unknownCount, eligibleCount, ineligibleCount, missingCount),
         tickers,
@@ -376,7 +375,7 @@ function computeHealthForDate(
   }
 
   // Validity check: if knownCount / denominator < MIN_KNOWN_PCT, mark as UNKNOWN
-  // Use per-deck override (MACRO uses lower threshold)
+  // Config must use base deckId only (variant key affects only universeOverride + output path)
   const envDefault = getMinKnownPct();
   const minKnownPct = getMinKnownPctForDeck(deckId, envDefault);
   const knownPct = denominator > 0 ? knownCount / denominator : 0;
@@ -558,19 +557,22 @@ function deckHasGroups(deckId: TrendDeckId): boolean {
   return getGroupKeysForDeck(deckId).length > 0;
 }
 
-/** Section variants for non-grouped decks with >=2 sections. Filter by section.id (label) so universeOverride matches deck. */
-function getSectionVariantsForDeck(deckId: TrendDeckId): Array<{ sectionId: string; sectionKey: HistoryVariantKey }> {
+/** Section variants for non-grouped decks with >=2 sections. sectionKey is for filenames/URL; match universe via toSectionKey. */
+function getSectionVariantsForDeck(deckId: TrendDeckId): Array<{ sectionLabel: string; sectionKey: HistoryVariantKey }> {
   const deck = getDeck(deckId);
   if (deckHasGroups(deckId) || !deck.sections || deck.sections.length < 2) {
     return [];
   }
-  return deck.sections.map((s) => ({ sectionId: s.id, sectionKey: toSectionKey(s.id) }));
+  return deck.sections.map((s) => ({
+    sectionLabel: s.id ?? s.label ?? '',
+    sectionKey: toSectionKey(s.id ?? s.label ?? ''),
+  }));
 }
 
-/** Filter universe by exact section id (deck.sections[].id); item.section must match. */
-function getUniverseForSectionById(deckId: TrendDeckId, sectionId: string): TrendUniverseItem[] {
+/** Filter universe by normalized section key: toSectionKey(item.section) === sectionKey (handles case/label mismatches). */
+function getUniverseForSectionByKey(deckId: TrendDeckId, sectionKey: HistoryVariantKey): TrendUniverseItem[] {
   const deck = getDeck(deckId);
-  return deck.universe.filter((item) => item.section === sectionId);
+  return deck.universe.filter((item) => toSectionKey(item.section ?? '') === sectionKey);
 }
 
 /**
@@ -603,11 +605,11 @@ function backfillDeckHistory(
   const deck = getDeck(deckId);
   const groupKeys = getGroupKeysForDeck(deckId);
   const sectionVariants = getSectionVariantsForDeck(deckId);
-  const variants: Array<{ variantKey?: HistoryVariantKey; universe: TrendUniverseItem[] }> =
+  const variants: Array<{ variantKey?: HistoryVariantKey; universe: TrendUniverseItem[]; sectionLabel?: string }> =
     groupKeys.length > 0
       ? [{ universe: deck.universe }, ...groupKeys.map((g) => ({ variantKey: g, universe: getUniverseForGroup(deckId, g) }))]
       : sectionVariants.length > 0
-        ? [{ universe: deck.universe }, ...sectionVariants.map(({ sectionId, sectionKey }) => ({ variantKey: sectionKey, universe: getUniverseForSectionById(deckId, sectionId) }))]
+        ? [{ universe: deck.universe }, ...sectionVariants.map(({ sectionLabel, sectionKey }) => ({ variantKey: sectionKey, universe: getUniverseForSectionByKey(deckId, sectionKey), sectionLabel }))]
         : [{ universe: deck.universe }];
 
   const retentionDays = getHealthHistoryRetentionDays();
@@ -617,6 +619,9 @@ function backfillDeckHistory(
     const variantKey = variant.variantKey;
     const universe = variant.universe;
     const label = variantKey ? `${deckId}.${variantKey}` : deckId;
+    if (variant.sectionLabel != null) {
+      console.log(`  [${deckId}] section=${variant.sectionLabel} key=${variantKey} tickers=${universe.length}`);
+    }
 
     // Get trading days in range for this variant
     const tradingDays = getTradingDaysInRange(startDate, endDate, deckId, universe);
@@ -632,6 +637,7 @@ function backfillDeckHistory(
     let unknown = 0;
     let prevDate: string | null = null;
     let prevTickers: TrendTickerSnapshot[] | null = null;
+    let debugLogged = false;
 
     for (const date of tradingDays) {
       // Guard: skip weekend dates (shouldn't happen if tradingDays is correct, but double-check)
@@ -642,6 +648,21 @@ function backfillDeckHistory(
 
       const result = computeHealthForDate(deckId, date, metaIndex, universe);
       let point = result.point;
+
+      // Debug for MACRO variants when TREND100_DEBUG_MACRO=1 (config resolution, minKnownPct, etc.)
+      if (!debugLogged && variantKey && deckId === 'MACRO' && process.env.TREND100_DEBUG_MACRO === '1') {
+        const envDef = getMinKnownPct();
+        const minKnownPctUsed = getMinKnownPctForDeck(deckId, envDef);
+        const denomMode = getKnownDenominatorMode(deckId);
+        const denom = denomMode === 'eligible' ? result.tickers.length : universe.length;
+        const requiredKnown = denom > 0 ? Math.ceil(denom * minKnownPctUsed) : 0;
+        const knownCount = point.knownCount;
+        const knownPct = denom > 0 ? (knownCount / denom) * 100 : 0;
+        console.log(
+          `  [DEBUG MACRO] baseDeckId=${deckId} variantKey=${variantKey} minKnownPctUsed=${minKnownPctUsed} activeUniverseLen=${universe.length} requiredKnown=${requiredKnown} sampleDate=${date} knownCount=${knownCount} knownPct=${knownPct.toFixed(1)}% regimeLabel=${point.regimeLabel}`
+        );
+        debugLogged = true;
+      }
 
       if (prevDate && prevTickers && point.regimeLabel !== 'UNKNOWN') {
         const diffusion = computeDiffusion(deckId, prevDate, date, metaIndex, universe);
@@ -713,11 +734,11 @@ function updateDeckHistory(deckId: TrendDeckId): void {
   const deck = getDeck(deckId);
   const groupKeys = getGroupKeysForDeck(deckId);
   const sectionVariants = getSectionVariantsForDeck(deckId);
-  const variants: Array<{ variantKey?: HistoryVariantKey; universe: TrendUniverseItem[] }> =
+  const variants: Array<{ variantKey?: HistoryVariantKey; universe: TrendUniverseItem[]; sectionLabel?: string }> =
     groupKeys.length > 0
       ? [{ universe: deck.universe }, ...groupKeys.map((g) => ({ variantKey: g, universe: getUniverseForGroup(deckId, g) }))]
       : sectionVariants.length > 0
-        ? [{ universe: deck.universe }, ...sectionVariants.map(({ sectionId, sectionKey }) => ({ variantKey: sectionKey, universe: getUniverseForSectionById(deckId, sectionId) }))]
+        ? [{ universe: deck.universe }, ...sectionVariants.map(({ sectionLabel, sectionKey }) => ({ variantKey: sectionKey, universe: getUniverseForSectionByKey(deckId, sectionKey), sectionLabel }))]
         : [{ universe: deck.universe }];
 
   const retentionDays = getHealthHistoryRetentionDays();
@@ -726,6 +747,9 @@ function updateDeckHistory(deckId: TrendDeckId): void {
     const variantKey = variant.variantKey;
     const universe = variant.universe;
     const label = variantKey ? `${deckId}.${variantKey}` : deckId;
+    if (variant.sectionLabel != null) {
+      console.log(`  [${deckId}] section=${variant.sectionLabel} key=${variantKey} tickers=${universe.length}`);
+    }
 
     const existingHistory = loadHistory(deckId, variantKey);
 

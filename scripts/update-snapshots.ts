@@ -291,8 +291,9 @@ function computeHealthForDate(
       ? ineligibleCount
       : Math.max(0, totalTickers - knownCount);
   
-  // Check minEligibleCount threshold (MACRO only)
-  const minEligibleCount = getMinEligibleCountForDeck(deckId);
+  // Check minEligibleCount threshold (MACRO only). For variants (universeOverride), cap at universe size.
+  const deckMinEligible = getMinEligibleCountForDeck(deckId);
+  const minEligibleCount = universeOverride ? Math.min(deckMinEligible, universe.length) : deckMinEligible;
   if (denominatorMode === 'eligible') {
     if (eligibleCount === 0) {
       return {
@@ -453,19 +454,22 @@ function deckHasGroups(deckId: TrendDeckId): boolean {
   return getGroupKeysForDeck(deckId).length > 0;
 }
 
-/** Section variants for non-grouped decks with >=2 sections. Filter by section.id so universeOverride matches deck. */
-function getSectionVariantsForDeck(deckId: TrendDeckId): Array<{ sectionId: string; sectionKey: HistoryVariantKey }> {
+/** Section variants for non-grouped decks with >=2 sections. sectionKey is for filenames/URL; match universe via toSectionKey. */
+function getSectionVariantsForDeck(deckId: TrendDeckId): Array<{ sectionLabel: string; sectionKey: HistoryVariantKey }> {
   const deck = getDeck(deckId);
   if (deckHasGroups(deckId) || !deck.sections || deck.sections.length < 2) {
     return [];
   }
-  return deck.sections.map((s) => ({ sectionId: s.id, sectionKey: toSectionKey(s.id) }));
+  return deck.sections.map((s) => ({
+    sectionLabel: s.id ?? s.label ?? '',
+    sectionKey: toSectionKey(s.id ?? s.label ?? ''),
+  }));
 }
 
-/** Filter universe by exact section id (deck.sections[].id); item.section must match. */
-function getUniverseForSectionById(deckId: TrendDeckId, sectionId: string): TrendUniverseItem[] {
+/** Filter universe by normalized section key: toSectionKey(item.section) === sectionKey (handles case/label mismatches). */
+function getUniverseForSectionByKey(deckId: TrendDeckId, sectionKey: HistoryVariantKey): TrendUniverseItem[] {
   const deck = getDeck(deckId);
-  return deck.universe.filter((item) => item.section === sectionId);
+  return deck.universe.filter((item) => toSectionKey(item.section ?? '') === sectionKey);
 }
 
 // Get today's date in YYYY-MM-DD format
@@ -777,17 +781,20 @@ async function main() {
     const deck = getDeck(deckId);
     const groupKeys = getGroupKeysForDeck(deckId);
     const sectionVariants = getSectionVariantsForDeck(deckId);
-    const variants: Array<{ variantKey?: HistoryVariantKey; universe: TrendUniverseItem[] }> =
+    const variants: Array<{ variantKey?: HistoryVariantKey; universe: TrendUniverseItem[]; sectionLabel?: string }> =
       groupKeys.length > 0
         ? [{ universe: deck.universe }, ...groupKeys.map((g) => ({ variantKey: g, universe: getUniverseForGroup(deckId, g) }))]
         : sectionVariants.length > 0
-          ? [{ universe: deck.universe }, ...sectionVariants.map(({ sectionId, sectionKey }) => ({ variantKey: sectionKey, universe: getUniverseForSectionById(deckId, sectionId) }))]
+          ? [{ universe: deck.universe }, ...sectionVariants.map(({ sectionLabel, sectionKey }) => ({ variantKey: sectionKey, universe: getUniverseForSectionByKey(deckId, sectionKey), sectionLabel }))]
           : [{ universe: deck.universe }];
 
     for (const variant of variants) {
       const variantKey = variant.variantKey;
       const universe = variant.universe;
       const label = variantKey ? `${deckId}.${variantKey}` : deckId;
+      if (variant.sectionLabel != null) {
+        console.log(`  [${deckId}] section=${variant.sectionLabel} key=${variantKey} tickers=${universe.length}`);
+      }
 
       const existingHistory = loadHistory(deckId, variantKey);
 

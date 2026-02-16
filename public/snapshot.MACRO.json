@@ -1,6 +1,6 @@
 {
-  "runDate": "2026-02-13",
-  "asOfDate": "2026-02-12",
+  "runDate": "2026-02-16",
+  "asOfDate": "2026-02-13",
   "universeSize": 17,
   "tickers": [
     {
@@ -14,13 +14,13 @@
       "subtitle": "Agriculture",
       "name": "Invesco DB Agriculture Fund",
       "status": "RED",
-      "price": 25.89,
-      "changePct": 0.27,
+      "price": 25.79,
+      "changePct": -0.39,
       "sma200": 26.47,
       "sma50w": 26.47,
-      "ema50w": 26.18,
-      "distanceTo200dPct": -2.21,
-      "distanceToUpperBandPct": -2.19
+      "ema50w": 26.17,
+      "distanceTo200dPct": -2.56,
+      "distanceToUpperBandPct": -2.56
     },
     {
       "ticker": "DBB",
@@ -33,13 +33,13 @@
       "subtitle": "Base Metals",
       "name": "Invesco DB Base Metals Fund",
       "status": "GREEN",
-      "price": 23.59,
-      "changePct": -2.36,
-      "sma200": 20.7,
+      "price": 23.58,
+      "changePct": -0.04,
+      "sma200": 20.73,
       "sma50w": 20.46,
       "ema50w": 21.18,
-      "distanceTo200dPct": 13.95,
-      "distanceToUpperBandPct": 11.36
+      "distanceTo200dPct": 13.75,
+      "distanceToUpperBandPct": 11.31
     },
     {
       "ticker": "PDBC",
@@ -52,13 +52,13 @@
       "subtitle": "Commodities",
       "name": "Invesco Optimum Yield Diversified Commodity Strategy No K-1 ETF",
       "status": "GREEN",
-      "price": 14.16,
-      "changePct": -2.28,
+      "price": 14.17,
+      "changePct": 0.07,
       "sma200": 13.39,
       "sma50w": 13.35,
       "ema50w": 13.54,
-      "distanceTo200dPct": 5.77,
-      "distanceToUpperBandPct": 4.58
+      "distanceTo200dPct": 5.79,
+      "distanceToUpperBandPct": 4.65
     },
     {
       "ticker": "USO",
@@ -72,13 +72,13 @@
       "subtitle": "Oil",
       "name": "United States Oil Fund LP",
       "status": "GREEN",
-      "price": 76.62,
-      "changePct": 4.27,
-      "sma200": 71.83,
-      "sma50w": 72.12,
-      "ema50w": 72.32,
-      "distanceTo200dPct": 6.66,
-      "distanceToUpperBandPct": 5.94
+      "price": 76.22,
+      "changePct": -0.52,
+      "sma200": 71.88,
+      "sma50w": 72.11,
+      "ema50w": 72.31,
+      "distanceTo200dPct": 6.04,
+      "distanceToUpperBandPct": 5.41
     },
     {
       "ticker": "FXA",
@@ -91,13 +91,13 @@
       "subtitle": "AUD",
       "name": "Invesco CurrencyShares Australian Dollar Trust",
       "status": "GREEN",
-      "price": 70.17,
-      "changePct": -0.55,
-      "sma200": 65.14,
+      "price": 70.04,
+      "changePct": -0.19,
+      "sma200": 65.17,
       "sma50w": 64.74,
-      "ema50w": 65.4,
-      "distanceTo200dPct": 7.72,
-      "distanceToUpperBandPct": 7.3
+      "ema50w": 65.39,
+      "distanceTo200dPct": 7.47,
+      "distanceToUpperBandPct": 7.11
     },
     {
       "ticker": "FXB",
@@ -110,13 +110,13 @@
       "subtitle": "GBP",
       "name": "Invesco CurrencyShares British Pound Sterling Trust",
       "status": "GREEN",
-      "price": 130.93,
-      "changePct": -0.02,
-      "sma200": 129.13,
-      "sma50w": 128.52,
-      "ema50w": 127.96,
-      "distanceTo200dPct": 1.39,
-      "distanceToUpperBandPct": 1.87
+      "price": 131.27,
+      "changePct": 0.26,
+      "sma200": 129.14,
+      "sma50w": 128.53,
+      "ema50w": 127.98,
+      "distanceTo200dPct": 1.65,
+      "distanceToUpperBandPct": 2.13
     },
     {
       "ticker": "FXC",
@@ -129,13 +129,13 @@
       "subtitle": "CAD",
       "name": "Invesco CurrencyShares Canadian Dollar Trust",
       "status": "GREEN",
-      "price": 71.79,
-      "changePct": -0.26,
-      "sma200": 70.71,
+      "price": 71.77,
+      "changePct": -0.03,
+      "sma200": 70.72,
       "sma50w": 70.48,
       "ema50w": 70.56,
-      "distanceTo200dPct": 1.52,
-      "distanceToUpperBandPct": 1.74
+      "distanceTo200dPct": 1.49,
+      "distanceToUpperBandPct": 1.71
     },
     {
       "ticker": "FXE",
@@ -148,13 +148,13 @@
       "subtitle": "EUR",
       "name": "Invesco CurrencyShares Euro Trust",
       "status": "GREEN",
-      "price": 109.51,
-      "changePct": -0.05,
-      "sma200": 107.22,
+      "price": 109.58,
+      "changePct": 0.06,
+      "sma200": 107.24,
       "sma50w": 106.44,
       "ema50w": 106.14,
-      "distanceTo200dPct": 2.14,
-      "distanceToUpperBandPct": 2.89
+      "distanceTo200dPct": 2.18,
+      "distanceToUpperBandPct": 2.95
     },
     {
       "ticker": "FXY",
@@ -167,13 +167,13 @@
       "subtitle": "JPY",
       "name": "Invesco CurrencyShares Japanese Yen Trust",
       "status": "RED",
-      "price": 60.21,
-      "changePct": 0.33,
-      "sma200": 61.33,
+      "price": 60.19,
+      "changePct": -0.03,
+      "sma200": 61.31,
       "sma50w": 61.52,
       "ema50w": 60.62,
-      "distanceTo200dPct": -1.83,
-      "distanceToUpperBandPct": -2.13
+      "distanceTo200dPct": -1.82,
+      "distanceToUpperBandPct": -2.16
     },
     {
       "ticker": "UUP",
@@ -186,13 +186,13 @@
       "subtitle": "Dollar",
       "name": "Invesco DB US Dollar Index Bullish Fund",
       "status": "RED",
-      "price": 26.63,
-      "changePct": -0.56,
-      "sma200": 27.55,
-      "sma50w": 27.68,
-      "ema50w": 27.8,
-      "distanceTo200dPct": -3.34,
-      "distanceToUpperBandPct": -4.22
+      "price": 26.82,
+      "changePct": 0.71,
+      "sma200": 27.54,
+      "sma50w": 27.69,
+      "ema50w": 27.81,
+      "distanceTo200dPct": -2.62,
+      "distanceToUpperBandPct": -3.56
     },
     {
       "ticker": "GDX",
@@ -205,13 +205,13 @@
       "subtitle": "Gold Miners",
       "name": "VanEck Gold Miners ETF",
       "status": "GREEN",
-      "price": 98.28,
-      "changePct": -7.26,
-      "sma200": 69.43,
-      "sma50w": 66.09,
-      "ema50w": 70.52,
-      "distanceTo200dPct": 41.55,
-      "distanceToUpperBandPct": 39.37
+      "price": 103.94,
+      "changePct": 5.76,
+      "sma200": 69.71,
+      "sma50w": 66.21,
+      "ema50w": 70.74,
+      "distanceTo200dPct": 49.11,
+      "distanceToUpperBandPct": 46.93
     },
     {
       "ticker": "GLDM",
@@ -224,13 +224,13 @@
       "subtitle": "Gold",
       "name": "SPDR Gold MiniShares Trust",
       "status": "GREEN",
-      "price": 97.25,
-      "changePct": -3.4,
-      "sma200": 76,
-      "sma50w": 73.94,
-      "ema50w": 76.07,
-      "distanceTo200dPct": 27.96,
-      "distanceToUpperBandPct": 27.84
+      "price": 99.61,
+      "changePct": 2.43,
+      "sma200": 76.17,
+      "sma50w": 73.98,
+      "ema50w": 76.16,
+      "distanceTo200dPct": 30.78,
+      "distanceToUpperBandPct": 30.78
     },
     {
       "ticker": "SIL",
@@ -243,13 +243,13 @@
       "subtitle": "Silver Miners",
       "name": "Global X Silver Miners ETF",
       "status": "GREEN",
-      "price": 96.66,
-      "changePct": -8.11,
-      "sma200": 64.99,
-      "sma50w": 61.37,
-      "ema50w": 66.81,
-      "distanceTo200dPct": 48.72,
-      "distanceToUpperBandPct": 44.67
+      "price": 101.64,
+      "changePct": 5.15,
+      "sma200": 65.3,
+      "sma50w": 61.47,
+      "ema50w": 67.01,
+      "distanceTo200dPct": 55.65,
+      "distanceToUpperBandPct": 51.68
     },
     {
       "ticker": "SLV",
@@ -262,13 +262,13 @@
       "subtitle": "Silver",
       "name": "iShares Silver Trust",
       "status": "GREEN",
-      "price": 67.73,
-      "changePct": -11.53,
-      "sma200": 45.51,
-      "sma50w": 43.13,
-      "ema50w": 48.1,
-      "distanceTo200dPct": 48.84,
-      "distanceToUpperBandPct": 40.81
+      "price": 69.72,
+      "changePct": 2.94,
+      "sma200": 45.7,
+      "sma50w": 43.17,
+      "ema50w": 48.18,
+      "distanceTo200dPct": 52.55,
+      "distanceToUpperBandPct": 44.71
     },
     {
       "ticker": "SRUUF",
@@ -281,13 +281,13 @@
       "subtitle": "Uranium",
       "name": "Sprott Physical Uranium Trust",
       "status": "GREEN",
-      "price": 23.95,
-      "changePct": 10.62,
-      "sma200": 17.66,
-      "sma50w": 17.34,
-      "ema50w": 18.39,
-      "distanceTo200dPct": 35.59,
-      "distanceToUpperBandPct": 30.24
+      "price": 21.04,
+      "changePct": -12.15,
+      "sma200": 17.7,
+      "sma50w": 17.28,
+      "ema50w": 18.28,
+      "distanceTo200dPct": 18.88,
+      "distanceToUpperBandPct": 15.13
     },
     {
       "ticker": "Bitcoin",
@@ -298,13 +298,13 @@
       "subtitle": "FBTC",
       "name": "Fidelity Wise Origin Bitcoin Fund",
       "status": "RED",
-      "price": 77.55,
-      "changePct": -0.36,
-      "sma200": 90.78,
-      "sma50w": 87.91,
-      "ema50w": 84.41,
-      "distanceTo200dPct": -14.57,
-      "distanceToUpperBandPct": -11.79
+      "price": 59.89,
+      "changePct": -22.77,
+      "sma200": 90.74,
+      "sma50w": 87.56,
+      "ema50w": 83.71,
+      "distanceTo200dPct": -34,
+      "distanceToUpperBandPct": -31.6
     },
     {
       "ticker": "Ethereum",
@@ -315,13 +315,13 @@
       "subtitle": "FETH",
       "name": "Fidelity Ethereum Fund",
       "status": "RED",
-      "price": 30.01,
-      "changePct": 2.53,
-      "sma200": 32.29,
-      "sma50w": 30.49,
-      "ema50w": 32.27,
-      "distanceTo200dPct": -7.05,
-      "distanceToUpperBandPct": -7.01
+      "price": 20.4,
+      "changePct": -32.02,
+      "sma200": 32.32,
+      "sma50w": 30.3,
+      "ema50w": 31.9,
+      "distanceTo200dPct": -36.87,
+      "distanceToUpperBandPct": -36.04
     }
   ],
   "health": {

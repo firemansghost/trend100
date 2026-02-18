@@ -62,8 +62,8 @@ function main() {
     shockByDate.set(s.date, s);
   }
 
-  const allDates = new Set([...gatesByDate.keys(), ...shockByDate.keys()]);
-  const dates = [...allDates].sort();
+  const lastComputedShockDate = [...shockRaw].reverse().find((s) => s.shockRaw != null)?.date ?? null;
+  const dates = [...shockByDate.keys()].sort();
 
   const points: GreenBarPoint[] = dates.map((date) => {
     const gate = gatesByDate.get(date);
@@ -106,7 +106,7 @@ function main() {
 
   console.log(`\n✅ Wrote ${points.length} points to public/turbulence.greenbar.json`);
   console.log(`   Threshold: shockZ >= ${threshold}`);
-  console.log(`   Last date: ${last?.date ?? 'N/A'}`);
+  console.log(`   Last date: ${last?.date ?? 'N/A'} (aligned to last computed shock: ${lastComputedShockDate ?? 'N/A'})`);
   console.log(`   Green bars: ${countGreenBars} all-time, ${countGreenBarsLast365} last 365d`);
   console.log(`   Last green bar: ${lastGreenBar?.date ?? 'none'}`);
 }

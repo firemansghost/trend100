@@ -340,6 +340,98 @@ function printTurbulenceGatesStats(): boolean {
   }
 }
 
+interface TurbulenceShockPoint {
+  date: string;
+  nAssets: number;
+  nPairs: number;
+  shockRaw: number | null;
+  shockZ: number | null;
+}
+
+function printTurbulenceShockStats(): boolean {
+  const filePath = join(PUBLIC_DIR, 'turbulence.shock.json');
+  if (!existsSync(filePath)) {
+    console.error('  ❌ turbulence.shock.json: File not found');
+    return false;
+  }
+
+  try {
+    const content = readFileSync(filePath, 'utf-8');
+    const points = JSON.parse(content) as unknown;
+    if (!Array.isArray(points)) {
+      console.error('  ❌ turbulence.shock.json: Not an array');
+      return false;
+    }
+
+    const arr = points as TurbulenceShockPoint[];
+    const minPoints = 250;
+    const minPointsFallback = 100;
+    if (arr.length < minPointsFallback) {
+      console.error(`  ❌ turbulence.shock.json: Too few points (${arr.length}, need >= ${minPointsFallback})`);
+      return false;
+    }
+    if (arr.length < minPoints) {
+      console.warn(`  ⚠️  turbulence.shock.json: ${arr.length} points (prefer >= ${minPoints})`);
+    }
+
+    for (let i = 1; i < arr.length; i++) {
+      if (arr[i]!.date <= arr[i - 1]!.date) {
+        console.error(`  ❌ turbulence.shock.json: Not sorted ascending (${arr[i - 1]!.date} vs ${arr[i]!.date})`);
+        return false;
+      }
+    }
+
+    const lastDate = arr[arr.length - 1]!.date;
+    const today = new Date().toISOString().split('T')[0]!;
+    const lastDateObj = new Date(lastDate);
+    const todayObj = new Date(today);
+    const daysSinceLast = Math.floor((todayObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceLast > 7) {
+      console.error(`  ❌ turbulence.shock.json: Stale (last date ${lastDate} is ${daysSinceLast} days ago, max 7)`);
+      return false;
+    }
+
+    for (const p of arr) {
+      if (typeof p.date !== 'string' || typeof p.nAssets !== 'number' || typeof p.nPairs !== 'number') {
+        console.error(`  ❌ turbulence.shock.json: Missing or invalid keys at ${p.date}`);
+        return false;
+      }
+      if (p.shockRaw != null && p.nPairs !== (p.nAssets * (p.nAssets - 1)) / 2) {
+        console.error(`  ❌ turbulence.shock.json: nPairs inconsistent with nAssets at ${p.date} (nPairs=${p.nPairs}, expected=${(p.nAssets * (p.nAssets - 1)) / 2})`);
+        return false;
+      }
+    }
+
+    const hasShockRaw = arr.some((p) => p.shockRaw != null);
+    const hasShockZ = arr.some((p) => p.shockZ != null);
+    if (!hasShockRaw) {
+      console.error('  ❌ turbulence.shock.json: No non-null shockRaw (compute broken or minAssets not met)');
+      return false;
+    }
+    if (!hasShockZ && arr.length >= 360) {
+      console.warn('  ⚠️  turbulence.shock.json: No non-null shockZ (insufficient trailing window?)');
+    }
+
+    const nullRawCount = arr.filter((p) => p.shockRaw === null).length;
+    const nullZCount = arr.filter((p) => p.shockZ === null).length;
+    const pctNullRaw = arr.length > 0 ? (nullRawCount / arr.length) * 100 : 0;
+    const pctNullZ = arr.length > 0 ? (nullZCount / arr.length) * 100 : 0;
+    if (pctNullRaw > 50 || pctNullZ > 80) {
+      console.warn(`  ⚠️  turbulence.shock.json: High nulls (shockRaw: ${pctNullRaw.toFixed(1)}%, shockZ: ${pctNullZ.toFixed(1)}%) - check minAssets/windows`);
+    }
+
+    const first = arr[0]!.date;
+    const last = arr[arr.length - 1]!.date;
+    const lastP = arr[arr.length - 1]!;
+    console.log(`  turbulence.shock.json: ${arr.length} points (${first} to ${last})`);
+    console.log(`    Last: nAssets=${lastP.nAssets}, nPairs=${lastP.nPairs}, shockRaw=${lastP.shockRaw ?? 'null'}, shockZ=${lastP.shockZ ?? 'null'}`);
+    return true;
+  } catch (error) {
+    console.error(`  turbulence.shock.json: Error - ${error}`);
+    return false;
+  }
+}
+
 /**
  * Main function
  */
@@ -406,6 +498,13 @@ function main() {
   const gatesOk = printTurbulenceGatesStats();
   if (!gatesOk) {
     console.error('\n❌ Validation failed: turbulence.gates.json invalid or stale');
+    process.exit(1);
+  }
+
+  console.log('\nTurbulence Shock:');
+  const shockOk = printTurbulenceShockStats();
+  if (!shockOk) {
+    console.error('\n❌ Validation failed: turbulence.shock.json invalid or stale');
     process.exit(1);
   }
   

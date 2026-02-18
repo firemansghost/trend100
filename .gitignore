@@ -41,6 +41,7 @@ yarn-error.log*
 
 # Generated artifacts (CI builds these; do not commit)
 public/turbulence.gates.json
+public/turbulence.shock.json
 
 # Note: data/marketstack/ is committed to persist cache between GitHub Actions runs
 # Metadata about inception-limited symbols (can be regenerated)

@@ -41,7 +41,7 @@
 - Logs clear messages for inception-limited symbols: `"ℹ️ <SYMBOL> cannot extend earlier than <date> (provider limit/inception)"`
 
 ### CI pipeline checks
-- **Artifact validation:** CI must pass `pnpm update:snapshots && pnpm update:turbulence-gates && pnpm verify:artifacts` before deploy (vercel-prebuilt-prod.yml on push; daily-artifacts-deploy.yml on schedule)
+- **Artifact validation:** CI must pass `pnpm update:snapshots && pnpm update:turbulence-gates && pnpm update:turbulence-shock && pnpm verify:artifacts` before deploy (vercel-prebuilt-prod.yml on push; daily-artifacts-deploy.yml on schedule)
 - **FRED_API_KEY:** Required secret for turbulence gates generation; must be set in GitHub Actions secrets for both deploy workflows
 - **Daily deploy:** `daily-artifacts-deploy.yml` runs Mon–Fri 22:15 UTC; must pass update:snapshots + verify:artifacts before deploying
 - **Production smoke checks:** After deploy, key artifact endpoints should return 200:
@@ -55,6 +55,14 @@
   - Last point date within 7 calendar days (fails if stale to prevent stale deploys)
   - Null rules: if `spx` or `spx50dma` is null, `spxAbove50dma` must be null; if `vix` is null, `vixBelow25` must be null
   - At least one non-null `spx50dma` (ensures compute is not broken)
+- **Turbulence shock:** Validates `public/turbulence.shock.json`:
+  - File exists, is an array, ≥100 points (prefer ≥250)
+  - Sorted ascending by date
+  - Last point date within 7 calendar days (fails if stale)
+  - Required keys: date, nAssets, nPairs, shockRaw, shockZ
+  - nPairs = nAssets*(nAssets-1)/2 when shockRaw is non-null
+  - At least one non-null shockRaw; at least one non-null shockZ (if enough history)
+  - Warns on high nulls (minAssets/windows)
 - EOD cache spans align with retention target (`MARKETSTACK_CACHE_DAYS`, default: 2300 calendar days)
 - Inception-limited tickers show `"ℹ️ (limited history: inception)"` instead of `"⚠️ (needs extension)"`
 - Health-history spans remain consistent (no unexpected shrinkage)

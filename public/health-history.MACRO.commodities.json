@@ -31778,5 +31778,25 @@
     "eligibleCount": 3,
     "ineligibleCount": 0,
     "missingCount": 0
+  },
+  {
+    "date": "2026-02-17",
+    "greenPct": 66.7,
+    "yellowPct": 0,
+    "redPct": 33.3,
+    "regimeLabel": "TRANSITION",
+    "diffusionPct": 0,
+    "diffusionCount": 0,
+    "diffusionTotalCompared": 3,
+    "pctAboveUpperBand": 66.7,
+    "medianDistanceAboveUpperBandPct": 6.2,
+    "stretch200MedianPct": 4.69,
+    "heatScore": 43,
+    "knownCount": 3,
+    "unknownCount": 0,
+    "totalTickers": 3,
+    "eligibleCount": 3,
+    "ineligibleCount": 0,
+    "missingCount": 0
   }
 ]

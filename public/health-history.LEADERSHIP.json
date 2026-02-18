@@ -27113,5 +27113,22 @@
     "knownCount": 100,
     "unknownCount": 0,
     "totalTickers": 100
+  },
+  {
+    "date": "2026-02-17",
+    "greenPct": 64,
+    "yellowPct": 1,
+    "redPct": 35,
+    "regimeLabel": "TRANSITION",
+    "diffusionPct": 6,
+    "diffusionCount": 6,
+    "diffusionTotalCompared": 100,
+    "pctAboveUpperBand": 68,
+    "medianDistanceAboveUpperBandPct": 12.4,
+    "stretch200MedianPct": 6.695,
+    "heatScore": 45,
+    "knownCount": 100,
+    "unknownCount": 0,
+    "totalTickers": 100
   }
 ]

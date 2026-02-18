@@ -273,6 +273,23 @@ export function Trend100Dashboard({
     return false;
   }, [filteredHistory, firstValidPoint]);
 
+  // History coverage stats for incomplete series (PR7)
+  const historyCoverage = useMemo(() => {
+    const totalPoints = filteredHistory.length;
+    const validPoints = filteredHistory.filter((p) => p.regimeLabel !== 'UNKNOWN').length;
+    const unknownPoints = totalPoints - validPoints;
+    const firstValidDateString = firstValidPoint?.date ?? null;
+    const showCoverage =
+      totalPoints > 0 && (unknownPoints > 0 || validPoints === 0);
+    return {
+      totalPoints,
+      validPoints,
+      unknownPoints,
+      firstValidDateString,
+      showCoverage,
+    };
+  }, [filteredHistory, firstValidPoint]);
+
   const metricConfig = useMemo(() => {
     switch (metric) {
       case 'health':
@@ -482,6 +499,13 @@ export function Trend100Dashboard({
           {hasMissingHistoryRegion && (
             <p className="text-xs text-slate-400 mt-1 mb-2">
               Shaded region = insufficient history.
+            </p>
+          )}
+          {historyCoverage.showCoverage && (
+            <p className="text-xs text-slate-400 mt-1 mb-2">
+              {historyCoverage.validPoints > 0
+                ? `History coverage: ${historyCoverage.validPoints}/${historyCoverage.totalPoints} days (first valid: ${historyCoverage.firstValidDateString}).`
+                : `History coverage: 0/${historyCoverage.totalPoints} days (no valid history in range).`}
             </p>
           )}
           <HealthHistoryChart

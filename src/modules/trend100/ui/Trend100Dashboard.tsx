@@ -91,6 +91,7 @@ export function Trend100Dashboard({
   const [showDiffusion, setShowDiffusion] = useState(false);
   const [showMetricHelp, setShowMetricHelp] = useState(false);
   const [showMetricHint, setShowMetricHint] = useState(false);
+  const [showTurbulenceExplainer, setShowTurbulenceExplainer] = useState(false);
 
   useEffect(() => {
     // One-time hint for metric discoverability (client-only)
@@ -516,7 +517,48 @@ export function Trend100Dashboard({
                   '—'
                 )}
               </div>
+              <button
+                type="button"
+                onClick={() => setShowTurbulenceExplainer((v) => !v)}
+                aria-expanded={showTurbulenceExplainer}
+                aria-controls="turbulence-explainer-panel"
+                aria-label="What is Turbulence / Green Bar?"
+                className="mt-1 text-slate-500 hover:text-slate-300 underline focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1 focus:ring-offset-zinc-950 rounded"
+              >
+                What is this?
+              </button>
             </div>
+            {showTurbulenceExplainer && (
+              <div
+                id="turbulence-explainer-panel"
+                role="region"
+                aria-label="Turbulence explainer"
+                className="mt-2 rounded border border-zinc-800 bg-zinc-900/80 p-3 text-xs text-slate-400 space-y-2"
+              >
+                <div className="font-semibold text-slate-300">
+                  Turbulence / &quot;Green Bar&quot;
+                </div>
+                <p>
+                  A &quot;Green Bar&quot; flags hidden internal stress: correlations between assets are shifting fast even if the index still looks fine.
+                </p>
+                <p>
+                  It triggers when ALL 3 align: (1) ShockZ ≥ {SHOCK_Z_THRESHOLD}, (2) SPX above its 50-day average, (3) VIX below 25.
+                </p>
+                <p>
+                  ShockZ is computed from a proxy correlation matrix (sector ETFs). Gates come from FRED (SP500 + VIXCLS).
+                </p>
+                <p>
+                  PENDING means Shock updated, but the latest FRED gate day hasn&apos;t posted yet (often 0–1 day lag).
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowTurbulenceExplainer(false)}
+                  className="text-slate-500 hover:text-slate-300 underline focus:outline-none focus:ring-2 focus:ring-zinc-500 rounded"
+                >
+                  Close
+                </button>
+              </div>
+            )}
           </div>
         );
       })()}

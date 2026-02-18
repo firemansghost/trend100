@@ -23,6 +23,18 @@ import { SectionPills } from './SectionPills';
 import type { TrendDeckSection } from '../types';
 import { toSectionKey } from '../data/sectionKey';
 
+/** Format boolean for display: "true"/"false"/"—" when null. */
+function fmtBool(b: boolean | null): string {
+  if (b === null) return '—';
+  return b ? 'true' : 'false';
+}
+
+/** Format number for display: 2 decimals or "—" when null. */
+function fmtNum(n: number | null): string {
+  if (n == null) return '—';
+  return n.toFixed(2);
+}
+
 /** Resolve section id from URL sectionKey (e.g. quality-lowvol -> Quality/LowVol section id). */
 function sectionIdFromSectionKey(sections: TrendDeckSection[], sectionKey: string): string | null {
   const key = sectionKey.toLowerCase().trim();
@@ -258,6 +270,15 @@ export function Trend100Dashboard({
     return filtered.filter((point) => point.date >= cutoffDateStr);
   }, [history, timeframe, snapshot.asOfDate]);
 
+  // Chart date range (for green bar legend visibility)
+  const chartMinDate = filteredHistory[0]?.date ?? null;
+  const chartMaxDate =
+    filteredHistory.length > 0 ? filteredHistory[filteredHistory.length - 1]!.date : null;
+  const hasGreenBarInChartRange = useMemo(() => {
+    if (!chartMinDate || !chartMaxDate || greenBarDates.size === 0) return false;
+    return [...greenBarDates].some((d) => d >= chartMinDate && d <= chartMaxDate);
+  }, [chartMinDate, chartMaxDate, greenBarDates]);
+
   // Find first valid point in displayed range (for notice)
   const firstValidPoint = useMemo(() => {
     for (const point of filteredHistory) {
@@ -385,6 +406,24 @@ export function Trend100Dashboard({
                 last.vixBelow25 === true
               ? 'ELEVATED'
               : 'NORMAL';
+
+        // PENDING: compute shockDate, gatesDate, lagDays for display
+        const shockDate = last.date;
+        const gatesDate = (() => {
+          for (let i = greenbarData!.length - 1; i >= 0; i--) {
+            const p = greenbarData![i]!;
+            if (p.spxAbove50dma != null && p.vixBelow25 != null) return p.date;
+          }
+          return null;
+        })();
+        const lagDays =
+          shockDate && gatesDate
+            ? Math.round(
+                (new Date(shockDate).getTime() - new Date(gatesDate).getTime()) /
+                  (1000 * 60 * 60 * 24)
+              )
+            : null;
+
         return (
           <div className="container mx-auto px-4 py-2 border-b border-zinc-800">
             <div className="text-xs text-slate-400">
@@ -403,14 +442,22 @@ export function Trend100Dashboard({
                 {status === 'PENDING' ? 'PENDING (waiting on FRED gates)' : status}
               </span>
               <span className="ml-3 text-slate-500">
-                ShockZ={last.shockZ != null ? last.shockZ.toFixed(2) : 'null'}{' '}
-                SPX&gt;50DMA={String(last.spxAbove50dma ?? 'null')}{' '}
-                VIX&lt;25={String(last.vixBelow25 ?? 'null')}
+                ShockZ={fmtNum(last.shockZ)}{' '}
+                SPX&gt;50DMA={fmtBool(last.spxAbove50dma)}{' '}
+                VIX&lt;25={fmtBool(last.vixBelow25)}
               </span>
             </div>
-            {gatesMissing && last.date && (
-              <div className="text-xs text-slate-500 mt-0.5">
-                Shock updated for {last.date}. Gates lag by 0–1 days depending on FRED update timing.
+            {gatesMissing && shockDate && (
+              <div className="text-xs text-slate-500 mt-0.5 space-y-0.5">
+                {last.shockZ != null && (
+                  <div>
+                    Shock: {shockDate} (z={fmtNum(last.shockZ)}){' '}
+                    {gatesDate != null
+                      ? `| Gates: ${gatesDate} (lag ${lagDays}d)`
+                      : '| Gates: pending'}
+                  </div>
+                )}
+                <div>Gates lag by 0–1 days depending on FRED update timing.</div>
               </div>
             )}
           </div>
@@ -562,6 +609,11 @@ export function Trend100Dashboard({
               {historyCoverage.validPoints > 0
                 ? `History coverage: ${historyCoverage.validPoints}/${historyCoverage.totalPoints} days (first valid: ${historyCoverage.firstValidDateString}).`
                 : `History coverage: 0/${historyCoverage.totalPoints} days (no valid history in range).`}
+            </p>
+          )}
+          {hasGreenBarInChartRange && (
+            <p className="text-xs text-slate-400 mt-1 mb-2">
+              Vertical bands = Green Bar events.
             </p>
           )}
           <HealthHistoryChart

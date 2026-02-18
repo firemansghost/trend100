@@ -432,6 +432,89 @@ function printTurbulenceShockStats(): boolean {
   }
 }
 
+interface TurbulenceGreenBarPoint {
+  date: string;
+  shockZ: number | null;
+  shockRaw: number | null;
+  spxAbove50dma: boolean | null;
+  vixBelow25: boolean | null;
+  isGreenBar: boolean;
+}
+
+function printTurbulenceGreenBarStats(): boolean {
+  const filePath = join(PUBLIC_DIR, 'turbulence.greenbar.json');
+  if (!existsSync(filePath)) {
+    console.error('  ❌ turbulence.greenbar.json: File not found');
+    return false;
+  }
+
+  try {
+    const content = readFileSync(filePath, 'utf-8');
+    const points = JSON.parse(content) as unknown;
+    if (!Array.isArray(points)) {
+      console.error('  ❌ turbulence.greenbar.json: Not an array');
+      return false;
+    }
+
+    const arr = points as TurbulenceGreenBarPoint[];
+    if (arr.length < 250) {
+      console.error(`  ❌ turbulence.greenbar.json: Too few points (${arr.length}, need >= 250)`);
+      return false;
+    }
+
+    for (let i = 1; i < arr.length; i++) {
+      if (arr[i]!.date <= arr[i - 1]!.date) {
+        console.error(`  ❌ turbulence.greenbar.json: Not sorted ascending (${arr[i - 1]!.date} vs ${arr[i]!.date})`);
+        return false;
+      }
+    }
+
+    const lastDate = arr[arr.length - 1]!.date;
+    const today = new Date().toISOString().split('T')[0]!;
+    const lastDateObj = new Date(lastDate);
+    const todayObj = new Date(today);
+    const daysSinceLast = Math.floor((todayObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceLast > 7) {
+      console.error(`  ❌ turbulence.greenbar.json: Stale (last date ${lastDate} is ${daysSinceLast} days ago, max 7)`);
+      return false;
+    }
+
+    for (const p of arr) {
+      if (typeof p.isGreenBar !== 'boolean') {
+        console.error(`  ❌ turbulence.greenbar.json: isGreenBar must be boolean at ${p.date}`);
+        return false;
+      }
+    }
+
+    const hasValidRow = arr.some(
+      (p) =>
+        p.shockZ != null &&
+        (p.spxAbove50dma != null || p.vixBelow25 != null)
+    );
+    if (!hasValidRow) {
+      console.error('  ❌ turbulence.greenbar.json: No row with shockZ and gates non-null');
+      return false;
+    }
+
+    const countGreenBars = arr.filter((p) => p.isGreenBar).length;
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0]!;
+    const countGreenBarsLast365 = arr.filter((p) => p.isGreenBar && p.date >= oneYearAgoStr).length;
+    const lastGreenBar = [...arr].reverse().find((p) => p.isGreenBar);
+    const lastP = arr[arr.length - 1]!;
+
+    console.log(`  turbulence.greenbar.json: ${arr.length} points (${arr[0]!.date} to ${lastP.date})`);
+    console.log(`    Green bars: ${countGreenBars} all-time, ${countGreenBarsLast365} last 365d`);
+    console.log(`    Last green bar: ${lastGreenBar?.date ?? 'none'}`);
+    console.log(`    Last: shockZ=${lastP.shockZ ?? 'null'}, spxAbove50dma=${lastP.spxAbove50dma ?? 'null'}, vixBelow25=${lastP.vixBelow25 ?? 'null'}, isGreenBar=${lastP.isGreenBar}`);
+    return true;
+  } catch (error) {
+    console.error(`  turbulence.greenbar.json: Error - ${error}`);
+    return false;
+  }
+}
+
 /**
  * Main function
  */
@@ -505,6 +588,13 @@ function main() {
   const shockOk = printTurbulenceShockStats();
   if (!shockOk) {
     console.error('\n❌ Validation failed: turbulence.shock.json invalid or stale');
+    process.exit(1);
+  }
+
+  console.log('\nTurbulence Green Bar:');
+  const greenBarOk = printTurbulenceGreenBarStats();
+  if (!greenBarOk) {
+    console.error('\n❌ Validation failed: turbulence.greenbar.json invalid or stale');
     process.exit(1);
   }
   

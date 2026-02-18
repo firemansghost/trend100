@@ -6,6 +6,7 @@
 
 'use client';
 
+import { useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -42,6 +43,8 @@ interface HealthHistoryChartProps {
   metricKey?: MetricKey;
   metricLabel?: string;
   yDomain?: [number | 'auto' | 'dataMin' | 'dataMax', number | 'auto' | 'dataMin' | 'dataMax'];
+  /** Dates where Turbulence Green Bar is active (for subtle overlay) */
+  greenBarDates?: Set<string>;
 }
 
 /**
@@ -120,6 +123,7 @@ export function HealthHistoryChart({
   metricKey = 'greenPct',
   metricLabel = 'Health (Green %)',
   yDomain = [0, 100],
+  greenBarDates,
 }: HealthHistoryChartProps) {
   // Determine if we should use compact date format for labels (for longer ranges)
   const isLongRange = data.length > 180;
@@ -142,6 +146,21 @@ export function HealthHistoryChart({
   });
 
   const isEmpty = chartData.length === 0;
+
+  // Green bar overlay: light vertical bands on dates where Green Bar is active
+  const greenBarAreas = useMemo(() => {
+    if (!greenBarDates || greenBarDates.size === 0) return [];
+    const chartDateSet = new Set(chartData.map((p) => p.date));
+    const result: Array<{ x1: number; x2: number }> = [];
+    for (const date of greenBarDates) {
+      if (!chartDateSet.has(date)) continue;
+      const d = new Date(date);
+      const x1 = d.getTime();
+      const x2 = x1 + 86400000 - 1;
+      result.push({ x1, x2 });
+    }
+    return result;
+  }, [chartData, greenBarDates]);
 
   // Shaded "missing history" region: from chart start until first non-UNKNOWN point
   const minTs = chartData[0]?.dateTs;
@@ -205,6 +224,16 @@ export function HealthHistoryChart({
               ifOverflow="extendDomain"
             />
           )}
+          {greenBarAreas.map((area, i) => (
+            <ReferenceArea
+              key={`gb-${i}`}
+              x1={area.x1}
+              x2={area.x2}
+              fill="rgba(34, 197, 94, 0.08)"
+              strokeOpacity={0}
+              ifOverflow="extendDomain"
+            />
+          ))}
           <Line
             type="monotone"
             dataKey={metricKey}

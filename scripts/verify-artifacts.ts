@@ -412,6 +412,16 @@ function printTurbulenceShockStats(): boolean {
       console.warn('  ⚠️  turbulence.shock.json: No non-null shockZ (insufficient trailing window?)');
     }
 
+    const lastRowWith6Plus = [...arr].reverse().find((p) => p.nAssets >= 6);
+    if (lastRowWith6Plus) {
+      if (lastRowWith6Plus.shockRaw === null) {
+        console.error(`  ❌ turbulence.shock.json: Last row with nAssets>=6 (${lastRowWith6Plus.date}) has null shockRaw (partial coverage should compute)`);
+        return false;
+      }
+    } else {
+      console.warn('  ⚠️  turbulence.shock.json: No row has nAssets>=6 (insufficient data coverage)');
+    }
+
     const nullRawCount = arr.filter((p) => p.shockRaw === null).length;
     const nullZCount = arr.filter((p) => p.shockZ === null).length;
     const pctNullRaw = arr.length > 0 ? (nullRawCount / arr.length) * 100 : 0;

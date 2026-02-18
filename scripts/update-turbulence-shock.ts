@@ -23,7 +23,9 @@ const SHOCK_UNIVERSE_FALLBACK = [
 const SHORT_WINDOW = 20;
 const LONG_WINDOW = 60;
 const TRAILING_Z_WINDOW = 252;
-const MIN_ASSETS = 8;
+const MIN_ASSETS_FLOOR = 6;
+const MIN_ASSETS_TARGET = 8;
+const RECENT_WINDOW_DAYS = 7;
 const MIN_Z_POINTS = 100;
 
 interface ShockPoint {
@@ -52,11 +54,17 @@ function getShockUniverse(): string[] {
   try {
     const deck = getDeck('US_SECTORS');
     const symbols = deck.universe.map((item) => item.providerTicker ?? item.ticker);
-    if (symbols.length >= MIN_ASSETS) return symbols;
+    if (symbols.length >= MIN_ASSETS_FLOOR) return symbols;
   } catch {
     // fallback
   }
   return SHOCK_UNIVERSE_FALLBACK;
+}
+
+function daysBetween(a: string, b: string): number {
+  return Math.floor(
+    (new Date(b).getTime() - new Date(a).getTime()) / (1000 * 60 * 60 * 24)
+  );
 }
 
 function computeCorrelationMatrix(returnsMatrix: number[][]): number[][] {
@@ -129,11 +137,36 @@ function main() {
     }
   }
 
-  if (barsBySymbol.size < MIN_ASSETS) {
+  if (barsBySymbol.size < MIN_ASSETS_FLOOR) {
     throw new Error(
-      `Need at least ${MIN_ASSETS} symbols with EOD cache; found ${barsBySymbol.size}. Run update:snapshots first.`
+      `Need at least ${MIN_ASSETS_FLOOR} symbols with EOD cache; found ${barsBySymbol.size}. Run update:snapshots first.`
     );
   }
+
+  const maxDate = [...barsBySymbol.values()]
+    .map((bars) => bars[bars.length - 1]!.date)
+    .sort()
+    .pop()!;
+  const recentUniverse = symbols.filter((sym) => {
+    const bars = barsBySymbol.get(sym);
+    if (!bars || bars.length === 0) return false;
+    const lastBarDate = bars[bars.length - 1]!.date;
+    return Math.abs(daysBetween(lastBarDate, maxDate)) <= RECENT_WINDOW_DAYS;
+  });
+  const minAssetsEffective = Math.max(
+    MIN_ASSETS_FLOOR,
+    Math.min(MIN_ASSETS_TARGET, recentUniverse.length)
+  );
+
+  console.log('\nSymbol coverage (recent universe):');
+  for (const sym of symbols) {
+    const bars = barsBySymbol.get(sym);
+    const lastBarDate = bars && bars.length > 0 ? bars[bars.length - 1]!.date : 'N/A';
+    const included = recentUniverse.includes(sym);
+    console.log(`  ${sym} -> ${lastBarDate} -> ${included ? 'included' : 'excluded'}`);
+  }
+  console.log(`\nRecent universe (${recentUniverse.length}): ${recentUniverse.join(', ')}`);
+  console.log(`minAssetsEffective: ${minAssetsEffective}`);
 
   const allDates = new Set<string>();
   for (const bars of barsBySymbol.values()) {
@@ -144,7 +177,8 @@ function main() {
   const dates = [...allDates].sort();
 
   const closeByDate = new Map<string, Map<string, number>>();
-  for (const [sym, bars] of barsBySymbol) {
+  for (const sym of recentUniverse) {
+    const bars = barsBySymbol.get(sym)!;
     for (const b of bars) {
       if (b.date < start) continue;
       let m = closeByDate.get(b.date);
@@ -160,7 +194,8 @@ function main() {
   dates.forEach((d, i) => dateIndex.set(d, i));
 
   const returnsBySymbol = new Map<string, (number | null)[]>();
-  for (const [sym, bars] of barsBySymbol) {
+  for (const sym of recentUniverse) {
+    const bars = barsBySymbol.get(sym)!;
     const arr: (number | null)[] = new Array(dates.length).fill(null);
     const closeMap = new Map(bars.map((b) => [b.date, b.close]));
     for (let i = 0; i < dates.length; i++) {
@@ -187,7 +222,7 @@ function main() {
     const longStart = idx - LONG_WINDOW + 1;
 
     const validSymbols: string[] = [];
-    for (const sym of symbols) {
+    for (const sym of recentUniverse) {
       const rets = returnsBySymbol.get(sym);
       if (!rets) continue;
       let shortCount = 0;
@@ -203,7 +238,8 @@ function main() {
       }
     }
 
-    if (validSymbols.length < MIN_ASSETS) {
+    const minForDate = Math.max(MIN_ASSETS_FLOOR, Math.min(MIN_ASSETS_TARGET, validSymbols.length));
+    if (validSymbols.length < minForDate) {
       points.push({
         date,
         nAssets: validSymbols.length,

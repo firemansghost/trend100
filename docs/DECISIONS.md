@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-02-19 — (Ops) CI-generated turbulence gates artifact from FRED
+**Choice:** Added `public/turbulence.gates.json` artifact built from FRED data (SP500 + VIXCLS). The script `update-turbulence-gates.ts` fetches both series, computes SPX 50-day moving average, and outputs daily gate booleans (`spxAbove50dma`, `vixBelow25`) for Turbulence Model alignment (Jordi Visser). Artifacts are generated in CI (vercel-prebuilt-prod, daily-artifacts-deploy) before build; no runtime fetch in the deployed app. Generated JSON is not committed (ignored via .gitignore).
+
+**Why:** PR8 prerequisites for the Green Bar require SPX above 50-day MA and VIX below 25. Precomputing these gates in CI keeps the app statically deployable and avoids runtime FRED API calls. `FRED_API_KEY` is a CI-only secret; not added to Vercel env.
+
+---
+
 ### 2026-02-18 — (Ops) Scheduled daily artifacts refresh and deploy
 **Choice:** Added `daily-artifacts-deploy.yml` workflow that runs Mon–Fri at 22:15 UTC (after US market close). It generates artifacts, verifies them, and deploys prebuilt to Vercel. The live site gets fresh daily prices without requiring a git push. Legacy artifact workflows (update-snapshots, update-health-history, backfill-health-history, extend-eod-cache) are now manual-only utility workflows and do not commit artifacts.
 
@@ -13,9 +20,9 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 ---
 
 ### 2026-02-18 — (Ops) Artifacts generated in CI, deployed via Vercel prebuilt
-**Choice:** JSON artifacts (`public/snapshot.*.json`, `public/health-history.*.json`) are no longer committed to git. Instead:
+**Choice:** JSON artifacts (`public/snapshot.*.json`, `public/health-history.*.json`, `public/turbulence.gates.json`) are no longer committed to git. Instead:
 - Artifacts are generated in CI on every push to `main` (vercel-prebuilt-prod.yml) and daily via schedule (daily-artifacts-deploy.yml)
-- The pipeline runs `pnpm update:snapshots && pnpm verify:artifacts` before build
+- The pipeline runs `pnpm update:snapshots && pnpm update:turbulence-gates && pnpm verify:artifacts` before build
 - Deployment uses `vercel build --prod` followed by `vercel deploy --prebuilt --prod` so the freshly generated `/public` artifacts are included in the deployment
 
 **Why:** Keeps the repo focused on source code; avoids large generated JSON diffs and merge conflicts; ensures production always gets artifacts built from the latest data.

@@ -46,9 +46,11 @@ jobs:
           MARKETSTACK_API_KEY: ${{ secrets.MARKETSTACK_API_KEY }}
           MARKETSTACK_CACHE_DAYS: 2300
           MARKETSTACK_EXTEND_MAX_SYMBOLS: 200
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          TURBULENCE_GATES_START: "2019-10-01"
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: pnpm -s update:snapshots && pnpm -s verify:artifacts
+        run: pnpm -s update:snapshots && pnpm -s update:turbulence-gates && pnpm -s verify:artifacts
 
       - name: Pull Vercel project config
         env:

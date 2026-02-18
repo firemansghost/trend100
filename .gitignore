@@ -39,6 +39,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Generated artifacts (CI builds these; do not commit)
+public/turbulence.gates.json
+
 # Note: data/marketstack/ is committed to persist cache between GitHub Actions runs
 # Metadata about inception-limited symbols (can be regenerated)
 data/marketstack/eod/.meta/

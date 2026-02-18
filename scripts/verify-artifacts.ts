@@ -260,6 +260,86 @@ function printEodCacheStats(sampleSymbols?: string[]): void {
   }
 }
 
+interface TurbulenceGatePoint {
+  date: string;
+  spx: number | null;
+  spx50dma: number | null;
+  spxAbove50dma: boolean | null;
+  vix: number | null;
+  vixBelow25: boolean | null;
+}
+
+function printTurbulenceGatesStats(): boolean {
+  const filePath = join(PUBLIC_DIR, 'turbulence.gates.json');
+  if (!existsSync(filePath)) {
+    console.error('  ❌ turbulence.gates.json: File not found');
+    return false;
+  }
+
+  try {
+    const content = readFileSync(filePath, 'utf-8');
+    const points = JSON.parse(content) as unknown;
+    if (!Array.isArray(points)) {
+      console.error('  ❌ turbulence.gates.json: Not an array');
+      return false;
+    }
+
+    const arr = points as TurbulenceGatePoint[];
+    if (arr.length < 250) {
+      console.error(`  ❌ turbulence.gates.json: Too few points (${arr.length}, need >= 250)`);
+      return false;
+    }
+
+    for (let i = 1; i < arr.length; i++) {
+      if (arr[i]!.date <= arr[i - 1]!.date) {
+        console.error(`  ❌ turbulence.gates.json: Not sorted ascending (${arr[i - 1]!.date} vs ${arr[i]!.date})`);
+        return false;
+      }
+    }
+
+    const lastDate = arr[arr.length - 1]!.date;
+    const today = new Date().toISOString().split('T')[0]!;
+    const lastDateObj = new Date(lastDate);
+    const todayObj = new Date(today);
+    const daysSinceLast = Math.floor((todayObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceLast > 7) {
+      console.error(`  ❌ turbulence.gates.json: Stale (last date ${lastDate} is ${daysSinceLast} days ago, max 7)`);
+      return false;
+    }
+
+    let hasSpx50dma = false;
+    for (const p of arr) {
+      if (p.spx === null && p.spxAbove50dma !== null) {
+        console.error(`  ❌ turbulence.gates.json: spx null but spxAbove50dma non-null at ${p.date}`);
+        return false;
+      }
+      if (p.spx50dma === null && p.spxAbove50dma !== null) {
+        console.error(`  ❌ turbulence.gates.json: spx50dma null but spxAbove50dma non-null at ${p.date}`);
+        return false;
+      }
+      if (p.vix === null && p.vixBelow25 !== null) {
+        console.error(`  ❌ turbulence.gates.json: vix null but vixBelow25 non-null at ${p.date}`);
+        return false;
+      }
+      if (p.spx50dma !== null) hasSpx50dma = true;
+    }
+    if (!hasSpx50dma) {
+      console.error('  ❌ turbulence.gates.json: No non-null spx50dma (compute broken)');
+      return false;
+    }
+
+    const first = arr[0]!.date;
+    const last = arr[arr.length - 1]!.date;
+    const lastP = arr[arr.length - 1]!;
+    console.log(`  turbulence.gates.json: ${arr.length} points (${first} to ${last})`);
+    console.log(`    Last: spx=${lastP.spx ?? 'null'}, spx50dma=${lastP.spx50dma ?? 'null'}, spxAbove50dma=${lastP.spxAbove50dma ?? 'null'}, vix=${lastP.vix ?? 'null'}, vixBelow25=${lastP.vixBelow25 ?? 'null'}`);
+    return true;
+  } catch (error) {
+    console.error(`  turbulence.gates.json: Error - ${error}`);
+    return false;
+  }
+}
+
 /**
  * Main function
  */
@@ -319,6 +399,13 @@ function main() {
   
   if (validationFailed) {
     console.error('\n❌ Validation failed: weekend or partial-schema points found in health history');
+    process.exit(1);
+  }
+
+  console.log('\nTurbulence Gates:');
+  const gatesOk = printTurbulenceGatesStats();
+  if (!gatesOk) {
+    console.error('\n❌ Validation failed: turbulence.gates.json invalid or stale');
     process.exit(1);
   }
   

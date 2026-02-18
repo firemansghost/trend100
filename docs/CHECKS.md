@@ -41,13 +41,20 @@
 - Logs clear messages for inception-limited symbols: `"ℹ️ <SYMBOL> cannot extend earlier than <date> (provider limit/inception)"`
 
 ### CI pipeline checks
-- **Artifact validation:** CI must pass `pnpm update:snapshots && pnpm verify:artifacts` before deploy (vercel-prebuilt-prod.yml on push; daily-artifacts-deploy.yml on schedule)
+- **Artifact validation:** CI must pass `pnpm update:snapshots && pnpm update:turbulence-gates && pnpm verify:artifacts` before deploy (vercel-prebuilt-prod.yml on push; daily-artifacts-deploy.yml on schedule)
+- **FRED_API_KEY:** Required secret for turbulence gates generation; must be set in GitHub Actions secrets for both deploy workflows
 - **Daily deploy:** `daily-artifacts-deploy.yml` runs Mon–Fri 22:15 UTC; must pass update:snapshots + verify:artifacts before deploying
 - **Production smoke checks:** After deploy, key artifact endpoints should return 200:
   - https://trend100.vercel.app/snapshot.MACRO.json
   - https://trend100.vercel.app/health-history.MACRO.json
 
 ### verify:artifacts checks
+- **Turbulence gates:** Validates `public/turbulence.gates.json`:
+  - File exists, is an array, ≥250 points
+  - Sorted ascending by date
+  - Last point date within 7 calendar days (fails if stale to prevent stale deploys)
+  - Null rules: if `spx` or `spx50dma` is null, `spxAbove50dma` must be null; if `vix` is null, `vixBelow25` must be null
+  - At least one non-null `spx50dma` (ensures compute is not broken)
 - EOD cache spans align with retention target (`MARKETSTACK_CACHE_DAYS`, default: 2300 calendar days)
 - Inception-limited tickers show `"ℹ️ (limited history: inception)"` instead of `"⚠️ (needs extension)"`
 - Health-history spans remain consistent (no unexpected shrinkage)
@@ -65,6 +72,10 @@
 ### "MARKETSTACK_API_KEY environment variable is not set"
 - **Fix:** Create `.env.local` in repo root with `MARKETSTACK_API_KEY=your_key_here`
 - **Verify:** Scripts import `'./load-env'` as first import (check `scripts/*.ts` files)
+
+### "FRED_API_KEY environment variable is required"
+- **Fix:** Add `FRED_API_KEY=your_key_here` to `.env.local` for local runs; ensure `FRED_API_KEY` is set as a GitHub Actions secret for CI
+- **Use case:** Required by `update:turbulence-gates` to fetch SP500 and VIXCLS from FRED
 
 ### "Needs extension but budget exhausted"
 - **Fix:** Increase `MARKETSTACK_EXTEND_MAX_SYMBOLS` (default: 10) or run multiple times

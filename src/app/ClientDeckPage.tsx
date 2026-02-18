@@ -92,6 +92,11 @@ function ClientDeckPageContent() {
     loadSnapshot();
   }, [deckId]);
 
+  // Turbulence green bar state (optional artifact)
+  const [greenbarData, setGreenbarData] = useState<
+    Array<{ date: string; shockZ: number | null; spxAbove50dma: boolean | null; vixBelow25: boolean | null; isGreenBar: boolean }> | null
+  >(null);
+
   // History state: keep previous history visible while loading; never set to [] unless base/mock fail.
   const [history, setHistory] = useState<TrendHealthHistoryPoint[]>([]);
   const [historySource, setHistorySource] = useState<'file' | 'mock'>('mock');
@@ -155,6 +160,17 @@ function ClientDeckPageContent() {
     })();
   }, [deckId, historyVariantKey]);
 
+  // Load turbulence green bar (global, not deck-specific)
+  useEffect(() => {
+    fetch('/turbulence.greenbar.json', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (Array.isArray(data)) setGreenbarData(data);
+        else setGreenbarData(null);
+      })
+      .catch(() => setGreenbarData(null));
+  }, []);
+
   // Debug panel
   const debugPanel = debug && (
     <div className="bg-amber-900/30 border-b border-amber-700/50 px-4 py-2 text-xs font-mono text-amber-200">
@@ -204,6 +220,7 @@ function ClientDeckPageContent() {
         initialSectionKey={sectionKeyFromUrl}
         initialMetric={metricKey as any}
         historyVariantFallback={historyVariantFallback}
+        greenbarData={greenbarData}
       />
     </>
   );

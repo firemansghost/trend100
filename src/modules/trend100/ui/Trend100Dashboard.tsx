@@ -46,6 +46,8 @@ interface Trend100DashboardProps {
   initialMetric?: MetricChoice;
   /** When true, variant file was all UNKNOWN so we show base history and this banner. */
   historyVariantFallback?: boolean;
+  /** Turbulence green bar data (from /turbulence.greenbar.json). */
+  greenbarData?: Array<{ date: string; shockZ: number | null; spxAbove50dma: boolean | null; vixBelow25: boolean | null; isGreenBar: boolean }> | null;
 }
 
 export function Trend100Dashboard({
@@ -60,6 +62,7 @@ export function Trend100Dashboard({
   initialSectionKey = null,
   initialMetric = 'health',
   historyVariantFallback = false,
+  greenbarData = null,
 }: Trend100DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -211,6 +214,11 @@ export function Trend100Dashboard({
   // Then apply sorting
   const sortedTickers = sortTickers(filteredTickers, sortKey);
 
+  const greenBarDates = useMemo(() => {
+    if (!greenbarData) return new Set<string>();
+    return new Set(greenbarData.filter((p) => p.isGreenBar).map((p) => p.date));
+  }, [greenbarData]);
+
   // Filter history by timeframe and apply data-side hardening
   const filteredHistory = useMemo(() => {
     // Step 1: Filter to points <= snapshot.asOfDate (effective trading day)
@@ -360,6 +368,44 @@ export function Trend100Dashboard({
           </div>
         </div>
       )}
+
+      {/* Turbulence status (Green Bar from Jordi Visser model) */}
+      {greenbarData && greenbarData.length > 0 && (() => {
+        const THRESHOLD = 2.0;
+        const last = greenbarData[greenbarData.length - 1]!;
+        const status =
+          last.isGreenBar
+            ? 'GREEN BAR ACTIVE'
+            : last.shockZ != null &&
+                last.shockZ >= THRESHOLD * 0.75 &&
+                last.spxAbove50dma === true &&
+                last.vixBelow25 === true
+              ? 'ELEVATED'
+              : 'NORMAL';
+        return (
+          <div className="container mx-auto px-4 py-2 border-b border-zinc-800">
+            <div className="text-xs text-slate-400">
+              <span className="font-medium text-slate-300">Turbulence:</span>{' '}
+              <span
+                className={
+                  status === 'GREEN BAR ACTIVE'
+                    ? 'text-green-400 font-medium'
+                    : status === 'ELEVATED'
+                      ? 'text-amber-400'
+                      : ''
+                }
+              >
+                {status}
+              </span>
+              <span className="ml-3 text-slate-500">
+                ShockZ={last.shockZ != null ? last.shockZ.toFixed(2) : 'null'}{' '}
+                SPX&gt;50DMA={String(last.spxAbove50dma ?? 'null')}{' '}
+                VIX&lt;25={String(last.vixBelow25 ?? 'null')}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
 
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Health History Chart */}
@@ -514,6 +560,7 @@ export function Trend100Dashboard({
             metricKey={metricConfig.metricKey}
             metricLabel={metricConfig.label}
             yDomain={metricConfig.yDomain as any}
+            greenBarDates={greenBarDates}
           />
         </div>
 

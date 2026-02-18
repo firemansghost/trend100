@@ -1,27 +1,16 @@
+# Manual-only utility workflow. Does not commit artifacts. Production deploy happens via vercel-prebuilt-prod.yml / daily-artifacts-deploy.yml.
 name: Update Health History
 
 on:
-  workflow_dispatch: # Manual trigger only (Update Snapshots handles scheduled updates)
-
-# Concurrency: single-writer rule for generated artifacts
-# All workflows that commit generated JSON to main must share this group
-# cancel-in-progress: false so workflows queue instead of canceling each other
-concurrency:
-  group: trend100-cache-writer
-  cancel-in-progress: false
+  workflow_dispatch:
 
 jobs:
   update:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # Required to commit and push
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -36,85 +25,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Sync, generate, commit and push
+      - name: Generate health history
         env:
           MARKETSTACK_CACHE_DAYS: 2300
           MARKETSTACK_EXTEND_MAX_SYMBOLS: 10
           TREND100_STRICT_WARMUP: 0
           HEALTH_HISTORY_RETENTION_DAYS: 0
-        run: |
-          set -euo pipefail
-          
-          # Configure git
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          
-          # ROOT CAUSE: This workflow acts as a "writer" to main. Scheduled runs collide with
-          # other writes (another workflow run, manual dispatch, or any bot/user commit).
-          # When origin/main advances during our run, push is rejected. Rebasing a commit
-          # that modifies generated JSON is brittle because generated JSON changes in
-          # overlapping regions and cannot auto-merge cleanly, causing conflicts.
-          #
-          # SOLUTION: Instead of commit-then-rebase, use sync->generate->commit->push with
-          # retry loop. On each retry, we sync to latest origin/main, regenerate artifacts
-          # from scratch, then commit and push. This avoids JSON merge conflicts entirely.
-          
-          MAX_RETRIES=3
-          ATTEMPT=1
-          
-          while [ $ATTEMPT -le $MAX_RETRIES ]; do
-            echo "=========================================="
-            echo "Attempt $ATTEMPT/$MAX_RETRIES: syncing to origin/main..."
-            echo "=========================================="
-            
-            # Step 1: Sync to latest origin/main (clean base)
-            git fetch origin main
-            git checkout main
-            git reset --hard origin/main
-            
-            # Debug: show current state
-            echo "Current HEAD: $(git rev-parse HEAD)"
-            echo "Origin/main:  $(git rev-parse origin/main)"
-            
-            # Step 2: Regenerate artifacts from scratch
-            # IMPORTANT: Generation must be inside the loop so each retry regenerates
-            # on top of the newest origin/main. Otherwise retries are stale and will fail.
-            echo ""
-            echo "Regenerating artifacts..."
-            pnpm update:health-history
-            
-            # Step 3: Stage only the expected generated files
-            echo ""
-            echo "Staging generated files..."
-            git add public/health-history.*.json
-            
-            # Step 4: Check if there are changes
-            if [ -z "$(git diff --cached --name-only)" ]; then
-              echo "No changes to commit."
-              exit 0
-            fi
-            
-            # Step 5: Commit
-            echo ""
-            echo "Committing changes..."
-            git commit -m "chore: update health history for all decks [skip ci]"
-            
-            # Step 6: Push
-            echo ""
-            echo "Pushing to origin/main..."
-            if git push origin HEAD:main; then
-              echo ""
-              echo "✅ Push succeeded on attempt $ATTEMPT"
-              exit 0
-            fi
-            
-            # Step 7: Push failed - remote advanced, retry
-            echo ""
-            echo "⚠️  Push failed (remote moved). Retrying..."
-            ATTEMPT=$((ATTEMPT + 1))
-            echo ""
-          done
-          
-          echo ""
-          echo "❌ Push failed after $MAX_RETRIES attempts."
-          exit 1
+        run: pnpm update:health-history

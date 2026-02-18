@@ -5,6 +5,23 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-02-18 — (Ops) Scheduled daily artifacts refresh and deploy
+**Choice:** Added `daily-artifacts-deploy.yml` workflow that runs Mon–Fri at 22:15 UTC (after US market close). It generates artifacts, verifies them, and deploys prebuilt to Vercel. The live site gets fresh daily prices without requiring a git push. Legacy artifact workflows (update-snapshots, update-health-history, backfill-health-history, extend-eod-cache) are now manual-only utility workflows and do not commit artifacts.
+
+**Why:** Ensures production data stays current on weekdays even when no code changes are pushed. Manual-only legacy workflows remain available for debugging, backfills, or cache extension without conflicting with the authoritative deploy pipelines.
+
+---
+
+### 2026-02-18 — (Ops) Artifacts generated in CI, deployed via Vercel prebuilt
+**Choice:** JSON artifacts (`public/snapshot.*.json`, `public/health-history.*.json`) are no longer committed to git. Instead:
+- Artifacts are generated in CI on every push to `main` (vercel-prebuilt-prod.yml) and daily via schedule (daily-artifacts-deploy.yml)
+- The pipeline runs `pnpm update:snapshots && pnpm verify:artifacts` before build
+- Deployment uses `vercel build --prod` followed by `vercel deploy --prebuilt --prod` so the freshly generated `/public` artifacts are included in the deployment
+
+**Why:** Keeps the repo focused on source code; avoids large generated JSON diffs and merge conflicts; ensures production always gets artifacts built from the latest data.
+
+---
+
 ### 2026-01-29 — (Data/UI) Grouped decks generate group-specific health-history series (used by chart)
 **Choice:** For decks whose universe items include `group` (e.g., METALS_MINING), the pipeline generates multiple health-history artifacts:
 - `public/health-history.<DECK>.json` (ALL)

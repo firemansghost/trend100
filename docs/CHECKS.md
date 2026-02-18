@@ -40,6 +40,13 @@
 - Fetches "latest" for symbols with recent cache (batched updates)
 - Logs clear messages for inception-limited symbols: `"ℹ️ <SYMBOL> cannot extend earlier than <date> (provider limit/inception)"`
 
+### CI pipeline checks
+- **Artifact validation:** CI must pass `pnpm update:snapshots && pnpm verify:artifacts` before deploy (vercel-prebuilt-prod.yml on push; daily-artifacts-deploy.yml on schedule)
+- **Daily deploy:** `daily-artifacts-deploy.yml` runs Mon–Fri 22:15 UTC; must pass update:snapshots + verify:artifacts before deploying
+- **Production smoke checks:** After deploy, key artifact endpoints should return 200:
+  - https://trend100.vercel.app/snapshot.MACRO.json
+  - https://trend100.vercel.app/health-history.MACRO.json
+
 ### verify:artifacts checks
 - EOD cache spans align with retention target (`MARKETSTACK_CACHE_DAYS`, default: 2300 calendar days)
 - Inception-limited tickers show `"ℹ️ (limited history: inception)"` instead of `"⚠️ (needs extension)"`

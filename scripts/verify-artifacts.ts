@@ -364,14 +364,9 @@ function printTurbulenceShockStats(): boolean {
     }
 
     const arr = points as TurbulenceShockPoint[];
-    const minPoints = 250;
-    const minPointsFallback = 100;
-    if (arr.length < minPointsFallback) {
-      console.error(`  ❌ turbulence.shock.json: Too few points (${arr.length}, need >= ${minPointsFallback})`);
+    if (arr.length < 250) {
+      console.error(`  ❌ turbulence.shock.json: Too few points (${arr.length}, need >= 250)`);
       return false;
-    }
-    if (arr.length < minPoints) {
-      console.warn(`  ⚠️  turbulence.shock.json: ${arr.length} points (prefer >= ${minPoints})`);
     }
 
     for (let i = 1; i < arr.length; i++) {
@@ -408,6 +403,11 @@ function printTurbulenceShockStats(): boolean {
       console.error('  ❌ turbulence.shock.json: No non-null shockRaw (compute broken or minAssets not met)');
       return false;
     }
+    const lastShockP = arr[arr.length - 1]!;
+    if (lastShockP.shockRaw === null) {
+      console.error(`  ❌ turbulence.shock.json: Last row (${lastShockP.date}) must have non-null shockRaw (output should be trimmed to last computed date)`);
+      return false;
+    }
     if (!hasShockZ && arr.length >= 360) {
       console.warn('  ⚠️  turbulence.shock.json: No non-null shockZ (insufficient trailing window?)');
     }
@@ -422,9 +422,8 @@ function printTurbulenceShockStats(): boolean {
 
     const first = arr[0]!.date;
     const last = arr[arr.length - 1]!.date;
-    const lastP = arr[arr.length - 1]!;
     console.log(`  turbulence.shock.json: ${arr.length} points (${first} to ${last})`);
-    console.log(`    Last: nAssets=${lastP.nAssets}, nPairs=${lastP.nPairs}, shockRaw=${lastP.shockRaw ?? 'null'}, shockZ=${lastP.shockZ ?? 'null'}`);
+    console.log(`    Last: nAssets=${lastShockP.nAssets}, nPairs=${lastShockP.nPairs}, shockRaw=${lastShockP.shockRaw ?? 'null'}, shockZ=${lastShockP.shockZ ?? 'null'}`);
     return true;
   } catch (error) {
     console.error(`  turbulence.shock.json: Error - ${error}`);
@@ -493,6 +492,12 @@ function printTurbulenceGreenBarStats(): boolean {
     );
     if (!hasValidRow) {
       console.error('  ❌ turbulence.greenbar.json: No row with shockZ and gates non-null');
+      return false;
+    }
+
+    const lastGreenBarP = arr[arr.length - 1]!;
+    if (lastGreenBarP.shockRaw === null) {
+      console.error(`  ❌ turbulence.greenbar.json: Last row (${lastGreenBarP.date}) must have non-null shockRaw (aligned to last computed shock date)`);
       return false;
     }
 

@@ -23,7 +23,9 @@ const SHOCK_UNIVERSE_FALLBACK = [
 const SHORT_WINDOW = 20;
 const LONG_WINDOW = 60;
 const TRAILING_Z_WINDOW = 252;
-const MIN_ASSETS = 8;
+const MIN_ASSETS_FLOOR = 6;
+const MIN_ASSETS_TARGET = 8;
+const RECENT_WINDOW_DAYS = 7;
 const MIN_Z_POINTS = 100;
 
 interface ShockPoint {
@@ -52,11 +54,17 @@ function getShockUniverse(): string[] {
   try {
     const deck = getDeck('US_SECTORS');
     const symbols = deck.universe.map((item) => item.providerTicker ?? item.ticker);
-    if (symbols.length >= MIN_ASSETS) return symbols;
+    if (symbols.length >= MIN_ASSETS_FLOOR) return symbols;
   } catch {
     // fallback
   }
   return SHOCK_UNIVERSE_FALLBACK;
+}
+
+function daysBetween(a: string, b: string): number {
+  return Math.floor(
+    (new Date(b).getTime() - new Date(a).getTime()) / (1000 * 60 * 60 * 24)
+  );
 }
 
 function computeCorrelationMatrix(returnsMatrix: number[][]): number[][] {
@@ -129,11 +137,29 @@ function main() {
     }
   }
 
-  if (barsBySymbol.size < MIN_ASSETS) {
+  if (barsBySymbol.size < MIN_ASSETS_FLOOR) {
     throw new Error(
-      `Need at least ${MIN_ASSETS} symbols with EOD cache; found ${barsBySymbol.size}. Run update:snapshots first.`
+      `Need at least ${MIN_ASSETS_FLOOR} symbols with EOD cache; found ${barsBySymbol.size}. Run update:snapshots first.`
     );
   }
+
+  const maxDate = [...barsBySymbol.values()]
+    .map((bars) => bars[bars.length - 1]!.date)
+    .sort()
+    .pop()!;
+  const recentUniverse = symbols.filter((sym) => {
+    const bars = barsBySymbol.get(sym);
+    if (!bars || bars.length === 0) return false;
+    const lastBarDate = bars[bars.length - 1]!.date;
+    return Math.abs(daysBetween(lastBarDate, maxDate)) <= RECENT_WINDOW_DAYS;
+  });
+  const minAssetsEffective = Math.max(
+    MIN_ASSETS_FLOOR,
+    Math.min(MIN_ASSETS_TARGET, recentUniverse.length)
+  );
+
+  console.log(`Recent universe (${recentUniverse.length}): ${recentUniverse.join(', ')}`);
+  console.log(`minAssetsEffective: ${minAssetsEffective}`);
 
   const allDates = new Set<string>();
   for (const bars of barsBySymbol.values()) {
@@ -144,7 +170,8 @@ function main() {
   const dates = [...allDates].sort();
 
   const closeByDate = new Map<string, Map<string, number>>();
-  for (const [sym, bars] of barsBySymbol) {
+  for (const sym of recentUniverse) {
+    const bars = barsBySymbol.get(sym)!;
     for (const b of bars) {
       if (b.date < start) continue;
       let m = closeByDate.get(b.date);
@@ -160,7 +187,8 @@ function main() {
   dates.forEach((d, i) => dateIndex.set(d, i));
 
   const returnsBySymbol = new Map<string, (number | null)[]>();
-  for (const [sym, bars] of barsBySymbol) {
+  for (const sym of recentUniverse) {
+    const bars = barsBySymbol.get(sym)!;
     const arr: (number | null)[] = new Array(dates.length).fill(null);
     const closeMap = new Map(bars.map((b) => [b.date, b.close]));
     for (let i = 0; i < dates.length; i++) {
@@ -187,7 +215,7 @@ function main() {
     const longStart = idx - LONG_WINDOW + 1;
 
     const validSymbols: string[] = [];
-    for (const sym of symbols) {
+    for (const sym of recentUniverse) {
       const rets = returnsBySymbol.get(sym);
       if (!rets) continue;
       let shortCount = 0;
@@ -203,7 +231,8 @@ function main() {
       }
     }
 
-    if (validSymbols.length < MIN_ASSETS) {
+    const minForDate = Math.max(MIN_ASSETS_FLOOR, Math.min(MIN_ASSETS_TARGET, validSymbols.length));
+    if (validSymbols.length < minForDate) {
       points.push({
         date,
         nAssets: validSymbols.length,
@@ -254,20 +283,30 @@ function main() {
     }
   }
 
+  const lastComputedIdx = [...points].reverse().findIndex((p) => p.shockRaw != null);
+  const trimmedPoints =
+    lastComputedIdx >= 0
+      ? points.slice(0, points.length - lastComputedIdx)
+      : points;
+  const lastComputedDate = trimmedPoints[trimmedPoints.length - 1]?.date ?? null;
+  if (lastComputedIdx > 0) {
+    console.log(`Trimmed ${lastComputedIdx} trailing null rows; last computed: ${lastComputedDate}`);
+  }
+
   const outPath = join(process.cwd(), 'public', 'turbulence.shock.json');
-  writeFileSync(outPath, JSON.stringify(points, null, 2), 'utf-8');
+  writeFileSync(outPath, JSON.stringify(trimmedPoints, null, 2), 'utf-8');
 
-  const nonNullRaw = points.filter((p) => p.shockRaw != null).length;
-  const nonNullZ = points.filter((p) => p.shockZ != null).length;
-  const pctNullRaw = points.length > 0 ? ((points.length - nonNullRaw) / points.length) * 100 : 0;
-  const pctNullZ = points.length > 0 ? ((points.length - nonNullZ) / points.length) * 100 : 0;
+  const nonNullRaw = trimmedPoints.filter((p) => p.shockRaw != null).length;
+  const nonNullZ = trimmedPoints.filter((p) => p.shockZ != null).length;
+  const pctNullRaw = trimmedPoints.length > 0 ? ((trimmedPoints.length - nonNullRaw) / trimmedPoints.length) * 100 : 0;
+  const pctNullZ = trimmedPoints.length > 0 ? ((trimmedPoints.length - nonNullZ) / trimmedPoints.length) * 100 : 0;
 
-  const rawVals = points.map((p) => p.shockRaw).filter((v): v is number => v != null);
+  const rawVals = trimmedPoints.map((p) => p.shockRaw).filter((v): v is number => v != null);
   const minRaw = rawVals.length > 0 ? Math.min(...rawVals) : null;
   const maxRaw = rawVals.length > 0 ? Math.max(...rawVals) : null;
 
-  console.log(`\n✅ Wrote ${points.length} points to public/turbulence.shock.json`);
-  console.log(`   First: ${points[0]?.date ?? 'N/A'}, Last: ${points[points.length - 1]?.date ?? 'N/A'}`);
+  console.log(`\n✅ Wrote ${trimmedPoints.length} points to public/turbulence.shock.json`);
+  console.log(`   First: ${trimmedPoints[0]?.date ?? 'N/A'}, Last: ${lastComputedDate ?? 'N/A'}`);
   console.log(`   shockRaw: ${nonNullRaw} non-null (${pctNullRaw.toFixed(1)}% null)`);
   console.log(`   shockZ: ${nonNullZ} non-null (${pctNullZ.toFixed(1)}% null)`);
   if (minRaw != null && maxRaw != null) {

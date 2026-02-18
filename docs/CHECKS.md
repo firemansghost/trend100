@@ -70,8 +70,11 @@
   - File exists, is an array, ≥250 rows
   - Sorted ascending by date
   - Last date within 7 calendar days (fails if stale)
-  - isGreenBar is boolean
+  - Last row must have non-null shockRaw and shockZ
+  - When gate fields (spxAbove50dma or vixBelow25) are null, isGreenBar must be null (PENDING state)
+  - When both gates are non-null, isGreenBar must be boolean
   - At least one row with shockZ and gates non-null
+  - Reports count of rows with pending gates (isGreenBar null)
 - EOD cache spans align with retention target (`MARKETSTACK_CACHE_DAYS`, default: 2300 calendar days)
 - Inception-limited tickers show `"ℹ️ (limited history: inception)"` instead of `"⚠️ (needs extension)"`
 - Health-history spans remain consistent (no unexpected shrinkage)

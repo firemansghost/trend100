@@ -5,8 +5,15 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-02-19 — (Data/UI) Turbulence Green Bar null-aware PENDING state when gates lag
+**Choice:** When FRED gates (turbulence.gates.json) lag shock (turbulence.shock.json) by a day—e.g., gates last date 2026-02-17 vs shock 2026-02-18—greenbar uses an explicit PENDING state instead of treating missing gates as false. For dates with shock but no gates: `spxAbove50dma`, `vixBelow25`, and `isGreenBar` are set to `null`. UI shows "Turbulence: PENDING (waiting on FRED gates)" with subtext explaining the lag. Chart overlays render only when `isGreenBar === true` (never for null). verify-artifacts enforces: if gate fields are null, isGreenBar must be null; if gates present, isGreenBar must be boolean.
+
+**Why:** FRED updates can lag EOD by 0–1 days. Treating missing gates as false would mislead users (e.g., showing NORMAL when we simply don't know). PENDING state is honest and avoids false negatives.
+
+---
+
 ### 2026-02-19 — (Data/UI) Turbulence Green Bar synthesis (Jordi Visser model)
-**Choice:** Added derived artifact `public/turbulence.greenbar.json` that joins turbulence.gates.json and turbulence.shock.json by date. Green Bar is active when all three conditions hold: (1) shockZ >= threshold (default 2.0, configurable via TURBULENCE_SHOCK_Z_THRESHOLD), (2) spxAbove50dma === true, (3) vixBelow25 === true. Output: `{ date, shockZ, shockRaw, spxAbove50dma, vixBelow25, isGreenBar }`. Generated after gates and shock in CI; no new secrets. UI shows Turbulence status line (NORMAL | ELEVATED | GREEN BAR ACTIVE) and subtle green overlay on Health History chart for Green Bar dates.
+**Choice:** Added derived artifact `public/turbulence.greenbar.json` that joins turbulence.gates.json and turbulence.shock.json by date. Green Bar is active when all three conditions hold: (1) shockZ >= threshold (default 2.0, configurable via TURBULENCE_SHOCK_Z_THRESHOLD), (2) spxAbove50dma === true, (3) vixBelow25 === true. Output: `{ date, shockZ, shockRaw, spxAbove50dma, vixBelow25, isGreenBar }`. Gates and isGreenBar may be null when FRED gates lag shock (see PENDING state decision). Generated after gates and shock in CI; no new secrets. UI shows Turbulence status line (NORMAL | ELEVATED | GREEN BAR ACTIVE | PENDING) and subtle green overlay on Health History chart for Green Bar dates.
 
 **Why:** Aligns with Jordi Visser's Turbulence Model: the Green Bar signals regime confirmation when correlation shock occurs in a supportive environment (SPX above trend, low fear). Derived artifact keeps logic in CI; UI loads from /public like other artifacts.
 

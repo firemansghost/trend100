@@ -437,7 +437,7 @@ interface TurbulenceGreenBarPoint {
   shockRaw: number | null;
   spxAbove50dma: boolean | null;
   vixBelow25: boolean | null;
-  isGreenBar: boolean;
+  isGreenBar: boolean | null;
 }
 
 function printTurbulenceGreenBarStats(): boolean {
@@ -479,8 +479,13 @@ function printTurbulenceGreenBarStats(): boolean {
     }
 
     for (const p of arr) {
-      if (typeof p.isGreenBar !== 'boolean') {
-        console.error(`  ❌ turbulence.greenbar.json: isGreenBar must be boolean at ${p.date}`);
+      const gatesMissing = p.spxAbove50dma == null || p.vixBelow25 == null;
+      if (gatesMissing && p.isGreenBar !== null) {
+        console.error(`  ❌ turbulence.greenbar.json: When gates missing at ${p.date}, isGreenBar must be null`);
+        return false;
+      }
+      if (!gatesMissing && typeof p.isGreenBar !== 'boolean') {
+        console.error(`  ❌ turbulence.greenbar.json: When gates present at ${p.date}, isGreenBar must be boolean`);
         return false;
       }
     }
@@ -501,18 +506,20 @@ function printTurbulenceGreenBarStats(): boolean {
       return false;
     }
 
-    const countGreenBars = arr.filter((p) => p.isGreenBar).length;
+    const countGreenBars = arr.filter((p) => p.isGreenBar === true).length;
+    const pendingGatesCount = arr.filter((p) => p.isGreenBar === null).length;
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0]!;
-    const countGreenBarsLast365 = arr.filter((p) => p.isGreenBar && p.date >= oneYearAgoStr).length;
-    const lastGreenBar = [...arr].reverse().find((p) => p.isGreenBar);
+    const countGreenBarsLast365 = arr.filter((p) => p.isGreenBar === true && p.date >= oneYearAgoStr).length;
+    const lastGreenBar = [...arr].reverse().find((p) => p.isGreenBar === true);
     const lastP = arr[arr.length - 1]!;
 
     console.log(`  turbulence.greenbar.json: ${arr.length} points (${arr[0]!.date} to ${lastP.date})`);
     console.log(`    Green bars: ${countGreenBars} all-time, ${countGreenBarsLast365} last 365d`);
     console.log(`    Last green bar: ${lastGreenBar?.date ?? 'none'}`);
-    console.log(`    Last: shockZ=${lastP.shockZ ?? 'null'}, spxAbove50dma=${lastP.spxAbove50dma ?? 'null'}, vixBelow25=${lastP.vixBelow25 ?? 'null'}, isGreenBar=${lastP.isGreenBar}`);
+    console.log(`    Rows with pending gates (isGreenBar null): ${pendingGatesCount}`);
+    console.log(`    Last: shockZ=${lastP.shockZ ?? 'null'}, spxAbove50dma=${lastP.spxAbove50dma ?? 'null'}, vixBelow25=${lastP.vixBelow25 ?? 'null'}, isGreenBar=${lastP.isGreenBar ?? 'null'}`);
     return true;
   } catch (error) {
     console.error(`  turbulence.greenbar.json: Error - ${error}`);

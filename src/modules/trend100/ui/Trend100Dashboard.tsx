@@ -260,6 +260,19 @@ export function Trend100Dashboard({
     return null;
   }, [filteredHistory]);
 
+  // Show legend when chart renders shaded "missing history" region (PR2)
+  const hasMissingHistoryRegion = useMemo(() => {
+    if (filteredHistory.length === 0) return false;
+    const first = filteredHistory[0]!;
+    // Leading UNKNOWN: first valid point is after chart start
+    if (firstValidPoint && new Date(firstValidPoint.date) > new Date(first.date)) {
+      return true;
+    }
+    // All UNKNOWN in range: no valid point but we have points
+    if (!firstValidPoint) return true;
+    return false;
+  }, [filteredHistory, firstValidPoint]);
+
   const metricConfig = useMemo(() => {
     switch (metric) {
       case 'health':
@@ -464,6 +477,11 @@ export function Trend100Dashboard({
           {firstValidPoint && filteredHistory.length > 0 && filteredHistory[0]!.date < firstValidPoint.date && (
             <p className="text-xs text-zinc-500 mb-2">
               Data unavailable before {firstValidPoint.date} (insufficient history)
+            </p>
+          )}
+          {hasMissingHistoryRegion && (
+            <p className="text-xs text-slate-400 mt-1 mb-2">
+              Shaded region = insufficient history.
             </p>
           )}
           <HealthHistoryChart

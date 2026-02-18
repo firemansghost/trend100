@@ -14,6 +14,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  ReferenceArea,
 } from 'recharts';
 import type { TrendHealthHistoryPoint } from '../types';
 
@@ -23,6 +24,17 @@ type MetricKey =
   | 'pctAboveUpperBand'
   | 'stretch200MedianPct'
   | 'medianDistanceAboveUpperBandPct';
+
+/** Chart data point: metric fields become null for UNKNOWN points so Recharts renders gaps. */
+type ChartPoint = Omit<TrendHealthHistoryPoint, MetricKey | 'diffusionPct'> & {
+  dateTs: number;
+  greenPct: number | null;
+  heatScore: number | null;
+  pctAboveUpperBand: number | null;
+  stretch200MedianPct: number | null;
+  medianDistanceAboveUpperBandPct: number | null;
+  diffusionPct: number | null;
+};
 
 interface HealthHistoryChartProps {
   data: TrendHealthHistoryPoint[];
@@ -112,14 +124,33 @@ export function HealthHistoryChart({
   // Determine if we should use compact date format for labels (for longer ranges)
   const isLongRange = data.length > 180;
 
-  // Format data for Recharts: use timestamp for X-axis (unique per day), keep date for tooltip
-  // Using timestamp ensures each daily point has a unique X value, preventing monthly bucketing
-  const chartData = data.map((point) => ({
-    ...point,
-    dateTs: new Date(point.date).getTime(), // Numeric timestamp for X-axis (unique per day)
-  }));
+  // Format data for Recharts: use timestamp for X-axis (unique per day), keep date for tooltip.
+  // Mask UNKNOWN points: set metric values to null so Recharts renders gaps (no flatline at 0).
+  const chartData: ChartPoint[] = data.map((point) => {
+    const isUnknown = point.regimeLabel === 'UNKNOWN';
+    const dateTs = new Date(point.date).getTime();
+    return {
+      ...point,
+      dateTs,
+      greenPct: isUnknown ? null : point.greenPct,
+      heatScore: isUnknown ? null : point.heatScore,
+      pctAboveUpperBand: isUnknown ? null : point.pctAboveUpperBand,
+      stretch200MedianPct: isUnknown ? null : point.stretch200MedianPct,
+      medianDistanceAboveUpperBandPct: isUnknown ? null : point.medianDistanceAboveUpperBandPct,
+      diffusionPct: isUnknown ? null : point.diffusionPct,
+    } as ChartPoint;
+  });
 
   const isEmpty = chartData.length === 0;
+
+  // Shaded "missing history" region: from chart start until first non-UNKNOWN point
+  const minTs = chartData[0]?.dateTs;
+  const firstKnownTs = chartData.find((p) => p.regimeLabel !== 'UNKNOWN')?.dateTs;
+  const maxTs = chartData[chartData.length - 1]?.dateTs;
+  const showShade =
+    minTs != null && firstKnownTs != null && firstKnownTs > minTs;
+  const showShadeAllUnknown =
+    minTs != null && maxTs != null && firstKnownTs == null;
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
@@ -165,6 +196,15 @@ export function HealthHistoryChart({
               />
             )}
           />
+          {(showShade || showShadeAllUnknown) && (
+            <ReferenceArea
+              x1={minTs!}
+              x2={showShadeAllUnknown ? maxTs! : firstKnownTs!}
+              fill="rgba(148, 163, 184, 0.12)"
+              strokeOpacity={0}
+              ifOverflow="extendDomain"
+            />
+          )}
           <Line
             type="monotone"
             dataKey={metricKey}

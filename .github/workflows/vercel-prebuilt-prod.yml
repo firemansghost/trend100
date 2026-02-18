@@ -24,7 +24,6 @@ jobs:
           corepack prepare pnpm@10 --activate
           pnpm --version
 
-      # Cache pnpm store AFTER pnpm exists
       - name: Get pnpm store directory
         id: pnpm-store
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
@@ -48,7 +47,7 @@ jobs:
           MARKETSTACK_EXTEND_MAX_SYMBOLS: 200
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: pnpm artifacts:refresh
+        run: pnpm -s update:snapshots && pnpm -s verify:artifacts
 
       - name: Pull Vercel project config
         env:

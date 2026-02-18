@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-02-19 — (Ops) Proxy covariance shock artifact (correlation regime shift)
+**Choice:** Added `public/turbulence.shock.json` artifact that measures a "correlation structure shock" using a proxy ETF universe (US_SECTORS deck: SPY + 11 sector SPDRs). Uses EOD cache data; writes daily `shockRaw` (Frobenius norm of Corr_short − Corr_long over off-diagonal pairs) and `shockZ` (z-score over trailing 252-day window). Windows: short=20, long=60, trailingZ=252 trading days; minAssets=8. Outputs `{ date, nAssets, nPairs, shockRaw, shockZ }`. No new secrets; uses Marketstack EOD cache already fed by update:snapshots. Stepping stone to future SPX constituent upgrade.
+
+**Why:** PR9 implements the third prerequisite for Jordi Visser's Turbulence Model: a covariance/correlation shock metric. Proxy universe avoids needing SPX constituents; aligns with Trend100 deck definitions.
+
+---
+
 ### 2026-02-19 — (Ops) CI-generated turbulence gates artifact from FRED
 **Choice:** Added `public/turbulence.gates.json` artifact built from FRED data (SP500 + VIXCLS). The script `update-turbulence-gates.ts` fetches both series, computes SPX 50-day moving average, and outputs daily gate booleans (`spxAbove50dma`, `vixBelow25`) for Turbulence Model alignment (Jordi Visser). Artifacts are generated in CI (vercel-prebuilt-prod, daily-artifacts-deploy) before build; no runtime fetch in the deployed app. Generated JSON is not committed (ignored via .gitignore).
 
@@ -20,9 +27,9 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 ---
 
 ### 2026-02-18 — (Ops) Artifacts generated in CI, deployed via Vercel prebuilt
-**Choice:** JSON artifacts (`public/snapshot.*.json`, `public/health-history.*.json`, `public/turbulence.gates.json`) are no longer committed to git. Instead:
+**Choice:** JSON artifacts (`public/snapshot.*.json`, `public/health-history.*.json`, `public/turbulence.gates.json`, `public/turbulence.shock.json`) are no longer committed to git. Instead:
 - Artifacts are generated in CI on every push to `main` (vercel-prebuilt-prod.yml) and daily via schedule (daily-artifacts-deploy.yml)
-- The pipeline runs `pnpm update:snapshots && pnpm update:turbulence-gates && pnpm verify:artifacts` before build
+- The pipeline runs `pnpm update:snapshots && pnpm update:turbulence-gates && pnpm update:turbulence-shock && pnpm verify:artifacts` before build
 - Deployment uses `vercel build --prod` followed by `vercel deploy --prebuilt --prod` so the freshly generated `/public` artifacts are included in the deployment
 
 **Why:** Keeps the repo focused on source code; avoids large generated JSON diffs and merge conflicts; ensures production always gets artifacts built from the latest data.

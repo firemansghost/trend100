@@ -392,30 +392,34 @@ export function Trend100Dashboard({
 
       {/* Turbulence status (Green Bar from Jordi Visser model) */}
       {greenbarData && greenbarData.length > 0 && (() => {
-        const THRESHOLD = 2.0;
-        const last = greenbarData[greenbarData.length - 1]!;
-        const gatesMissing =
-          last.spxAbove50dma === null || last.vixBelow25 === null || last.isGreenBar === null;
-        const status = gatesMissing
-          ? 'PENDING'
-          : last.isGreenBar === true
-            ? 'GREEN BAR ACTIVE'
-            : last.shockZ != null &&
-                last.shockZ >= THRESHOLD * 0.75 &&
-                last.spxAbove50dma === true &&
-                last.vixBelow25 === true
-              ? 'ELEVATED'
-              : 'NORMAL';
-
-        // PENDING: compute shockDate, gatesDate, lagDays for display
-        const shockDate = last.date;
-        const gatesDate = (() => {
+        const SHOCK_Z_THRESHOLD = 2.0;
+        const latest = greenbarData[greenbarData.length - 1]!;
+        const latestShockDate = latest.date;
+        const latestGateRow = (() => {
           for (let i = greenbarData!.length - 1; i >= 0; i--) {
             const p = greenbarData![i]!;
-            if (p.spxAbove50dma != null && p.vixBelow25 != null) return p.date;
+            if (p.spxAbove50dma != null && p.vixBelow25 != null) return p;
           }
           return null;
         })();
+        const latestGateDate = latestGateRow?.date ?? null;
+        const pendingGates =
+          latest.spxAbove50dma === null ||
+          latest.vixBelow25 === null ||
+          latest.isGreenBar === null;
+        const status = pendingGates
+          ? 'PENDING'
+          : latest.isGreenBar === true
+            ? 'GREEN BAR ACTIVE'
+            : latest.shockZ != null &&
+                latest.shockZ >= SHOCK_Z_THRESHOLD * 0.75 &&
+                latest.spxAbove50dma === true &&
+                latest.vixBelow25 === true
+              ? 'ELEVATED'
+              : 'NORMAL';
+
+        const shockDate = latestShockDate;
+        const gatesDate = latestGateDate;
         const lagDays =
           shockDate && gatesDate
             ? Math.round(
@@ -423,6 +427,16 @@ export function Trend100Dashboard({
                   (1000 * 60 * 60 * 24)
               )
             : null;
+
+        // Gate values to display: use latestGateRow when pending, else latest
+        const displayGateRow = pendingGates && latestGateRow ? latestGateRow : latest;
+        const showAsOf = pendingGates && latestGateRow != null;
+
+        const shockMet = latest.shockZ != null && latest.shockZ >= SHOCK_Z_THRESHOLD;
+        const spxMet = displayGateRow.spxAbove50dma === true;
+        const vixMet = displayGateRow.vixBelow25 === true;
+        const spxKnown = displayGateRow.spxAbove50dma != null;
+        const vixKnown = displayGateRow.vixBelow25 != null;
 
         return (
           <div className="container mx-auto px-4 py-2 border-b border-zinc-800">
@@ -442,16 +456,24 @@ export function Trend100Dashboard({
                 {status === 'PENDING' ? 'PENDING (waiting on FRED gates)' : status}
               </span>
               <span className="ml-3 text-slate-500">
-                ShockZ={fmtNum(last.shockZ)}{' '}
-                SPX&gt;50DMA={fmtBool(last.spxAbove50dma)}{' '}
-                VIX&lt;25={fmtBool(last.vixBelow25)}
+                ShockZ={fmtNum(latest.shockZ)}{' '}
+                SPX&gt;50DMA={
+                  showAsOf
+                    ? `${displayGateRow.spxAbove50dma ? 'true' : 'false'} (as of ${latestGateDate})`
+                    : fmtBool(latest.spxAbove50dma)
+                }{' '}
+                VIX&lt;25={
+                  showAsOf
+                    ? `${displayGateRow.vixBelow25 ? 'true' : 'false'} (as of ${latestGateDate})`
+                    : fmtBool(latest.vixBelow25)
+                }
               </span>
             </div>
-            {gatesMissing && shockDate && (
+            {pendingGates && shockDate && (
               <div className="text-xs text-slate-500 mt-0.5 space-y-0.5">
-                {last.shockZ != null && (
+                {latest.shockZ != null && (
                   <div>
-                    Shock: {shockDate} (z={fmtNum(last.shockZ)}){' '}
+                    Shock: {shockDate} (z={fmtNum(latest.shockZ)}){' '}
                     {gatesDate != null
                       ? `| Gates: ${gatesDate} (lag ${lagDays}d)`
                       : '| Gates: pending'}
@@ -460,6 +482,41 @@ export function Trend100Dashboard({
                 <div>Gates lag by 0–1 days depending on FRED update timing.</div>
               </div>
             )}
+            {/* 3-condition checklist (Jordi Visser Turbulence Model) */}
+            <div className="text-xs text-slate-400 mt-1.5 space-y-0.5">
+              <div>
+                Covariance shock (ShockZ ≥ {SHOCK_Z_THRESHOLD}):{' '}
+                {latest.shockZ != null ? (
+                  <>
+                    {shockMet ? '✅' : '❌'} (z={fmtNum(latest.shockZ)})
+                  </>
+                ) : (
+                  '—'
+                )}
+              </div>
+              <div>
+                SPX &gt; 50DMA:{' '}
+                {spxKnown ? (
+                  <>
+                    {spxMet ? '✅' : '❌'}
+                    {showAsOf && latestGateDate && ` (as of ${latestGateDate})`}
+                  </>
+                ) : (
+                  '—'
+                )}
+              </div>
+              <div>
+                VIX &lt; 25:{' '}
+                {vixKnown ? (
+                  <>
+                    {vixMet ? '✅' : '❌'}
+                    {showAsOf && latestGateDate && ` (as of ${latestGateDate})`}
+                  </>
+                ) : (
+                  '—'
+                )}
+              </div>
+            </div>
           </div>
         );
       })()}

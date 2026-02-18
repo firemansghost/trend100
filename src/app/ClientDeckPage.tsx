@@ -94,7 +94,7 @@ function ClientDeckPageContent() {
 
   // Turbulence green bar state (optional artifact)
   const [greenbarData, setGreenbarData] = useState<
-    Array<{ date: string; shockZ: number | null; spxAbove50dma: boolean | null; vixBelow25: boolean | null; isGreenBar: boolean }> | null
+    Array<{ date: string; shockZ: number | null; spxAbove50dma: boolean | null; vixBelow25: boolean | null; isGreenBar: boolean | null }> | null
   >(null);
 
   // History state: keep previous history visible while loading; never set to [] unless base/mock fail.

@@ -34,7 +34,7 @@ interface GreenBarPoint {
   shockRaw: number | null;
   spxAbove50dma: boolean | null;
   vixBelow25: boolean | null;
-  isGreenBar: boolean;
+  isGreenBar: boolean | null;
 }
 
 function main() {
@@ -74,11 +74,15 @@ function main() {
     const spxAbove50dma = gate?.spxAbove50dma ?? null;
     const vixBelow25 = gate?.vixBelow25 ?? null;
 
+    // Gates missing for this date: set gates and isGreenBar to null (PENDING state)
+    const gatesMissing = spxAbove50dma == null || vixBelow25 == null;
     const isGreenBar =
-      shockZ != null &&
-      shockZ >= threshold &&
-      spxAbove50dma === true &&
-      vixBelow25 === true;
+      gatesMissing
+        ? null
+        : shockZ != null &&
+            shockZ >= threshold &&
+            spxAbove50dma === true &&
+            vixBelow25 === true;
 
     return {
       date,
@@ -93,15 +97,15 @@ function main() {
   const outPath = join(PUBLIC_DIR, 'turbulence.greenbar.json');
   writeFileSync(outPath, JSON.stringify(points, null, 2), 'utf-8');
 
-  const countGreenBars = points.filter((p) => p.isGreenBar).length;
+  const countGreenBars = points.filter((p) => p.isGreenBar === true).length;
   const today = new Date().toISOString().split('T')[0]!;
   const oneYearAgo = new Date();
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
   const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0]!;
   const countGreenBarsLast365 = points.filter(
-    (p) => p.isGreenBar && p.date >= oneYearAgoStr
+    (p) => p.isGreenBar === true && p.date >= oneYearAgoStr
   ).length;
-  const lastGreenBar = [...points].reverse().find((p) => p.isGreenBar);
+  const lastGreenBar = [...points].reverse().find((p) => p.isGreenBar === true);
   const last = points[points.length - 1];
 
   console.log(`\n✅ Wrote ${points.length} points to public/turbulence.greenbar.json`);

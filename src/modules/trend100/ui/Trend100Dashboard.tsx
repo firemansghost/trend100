@@ -47,7 +47,7 @@ interface Trend100DashboardProps {
   /** When true, variant file was all UNKNOWN so we show base history and this banner. */
   historyVariantFallback?: boolean;
   /** Turbulence green bar data (from /turbulence.greenbar.json). */
-  greenbarData?: Array<{ date: string; shockZ: number | null; spxAbove50dma: boolean | null; vixBelow25: boolean | null; isGreenBar: boolean }> | null;
+  greenbarData?: Array<{ date: string; shockZ: number | null; spxAbove50dma: boolean | null; vixBelow25: boolean | null; isGreenBar: boolean | null }> | null;
 }
 
 export function Trend100Dashboard({
@@ -216,7 +216,7 @@ export function Trend100Dashboard({
 
   const greenBarDates = useMemo(() => {
     if (!greenbarData) return new Set<string>();
-    return new Set(greenbarData.filter((p) => p.isGreenBar).map((p) => p.date));
+    return new Set(greenbarData.filter((p) => p.isGreenBar === true).map((p) => p.date));
   }, [greenbarData]);
 
   // Filter history by timeframe and apply data-side hardening
@@ -373,8 +373,11 @@ export function Trend100Dashboard({
       {greenbarData && greenbarData.length > 0 && (() => {
         const THRESHOLD = 2.0;
         const last = greenbarData[greenbarData.length - 1]!;
-        const status =
-          last.isGreenBar
+        const gatesMissing =
+          last.spxAbove50dma === null || last.vixBelow25 === null || last.isGreenBar === null;
+        const status = gatesMissing
+          ? 'PENDING'
+          : last.isGreenBar === true
             ? 'GREEN BAR ACTIVE'
             : last.shockZ != null &&
                 last.shockZ >= THRESHOLD * 0.75 &&
@@ -392,10 +395,12 @@ export function Trend100Dashboard({
                     ? 'text-green-400 font-medium'
                     : status === 'ELEVATED'
                       ? 'text-amber-400'
-                      : ''
+                      : status === 'PENDING'
+                        ? 'text-slate-500 italic'
+                        : ''
                 }
               >
-                {status}
+                {status === 'PENDING' ? 'PENDING (waiting on FRED gates)' : status}
               </span>
               <span className="ml-3 text-slate-500">
                 ShockZ={last.shockZ != null ? last.shockZ.toFixed(2) : 'null'}{' '}
@@ -403,6 +408,11 @@ export function Trend100Dashboard({
                 VIX&lt;25={String(last.vixBelow25 ?? 'null')}
               </span>
             </div>
+            {gatesMissing && last.date && (
+              <div className="text-xs text-slate-500 mt-0.5">
+                Shock updated for {last.date}. Gates lag by 0–1 days depending on FRED update timing.
+              </div>
+            )}
           </div>
         );
       })()}

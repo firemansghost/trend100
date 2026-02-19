@@ -308,6 +308,12 @@ export function HealthHistoryChart({
         const elevated =
           eventsInView === 1 || daysInView >= 7 || density >= 0.12;
         const activityLevel = high ? 'HIGH' : elevated ? 'ELEVATED' : null;
+        const activityLabel =
+          activityLevel === 'HIGH' ? 'HIGH' : activityLevel === 'ELEVATED' ? 'ELEVATED' : '';
+        const titleText =
+          activityLevel
+            ? `Green Bar activity: ${activityLevel} (${daysInView} days / ${eventsInView} events in view)`
+            : undefined;
         return (
           <div className="mt-2 text-xs text-slate-400 space-y-0.5">
             <div>Vertical bands = Green Bar events.</div>
@@ -317,14 +323,28 @@ export function HealthHistoryChart({
                 <>
                   <span className="text-slate-500">·</span>
                   <span
-                    className={
-                      activityLevel === 'HIGH'
-                        ? 'inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20'
-                        : 'inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium bg-amber-500/5 text-amber-200 border border-amber-500/10'
-                    }
+                    className="inline-flex items-center gap-1.5 text-slate-400"
+                    title={titleText}
+                    aria-label={titleText}
                   >
-                    Activity: {activityLevel}
-                    {activityLevel === 'HIGH' && ' ⚠'}
+                    <span className="text-slate-400">Activity</span>
+                    <span
+                      className={
+                        activityLevel === 'HIGH'
+                          ? 'relative h-2.5 w-2.5 shrink-0 rounded-full bg-amber-400 ring-2 ring-amber-500/40 ring-offset-1 ring-offset-zinc-900 animate-pulse'
+                          : 'relative h-2 w-2 shrink-0 rounded-full bg-amber-500/80 ring-2 ring-amber-500/20 ring-offset-1 ring-offset-zinc-900'
+                      }
+                      aria-hidden
+                    />
+                    <span
+                      className={
+                        activityLevel === 'HIGH'
+                          ? 'text-amber-300/90'
+                          : 'text-slate-300'
+                      }
+                    >
+                      {activityLabel}
+                    </span>
                   </span>
                 </>
               )}

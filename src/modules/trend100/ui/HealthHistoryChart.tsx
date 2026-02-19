@@ -152,7 +152,8 @@ export function HealthHistoryChart({
   const chartMaxDate =
     chartData.length > 0 ? chartData[chartData.length - 1]!.date : null;
 
-  // Green bar overlay: one band per event (consecutive run of days)
+  // Green bar overlay: one band per event (consecutive trading days)
+  // Use chart's date series for adjacency: weekend/holiday gaps don't split runs
   // Also compute daysInView and eventsInView for legend
   const { greenBarRuns, daysInView, eventsInView } = useMemo(() => {
     if (!greenBarDates || greenBarDates.size === 0 || !chartMinDate || !chartMaxDate) {
@@ -165,17 +166,25 @@ export function HealthHistoryChart({
       return { greenBarRuns: [], daysInView: 0, eventsInView: 0 };
     }
     inRange.sort();
+    const dateToIdx = new Map<string, number>();
+    chartData.forEach((p, i) => dateToIdx.set(p.date, i));
     const runs: string[][] = [];
     let current: string[] = [inRange[0]!];
     const MS_PER_DAY = 86400000;
     for (let i = 1; i < inRange.length; i++) {
-      const prev = new Date(inRange[i - 1]!).getTime();
-      const curr = new Date(inRange[i]!).getTime();
-      if ((curr - prev) / MS_PER_DAY > 1) {
+      const prevDate = inRange[i - 1]!;
+      const currDate = inRange[i]!;
+      const prevIdx = dateToIdx.get(prevDate);
+      const currIdx = dateToIdx.get(currDate);
+      const contiguous =
+        prevIdx != null && currIdx != null && currIdx === prevIdx + 1;
+      if (contiguous) {
+        current.push(currDate);
+      } else if (prevIdx != null && currIdx != null) {
         runs.push(current);
-        current = [inRange[i]!];
+        current = [currDate];
       } else {
-        current.push(inRange[i]!);
+        current.push(currDate);
       }
     }
     runs.push(current);
@@ -191,7 +200,7 @@ export function HealthHistoryChart({
       daysInView: inRange.length,
       eventsInView: runs.length,
     };
-  }, [greenBarDates, chartMinDate, chartMaxDate]);
+  }, [greenBarDates, chartMinDate, chartMaxDate, chartData]);
 
   // Shaded "missing history" region: from chart start until first non-UNKNOWN point
   const minTs = chartData[0]?.dateTs;

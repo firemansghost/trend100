@@ -271,15 +271,6 @@ export function Trend100Dashboard({
     return filtered.filter((point) => point.date >= cutoffDateStr);
   }, [history, timeframe, snapshot.asOfDate]);
 
-  // Chart date range (for green bar legend visibility)
-  const chartMinDate = filteredHistory[0]?.date ?? null;
-  const chartMaxDate =
-    filteredHistory.length > 0 ? filteredHistory[filteredHistory.length - 1]!.date : null;
-  const hasGreenBarInChartRange = useMemo(() => {
-    if (!chartMinDate || !chartMaxDate || greenBarDates.size === 0) return false;
-    return [...greenBarDates].some((d) => d >= chartMinDate && d <= chartMaxDate);
-  }, [chartMinDate, chartMaxDate, greenBarDates]);
-
   // Find first valid point in displayed range (for notice)
   const firstValidPoint = useMemo(() => {
     for (const point of filteredHistory) {
@@ -730,11 +721,6 @@ export function Trend100Dashboard({
               {historyCoverage.validPoints > 0
                 ? `History coverage: ${historyCoverage.validPoints}/${historyCoverage.totalPoints} days (first valid: ${historyCoverage.firstValidDateString}).`
                 : `History coverage: 0/${historyCoverage.totalPoints} days (no valid history in range).`}
-            </p>
-          )}
-          {hasGreenBarInChartRange && (
-            <p className="text-xs text-slate-400 mt-1 mb-2">
-              Vertical bands = Green Bar events.
             </p>
           )}
           <HealthHistoryChart

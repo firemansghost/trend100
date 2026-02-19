@@ -147,20 +147,51 @@ export function HealthHistoryChart({
 
   const isEmpty = chartData.length === 0;
 
-  // Green bar overlay: light vertical bands on dates where Green Bar is active
-  const greenBarAreas = useMemo(() => {
-    if (!greenBarDates || greenBarDates.size === 0) return [];
-    const chartDateSet = new Set(chartData.map((p) => p.date));
-    const result: Array<{ x1: number; x2: number }> = [];
-    for (const date of greenBarDates) {
-      if (!chartDateSet.has(date)) continue;
-      const d = new Date(date);
-      const x1 = d.getTime();
-      const x2 = x1 + 86400000 - 1;
-      result.push({ x1, x2 });
+  // Chart date range for filtering Green Bar dates
+  const chartMinDate = chartData[0]?.date ?? null;
+  const chartMaxDate =
+    chartData.length > 0 ? chartData[chartData.length - 1]!.date : null;
+
+  // Green bar overlay: one band per event (consecutive run of days)
+  // Also compute daysInView and eventsInView for legend
+  const { greenBarRuns, daysInView, eventsInView } = useMemo(() => {
+    if (!greenBarDates || greenBarDates.size === 0 || !chartMinDate || !chartMaxDate) {
+      return { greenBarRuns: [], daysInView: 0, eventsInView: 0 };
     }
-    return result;
-  }, [chartData, greenBarDates]);
+    const inRange = [...greenBarDates].filter(
+      (d) => d >= chartMinDate && d <= chartMaxDate
+    );
+    if (inRange.length === 0) {
+      return { greenBarRuns: [], daysInView: 0, eventsInView: 0 };
+    }
+    inRange.sort();
+    const runs: string[][] = [];
+    let current: string[] = [inRange[0]!];
+    const MS_PER_DAY = 86400000;
+    for (let i = 1; i < inRange.length; i++) {
+      const prev = new Date(inRange[i - 1]!).getTime();
+      const curr = new Date(inRange[i]!).getTime();
+      if ((curr - prev) / MS_PER_DAY > 1) {
+        runs.push(current);
+        current = [inRange[i]!];
+      } else {
+        current.push(inRange[i]!);
+      }
+    }
+    runs.push(current);
+    const greenBarRuns: Array<{ x1: number; x2: number }> = runs.map((run) => {
+      const first = run[0]!;
+      const last = run[run.length - 1]!;
+      const x1 = new Date(first).getTime();
+      const x2 = new Date(last).getTime() + MS_PER_DAY - 1;
+      return { x1, x2 };
+    });
+    return {
+      greenBarRuns,
+      daysInView: inRange.length,
+      eventsInView: runs.length,
+    };
+  }, [greenBarDates, chartMinDate, chartMaxDate]);
 
   // Shaded "missing history" region: from chart start until first non-UNKNOWN point
   const minTs = chartData[0]?.dateTs;
@@ -224,13 +255,14 @@ export function HealthHistoryChart({
               ifOverflow="extendDomain"
             />
           )}
-          {greenBarAreas.map((area, i) => (
+          {greenBarRuns.map((area, i) => (
             <ReferenceArea
               key={`gb-${i}`}
               x1={area.x1}
               x2={area.x2}
-              fill="rgba(34, 197, 94, 0.08)"
-              strokeOpacity={0}
+              fill="rgba(34, 197, 94, 0.15)"
+              stroke="rgba(34, 197, 94, 0.25)"
+              strokeOpacity={0.6}
               ifOverflow="extendDomain"
             />
           ))}
@@ -257,6 +289,12 @@ export function HealthHistoryChart({
           )}
         </LineChart>
       </ResponsiveContainer>
+      )}
+      {!isEmpty && eventsInView > 0 && (
+        <div className="mt-2 text-xs text-slate-400 space-y-0.5">
+          <div>Vertical bands = Green Bar events.</div>
+          <div>Green Bar in view: {daysInView} days / {eventsInView} events</div>
+        </div>
       )}
     </div>
   );

@@ -473,12 +473,12 @@ export function Trend100Dashboard({
         const deltaToTrigger =
           shockZ != null ? TRIGGER_Z - shockZ : null;
         const metCount = [shockMet, spxMet, vixMet].filter(Boolean).length;
-        const blockingStr = !shockMet
-          ? 'ShockZ<2.0'
+        const blockingShort = !shockMet
+          ? 'Shock'
           : !spxMet
-            ? 'SPX<50DMA'
+            ? 'SPX'
             : !vixMet
-              ? 'VIX>25'
+              ? 'VIX'
               : null;
 
         const signalLabel = pendingGates
@@ -500,80 +500,87 @@ export function Trend100Dashboard({
                 ? 'inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.35)]'
                 : 'inline-block h-2 w-2 shrink-0 rounded-full bg-amber-300/70';
         const labelClass =
-          signalLabel === 'QUIET'
-            ? 'text-slate-400'
+          signalLabel === 'ACTIVE'
+            ? 'text-emerald-300'
             : signalLabel === 'WATCH'
-              ? 'text-amber-400/90'
-              : signalLabel === 'ACTIVE'
-                ? 'text-emerald-400/90'
-                : 'text-amber-300/80';
+              ? 'text-amber-300'
+              : signalLabel === 'PENDING'
+                ? 'text-amber-200'
+                : 'text-slate-300';
 
-        const signalParts: string[] = [];
-        if (signalLabel === 'ACTIVE' && lastRun && daysIntoEvent != null) {
-          signalParts.push(`Day ${daysIntoEvent} of event (started ${lastRun.startDate})`);
-        } else if (signalLabel === 'QUIET' && !lastRun) {
-          signalParts.push('No events in range');
-        } else if (signalLabel === 'PENDING') {
-          const lag = lagDays != null ? `${lagDays}d` : '—';
-          signalParts.push(`Shock updated ${latestShockDate}; gates lag ${lag}`);
-        } else if (lastRun && !isActiveNow) {
-          const td = daysSinceEvent != null ? `${daysSinceEvent} td ago` : '—';
-          signalParts.push(`Last event ended ${lastRun.endDate} (${td})`);
-        }
-        if (deltaToTrigger != null) {
-          signalParts.push(`Δz ${deltaToTrigger.toFixed(2)}`);
-        }
-        signalParts.push(`Conditions ${metCount}/3`);
-        if (blockingStr) {
-          signalParts.push(`Blocking: ${blockingStr}`);
-        }
+        const timerChipText =
+          signalLabel === 'ACTIVE' && lastRun && daysIntoEvent != null
+            ? `Day ${daysIntoEvent} of event (since ${lastRun.startDate})`
+            : !lastRun
+              ? 'No events in range'
+              : lastRun && !isActiveNow
+                ? `Last event ended ${lastRun.endDate} (${daysSinceEvent != null ? `${daysSinceEvent} td ago` : '—'})`
+                : '—';
+
+        const chipBase =
+          'inline-flex items-center rounded-md px-2 py-0.5 text-xs bg-zinc-900/60 border border-zinc-800 text-slate-300';
+
+        const headerRight =
+          shockDate && gatesDate != null
+            ? `Shock: ${shockDate} • Gates: ${gatesDate}${lagDays != null && lagDays > 0 ? ` (lag ${lagDays}d)` : ''}`
+            : shockDate
+              ? `Shock: ${shockDate} • Gates: pending`
+              : '—';
 
         return (
           <div className="container mx-auto px-4 py-2 border-b border-zinc-800">
-            <div className="text-xs text-slate-400">
-              <span className="font-medium text-slate-300">Turbulence:</span>{' '}
-              <span
-                className={
-                  status === 'GREEN BAR ACTIVE'
-                    ? 'text-green-400 font-medium'
-                    : status === 'ELEVATED'
-                      ? 'text-amber-400'
-                      : status === 'PENDING'
-                        ? 'text-slate-500 italic'
-                        : ''
-                }
-              >
-                {status === 'PENDING' ? 'PENDING (waiting on FRED gates)' : status}
-              </span>
-              <span className="ml-3 text-slate-500">
-                ShockZ={fmtNum(latest.shockZ)}{' '}
-                SPX&gt;50DMA={
-                  showAsOf
-                    ? `${displayGateRow.spxAbove50dma ? 'true' : 'false'} (as of ${latestGateDate})`
-                    : fmtBool(latest.spxAbove50dma)
-                }{' '}
-                VIX&lt;25={
-                  showAsOf
-                    ? `${displayGateRow.vixBelow25 ? 'true' : 'false'} (as of ${latestGateDate})`
-                    : fmtBool(latest.vixBelow25)
-                }
-              </span>
-            </div>
-            {pendingGates && shockDate && (
-              <div className="text-xs text-slate-500 mt-0.5 space-y-0.5">
-                {latest.shockZ != null && (
-                  <div>
-                    Shock: {shockDate} (z={fmtNum(latest.shockZ)}){' '}
-                    {gatesDate != null
-                      ? `| Gates: ${gatesDate} (lag ${lagDays}d)`
-                      : '| Gates: pending'}
-                  </div>
-                )}
-                <div>Gates lag by 0–1 days depending on FRED update timing.</div>
+            {/* Row A: headline */}
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="font-medium text-slate-300">Turbulence:</span>
+                <span className={dotClass} aria-hidden />
+                <span className={`font-medium ${labelClass}`}>{signalLabel}</span>
               </div>
-            )}
-            {/* 3-condition checklist (Jordi Visser Turbulence Model) */}
-            <div className="text-xs text-slate-400 mt-1.5 space-y-0.5">
+              <div className="text-xs text-slate-500">{headerRight}</div>
+            </div>
+            {/* Row B: status-tag chips */}
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <span className={chipBase}>
+                Δz {deltaToTrigger != null ? `${deltaToTrigger.toFixed(2)} to trigger` : '—'}
+              </span>
+              <span className={chipBase}>Conditions {metCount}/3</span>
+              {blockingShort && (
+                <span className={chipBase}>Blocking: {blockingShort}</span>
+              )}
+              <span className={chipBase}>{timerChipText}</span>
+              {signalLabel === 'PENDING' && (
+                <span className={chipBase}>Gates pending</span>
+              )}
+            </div>
+            {/* 3-condition checklist */}
+            <div className="text-xs text-slate-400 mt-2 space-y-0.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500">Details</span>
+                <button
+                  type="button"
+                  onClick={() => setShowTurbulenceExplainer((v) => !v)}
+                  aria-expanded={showTurbulenceExplainer}
+                  aria-controls="turbulence-explainer-panel"
+                  aria-label="About Green Bar"
+                  className="inline-flex items-center gap-1 text-slate-400 hover:text-slate-300 hover:underline focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1 focus:ring-offset-zinc-950 rounded"
+                >
+                  <svg
+                    className="h-3 w-3 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  About Green Bar
+                </button>
+              </div>
               <div>
                 Covariance shock (ShockZ ≥ {SHOCK_Z_THRESHOLD}):{' '}
                 {latest.shockZ != null ? (
@@ -614,42 +621,6 @@ export function Trend100Dashboard({
                   '—'
                 )}
               </div>
-              {/* PR19: Signal light — current state, timer, proximity */}
-              <div className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400 mt-1.5">
-                <span className="font-medium text-slate-300">Signal:</span>
-                <span className={dotClass} aria-hidden />
-                <span className={`font-medium ${labelClass}`}>{signalLabel}</span>
-                {signalParts.length > 0 && (
-                  <>
-                    <span className="text-slate-500">—</span>
-                    <span>{signalParts.join(' — ')}</span>
-                  </>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowTurbulenceExplainer((v) => !v)}
-                aria-expanded={showTurbulenceExplainer}
-                aria-controls="turbulence-explainer-panel"
-                aria-label="About Green Bar"
-                className="mt-1 inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-300 hover:underline focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1 focus:ring-offset-zinc-950 rounded"
-              >
-                <svg
-                  className="h-3 w-3 shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                About Green Bar
-              </button>
             </div>
             {showTurbulenceExplainer && (
               <div

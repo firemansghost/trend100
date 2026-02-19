@@ -9,8 +9,8 @@
  * Env:
  * - TURBULENCE_GATES_START (optional; default "2019-10-01")
  * - TURBULENCE_STOOQ_SPX_SYMBOL (optional; default "^spx")
- * - TURBULENCE_STOOQ_VIX_SYMBOL (optional; default "^vix")
- *   If Stooq returns no data for VIX, try ^VIX or vix.us via env.
+ * - TURBULENCE_STOOQ_VIX_SYMBOL (optional; default "vi.c" = S&P 500 VIX Cash)
+ *   If set, tried first; on failure, fallback list is used. CI pins vi.c for stability.
  */
 
 import './load-env';
@@ -93,6 +93,72 @@ async function fetchStooqCsv(
   return map;
 }
 
+const VIX_FALLBACK_SYMBOLS = ['vi.c', '^vix', '^VIX', 'vi.f'];
+
+async function fetchVixWithFallback(
+  start: string,
+  end: string
+): Promise<{ map: Map<string, number>; symbolUsed: string }> {
+  const envSymbol = process.env.TURBULENCE_STOOQ_VIX_SYMBOL?.trim();
+  const toTry = envSymbol ? [envSymbol, ...VIX_FALLBACK_SYMBOLS.filter((s) => s !== envSymbol)] : VIX_FALLBACK_SYMBOLS;
+
+  let lastError: Error | null = null;
+  let lastUrl = '';
+
+  for (const symbol of toTry) {
+    const d1 = toYyyyMmDd(start);
+    const d2 = toYyyyMmDd(end);
+    lastUrl = `${STOOQ_BASE}?s=${encodeURIComponent(symbol)}&d1=${d1}&d2=${d2}&i=d`;
+
+    try {
+      const res = await fetch(lastUrl);
+      if (!res.ok) {
+        lastError = new Error(`Stooq fetch failed: ${res.status} ${res.statusText}`);
+        continue;
+      }
+      const text = await res.text();
+      const trimmed = text.trim();
+      if (!trimmed || trimmed === 'No data.' || trimmed.toLowerCase().includes('no data')) {
+        lastError = new Error('Stooq returned no data');
+        continue;
+      }
+      const lines = trimmed.split('\n').filter((l) => l.trim());
+      if (lines.length < 2) {
+        lastError = new Error('Stooq CSV has no data rows');
+        continue;
+      }
+      const header = lines[0]!.toLowerCase();
+      const closeIdx = header.split(',').findIndex((c) => c.trim() === 'close');
+      const dateIdx = header.split(',').findIndex((c) => c.trim() === 'date');
+      if (closeIdx < 0 || dateIdx < 0) {
+        lastError = new Error('Stooq CSV missing Date or Close column');
+        continue;
+      }
+      const map = new Map<string, number>();
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i]!.split(',');
+        const date = cols[dateIdx]?.trim();
+        const closeStr = cols[closeIdx]?.trim();
+        if (!date || !closeStr) continue;
+        const close = parseFloat(closeStr);
+        if (Number.isFinite(close)) map.set(date, close);
+      }
+      if (map.size === 0) {
+        lastError = new Error('Stooq CSV parsed 0 valid rows');
+        continue;
+      }
+      return { map, symbolUsed: symbol };
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      continue;
+    }
+  }
+
+  throw new Error(
+    `Stooq VIX: all symbols failed. Tried: ${toTry.join(', ')}. Last URL: ${lastUrl}. Last error: ${lastError?.message ?? 'unknown'}`
+  );
+}
+
 function computeSpx50dma(
   dates: string[],
   spxByDate: Map<string, number>
@@ -118,14 +184,16 @@ async function main() {
   const start = process.env.TURBULENCE_GATES_START || '2019-10-01';
   const end = new Date().toISOString().split('T')[0]!;
   const spxSymbol = process.env.TURBULENCE_STOOQ_SPX_SYMBOL || '^spx';
-  const vixSymbol = process.env.TURBULENCE_STOOQ_VIX_SYMBOL || '^vix';
 
-  console.log(`Fetching Stooq ${spxSymbol} and ${vixSymbol} (${start} to ${end})...`);
+  console.log(`Fetching Stooq ${spxSymbol} and VIX (${start} to ${end})...`);
 
-  const [spxMap, vixMap] = await Promise.all([
+  const [spxMap, vixResult] = await Promise.all([
     fetchStooqCsv(spxSymbol, start, end),
-    fetchStooqCsv(vixSymbol, start, end),
+    fetchVixWithFallback(start, end),
   ]);
+
+  const vixMap = vixResult.map;
+  console.log(`   VIX symbol used: ${vixResult.symbolUsed}`);
 
   const allDates = new Set<string>([...spxMap.keys(), ...vixMap.keys()]);
   const dates = [...allDates].sort();

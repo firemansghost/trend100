@@ -93,9 +93,9 @@
 - **Fix:** Create `.env.local` in repo root with `MARKETSTACK_API_KEY=your_key_here`
 - **Verify:** Scripts import `'./load-env'` as first import (check `scripts/*.ts` files)
 
-### "Stooq returned no data for symbol"
-- **Fix:** Set `TURBULENCE_STOOQ_SPX_SYMBOL` or `TURBULENCE_STOOQ_VIX_SYMBOL` in `.env.local` if the default (^spx, ^vix) fails. Try ^gspc for SPX; ^VIX or vix.us for VIX.
-- **Use case:** `update:turbulence-gates` fetches SPX and VIX from Stooq CSV; symbol availability may vary
+### "Stooq returned no data" / "Stooq VIX: all symbols failed"
+- **Fix:** Set `TURBULENCE_STOOQ_VIX_SYMBOL` in `.env.local` or CI env. CI pins `vi.c` (S&P 500 VIX Cash). Fallback list: vi.c, ^vix, ^VIX, vi.f. For SPX, set `TURBULENCE_STOOQ_SPX_SYMBOL` (default ^spx; try ^gspc if needed).
+- **Use case:** `update:turbulence-gates` fetches from Stooq CSV; symbol availability varies. Script logs which VIX symbol succeeded.
 
 ### "Needs extension but budget exhausted"
 - **Fix:** Increase `MARKETSTACK_EXTEND_MAX_SYMBOLS` (default: 10) or run multiple times

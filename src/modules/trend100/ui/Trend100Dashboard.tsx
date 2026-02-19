@@ -603,7 +603,7 @@ export function Trend100Dashboard({
                 title={
                   deltaToTrigger != null
                     ? momentumArrow
-                      ? `Δz: distance from the ShockZ trigger (2.0). Lower is closer. Arrow/streak shows whether ShockZ has been moving toward the trigger over the last N trading days.`
+                      ? 'Δz: distance from the ShockZ trigger (2.0). Lower is closer; 0 means ShockZ meets the trigger. ↑ means ShockZ is moving toward the trigger; ↓ means moving away; → means roughly flat — for N trading days.'
                       : 'Δz: distance from the ShockZ trigger (2.0). Lower is closer; 0 means ShockZ meets the trigger.'
                     : 'ShockZ not available for the latest date.'
                 }
@@ -756,7 +756,7 @@ export function Trend100Dashboard({
                   ShockZ is computed from a proxy correlation matrix (sector ETFs). Gates (SPX&gt;50DMA, VIX&lt;25) come from EOD closes.
                 </p>
                 <p>
-                  PENDING means Shock is updated but SPX/VIX close for the latest date is missing (e.g., market holiday or data timing).
+                  PENDING means Shock is updated but SPX/VIX EOD closes for the latest date are missing — holiday or before the provider posts the close.
                 </p>
                 <button
                   type="button"

@@ -522,7 +522,7 @@ export function Trend100Dashboard({
 
         const headerRight =
           shockDate && gatesDate != null
-            ? `Shock: ${shockDate} • Gates: ${gatesDate}${lagDays != null && lagDays > 0 ? ` (lag ${lagDays}d)` : ''}`
+            ? `Shock: ${shockDate} • Gates: ${gatesDate}${lagDays != null && lagDays > 0 ? (pendingGates ? ` (pending, lag ${lagDays}d)` : ` (lag ${lagDays}d)`) : pendingGates ? ' (pending)' : ''}`
             : shockDate
               ? `Shock: ${shockDate} • Gates: pending`
               : '—';
@@ -538,15 +538,15 @@ export function Trend100Dashboard({
               </div>
               <div className="text-xs text-slate-500">{headerRight}</div>
             </div>
-            {/* Row B: status-tag chips */}
+            {/* Row B: status-tag chips (narrative order) */}
             <div className="flex flex-wrap items-center gap-2 mt-2">
-              <span className={chipBase}>
-                Δz {deltaToTrigger != null ? `${deltaToTrigger.toFixed(2)} to trigger` : '—'}
-              </span>
               <span className={chipBase}>Conditions {metCount}/3</span>
               {blockingShort && (
                 <span className={chipBase}>Blocking: {blockingShort}</span>
               )}
+              <span className={chipBase}>
+                Δz {deltaToTrigger != null ? `${deltaToTrigger.toFixed(2)} to trigger` : '—'}
+              </span>
               <span className={chipBase}>{timerChipText}</span>
               {signalLabel === 'PENDING' && (
                 <span className={chipBase}>Gates pending</span>

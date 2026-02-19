@@ -500,7 +500,11 @@ export function Trend100Dashboard({
                 {spxKnown ? (
                   <>
                     {spxMet ? '✅' : '❌'}
-                    {showAsOf && latestGateDate && ` (as of ${latestGateDate})`}
+                    {showAsOf && latestGateDate && (
+                      <span className="text-slate-500">
+                        {' '}(as of {latestGateDate}{pendingGates ? ', pending' : ''})
+                      </span>
+                    )}
                   </>
                 ) : (
                   '—'
@@ -511,7 +515,11 @@ export function Trend100Dashboard({
                 {vixKnown ? (
                   <>
                     {vixMet ? '✅' : '❌'}
-                    {showAsOf && latestGateDate && ` (as of ${latestGateDate})`}
+                    {showAsOf && latestGateDate && (
+                      <span className="text-slate-500">
+                        {' '}(as of {latestGateDate}{pendingGates ? ', pending' : ''})
+                      </span>
+                    )}
                   </>
                 ) : (
                   '—'
@@ -522,10 +530,24 @@ export function Trend100Dashboard({
                 onClick={() => setShowTurbulenceExplainer((v) => !v)}
                 aria-expanded={showTurbulenceExplainer}
                 aria-controls="turbulence-explainer-panel"
-                aria-label="What is Turbulence / Green Bar?"
-                className="mt-1 text-slate-500 hover:text-slate-300 underline focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1 focus:ring-offset-zinc-950 rounded"
+                aria-label="About Green Bar"
+                className="mt-1 inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-300 hover:underline focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1 focus:ring-offset-zinc-950 rounded"
               >
-                What is this?
+                <svg
+                  className="h-3 w-3 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                About Green Bar
               </button>
             </div>
             {showTurbulenceExplainer && (

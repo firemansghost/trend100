@@ -756,7 +756,7 @@ export function Trend100Dashboard({
                   ShockZ is computed from a proxy correlation matrix (sector ETFs). Gates (SPX&gt;50DMA, VIX&lt;25) come from EOD closes.
                 </p>
                 <p>
-                  PENDING means Shock is updated but SPX/VIX EOD closes for the latest date are missing — holiday or before the provider posts the close.
+                  PENDING means Shock is updated but SPX/VIX EOD closes for the latest date are missing on holidays or before the provider posts the close.
                 </p>
                 <button
                   type="button"

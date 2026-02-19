@@ -92,6 +92,7 @@ export function Trend100Dashboard({
   const [showMetricHelp, setShowMetricHelp] = useState(false);
   const [showMetricHint, setShowMetricHint] = useState(false);
   const [showTurbulenceExplainer, setShowTurbulenceExplainer] = useState(false);
+  const [showChipGlossary, setShowChipGlossary] = useState(false);
 
   useEffect(() => {
     // One-time hint for metric discoverability (client-only)
@@ -547,8 +548,9 @@ export function Trend100Dashboard({
               </div>
               <div className="text-xs text-slate-500">{headerRight}</div>
             </div>
-            {/* Row B: status-tag chips (narrative order) */}
-            <div className="flex flex-wrap items-center gap-2 mt-2">
+            {/* Row B: status-tag chips (narrative order) + Chip glossary */}
+            <div className="flex flex-wrap items-center justify-between gap-2 mt-2">
+              <div className="flex flex-wrap items-center gap-2">
               <span
                 className={chipBase}
                 title="How many of the 3 Green Bar conditions are currently satisfied (Shock, SPX>50DMA, VIX<25)."
@@ -567,11 +569,11 @@ export function Trend100Dashboard({
                 className={chipBase}
                 title={
                   deltaToTrigger != null
-                    ? 'Distance from the ShockZ trigger (2.0). Lower is closer; 0 means ShockZ meets the trigger.'
+                    ? 'Δz: distance from the ShockZ trigger (2.0). Lower is closer; 0 means ShockZ meets the trigger.'
                     : 'ShockZ not available for the latest date.'
                 }
               >
-                Δz {deltaToTrigger != null ? `${deltaToTrigger.toFixed(2)} to trigger` : '—'}
+                {deltaToTrigger != null ? deltaToTrigger.toFixed(2) : '—'} from trigger
               </span>
               <span className={chipBase} title={timerChipTitle}>
                 {timerChipText}
@@ -584,7 +586,47 @@ export function Trend100Dashboard({
                   Gates pending
                 </span>
               )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowChipGlossary((v) => !v)}
+                aria-expanded={showChipGlossary}
+                aria-controls="chip-glossary-panel"
+                aria-label="Chip glossary"
+                className="shrink-0 inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1 focus:ring-offset-zinc-950 rounded"
+              >
+                <svg
+                  className="h-3 w-3 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Chip glossary
+              </button>
             </div>
+            {showChipGlossary && (
+              <div
+                id="chip-glossary-panel"
+                role="region"
+                aria-label="Chip glossary"
+                className="mt-2 rounded border border-zinc-800 bg-zinc-900/80 p-3 text-xs text-slate-400 space-y-1.5"
+              >
+                <div className="font-medium text-slate-300">Chip glossary</div>
+                <div><span className="text-slate-300">Conditions N/3</span> — how many of the 3 Green Bar conditions are currently met.</div>
+                <div><span className="text-slate-300">Blocking: Shock|SPX|VIX</span> — what&apos;s preventing a Green Bar right now.</div>
+                <div><span className="text-slate-300">X from trigger</span> — distance to the ShockZ trigger (2.0). 0 means ShockZ meets trigger.</div>
+                <div><span className="text-slate-300">Timer</span> — day N of event, or trading days since last event ended.</div>
+                <div><span className="text-slate-300">Gates pending</span> — FRED gates (SPX/VIX) can lag 0–1 days behind shock.</div>
+              </div>
+            )}
             {/* 3-condition checklist */}
             <div className="text-xs text-slate-400 mt-2 space-y-0.5">
               <div className="flex items-center justify-between gap-2">

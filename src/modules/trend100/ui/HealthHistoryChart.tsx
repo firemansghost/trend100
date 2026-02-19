@@ -312,7 +312,7 @@ export function HealthHistoryChart({
           activityLevel === 'HIGH' ? 'HIGH' : activityLevel === 'ELEVATED' ? 'ELEVATED' : '';
         const titleText =
           activityLevel
-            ? `Green Bar activity: ${activityLevel} (${daysInView} days / ${eventsInView} events in view)`
+            ? `In-view Green Bar activity: ${activityLevel} (${daysInView} days / ${eventsInView} events in chart range)`
             : undefined;
         return (
           <div className="mt-2 text-xs text-slate-400 space-y-0.5">
@@ -327,7 +327,7 @@ export function HealthHistoryChart({
                     title={titleText}
                     aria-label={titleText}
                   >
-                    <span className="text-slate-400">Activity</span>
+                    <span className="text-slate-400">In-view activity</span>
                     <span
                       className={
                         activityLevel === 'HIGH'

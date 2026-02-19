@@ -619,7 +619,7 @@ export function Trend100Dashboard({
               {signalLabel === 'PENDING' && (
                 <span
                   className={chipBase}
-                  title='SPX/VIX "gate" data comes from FRED and can lag 0–1 days. Shock is updated, gates are not yet posted for the latest date.'
+                  title="Gates pending: SPX>50DMA and VIX<25 values come from FRED and can lag 0–1 days behind ShockZ."
                 >
                   Gates pending
                 </span>
@@ -663,7 +663,7 @@ export function Trend100Dashboard({
                 <div><span className="text-slate-300">Shock (ShockZ)</span> — a z-scored spike in correlation/covariance instability across the ETF universe. Relationships are breaking even if the index looks fine.</div>
                 <div><span className="text-slate-300">X from trigger</span> — distance to the ShockZ trigger (2.0). 0 means ShockZ meets trigger. Arrow/streak shows momentum toward or away.</div>
                 <div><span className="text-slate-300">Timer</span> — day N of event, or trading days since last event ended.</div>
-                <div><span className="text-slate-300">Gates pending</span> — FRED gates (SPX/VIX) can lag 0–1 days behind shock.</div>
+                <div><span className="text-slate-300">Gates pending</span> — SPX&gt;50DMA and VIX&lt;25 data (from FRED) can lag 0–1 days behind ShockZ.</div>
               </div>
             )}
             {/* 3-condition checklist */}

@@ -517,6 +517,15 @@ export function Trend100Dashboard({
                 ? `Last event ended ${lastRun.endDate} (${daysSinceEvent != null ? `${daysSinceEvent} td ago` : '—'})`
                 : '—';
 
+        const timerChipTitle =
+          signalLabel === 'ACTIVE' && lastRun
+            ? 'How long the current Green Bar event has been ongoing (trading days).'
+            : !lastRun
+              ? 'No Green Bar events in the current chart range.'
+              : lastRun && !isActiveNow
+                ? 'How many trading days since the last Green Bar event ended.'
+                : 'Event timing.';
+
         const chipBase =
           'inline-flex items-center rounded-md px-2 py-0.5 text-xs bg-zinc-900/60 border border-zinc-800 text-slate-300';
 
@@ -540,16 +549,40 @@ export function Trend100Dashboard({
             </div>
             {/* Row B: status-tag chips (narrative order) */}
             <div className="flex flex-wrap items-center gap-2 mt-2">
-              <span className={chipBase}>Conditions {metCount}/3</span>
+              <span
+                className={chipBase}
+                title="How many of the 3 Green Bar conditions are currently satisfied (Shock, SPX>50DMA, VIX<25)."
+              >
+                Conditions {metCount}/3
+              </span>
               {blockingShort && (
-                <span className={chipBase}>Blocking: {blockingShort}</span>
+                <span
+                  className={chipBase}
+                  title="Which condition is currently preventing a Green Bar signal."
+                >
+                  Blocking: {blockingShort}
+                </span>
               )}
-              <span className={chipBase}>
+              <span
+                className={chipBase}
+                title={
+                  deltaToTrigger != null
+                    ? 'Distance from the ShockZ trigger (2.0). Lower is closer; 0 means ShockZ meets the trigger.'
+                    : 'ShockZ not available for the latest date.'
+                }
+              >
                 Δz {deltaToTrigger != null ? `${deltaToTrigger.toFixed(2)} to trigger` : '—'}
               </span>
-              <span className={chipBase}>{timerChipText}</span>
+              <span className={chipBase} title={timerChipTitle}>
+                {timerChipText}
+              </span>
               {signalLabel === 'PENDING' && (
-                <span className={chipBase}>Gates pending</span>
+                <span
+                  className={chipBase}
+                  title='SPX/VIX "gate" data comes from FRED and can lag 0–1 days. Shock is updated, gates are not yet posted for the latest date.'
+                >
+                  Gates pending
+                </span>
               )}
             </div>
             {/* 3-condition checklist */}

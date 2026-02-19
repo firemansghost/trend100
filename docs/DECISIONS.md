@@ -6,9 +6,16 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 ---
 
 ### 2026-02 — (Data/Ops) Turbulence gates from Stooq instead of FRED (PR26)
-**Choice:** Switched `update-turbulence-gates.ts` from FRED (SP500 + VIXCLS) to Stooq CSV for SPX and VIX EOD closes. Eliminates 0–1 day FRED lag so gates align with ShockZ timing. No API key required. Env: `TURBULENCE_GATES_START`, `TURBULENCE_STOOQ_SPX_SYMBOL` (default ^spx), `TURBULENCE_STOOQ_VIX_SYMBOL` (default ^vix). Output schema unchanged.
+**Choice:** Switched `update-turbulence-gates.ts` from FRED (SP500 + VIXCLS) to Stooq CSV for SPX and VIX EOD closes. Eliminates 0–1 day FRED lag so gates align with ShockZ timing. No API key required. Env: `TURBULENCE_GATES_START`, `TURBULENCE_STOOQ_SPX_SYMBOL` (default ^spx), `TURBULENCE_STOOQ_VIX_SYMBOL` (default vi.c = S&P 500 VIX Cash). Output schema unchanged.
 
 **Why:** FRED can lag ShockZ by 0–1 days, causing "Gates pending" mismatches. Stooq EOD aligns with same-day close timing.
+
+---
+
+### 2026-02 — (Data/Ops) VIX symbol fallback + CI env pinning
+**Choice:** Stooq returns "no data" for ^vix. Switched default VIX symbol to `vi.c` (S&P 500 VIX Cash, spot index). Added fallback: try `TURBULENCE_STOOQ_VIX_SYMBOL` first if set, else try [vi.c, ^vix, ^VIX, vi.f] in order. Log which symbol succeeded. CI workflows explicitly set `TURBULENCE_STOOQ_VIX_SYMBOL: "vi.c"` so artifacts are stable.
+
+**Why:** ^vix fails in CI; vi.c is Stooq's spot VIX and returns data. Env pinning prevents future regressions if defaults change.
 
 ---
 

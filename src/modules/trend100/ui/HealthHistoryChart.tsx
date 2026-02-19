@@ -299,12 +299,39 @@ export function HealthHistoryChart({
         </LineChart>
       </ResponsiveContainer>
       )}
-      {!isEmpty && eventsInView > 0 && (
-        <div className="mt-2 text-xs text-slate-400 space-y-0.5">
-          <div>Vertical bands = Green Bar events.</div>
-          <div>Green Bar in view: {daysInView} days / {eventsInView} events</div>
-        </div>
-      )}
+      {!isEmpty && eventsInView > 0 && (() => {
+        const tradingDaysInView = chartData.length;
+        const density =
+          tradingDaysInView > 0 ? daysInView / tradingDaysInView : 0;
+        const high =
+          eventsInView >= 2 || daysInView >= 15 || density >= 0.25;
+        const elevated =
+          eventsInView === 1 || daysInView >= 7 || density >= 0.12;
+        const activityLevel = high ? 'HIGH' : elevated ? 'ELEVATED' : null;
+        return (
+          <div className="mt-2 text-xs text-slate-400 space-y-0.5">
+            <div>Vertical bands = Green Bar events.</div>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span>Green Bar in view: {daysInView} days / {eventsInView} events</span>
+              {activityLevel && (
+                <>
+                  <span className="text-slate-500">·</span>
+                  <span
+                    className={
+                      activityLevel === 'HIGH'
+                        ? 'inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20'
+                        : 'inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium bg-amber-500/5 text-amber-200 border border-amber-500/10'
+                    }
+                  >
+                    Activity: {activityLevel}
+                    {activityLevel === 'HIGH' && ' ⚠'}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -473,6 +473,35 @@ export function Trend100Dashboard({
         const shockZ = latest.shockZ;
         const deltaToTrigger =
           shockZ != null ? TRIGGER_Z - shockZ : null;
+
+        // Momentum: direction + streak from recent deltas (UI-only)
+        const validDeltas: number[] = [];
+        for (let i = 0; i < greenbarData.length; i++) {
+          const z = greenbarData[i]!.shockZ;
+          if (z != null) validDeltas.push(TRIGGER_Z - z);
+        }
+        let momentumArrow = '';
+        let momentumStreak = 0;
+        if (validDeltas.length >= 2 && deltaToTrigger != null) {
+          const latestDelta = validDeltas[validDeltas.length - 1]!;
+          const prevDelta = validDeltas[validDeltas.length - 2]!;
+          if (latestDelta < prevDelta) {
+            momentumArrow = '↑';
+            for (let k = validDeltas.length - 1; k >= 1; k--) {
+              if (validDeltas[k]! < validDeltas[k - 1]!) momentumStreak++;
+              else break;
+            }
+          } else if (latestDelta > prevDelta) {
+            momentumArrow = '↓';
+            for (let k = validDeltas.length - 1; k >= 1; k--) {
+              if (validDeltas[k]! > validDeltas[k - 1]!) momentumStreak++;
+              else break;
+            }
+          } else {
+            momentumArrow = '→';
+          }
+        }
+
         const metCount = [shockMet, spxMet, vixMet].filter(Boolean).length;
         const blockingShort = !shockMet
           ? 'Shock'
@@ -560,7 +589,11 @@ export function Trend100Dashboard({
               {blockingShort && (
                 <span
                   className={chipBase}
-                  title="Which condition is currently preventing a Green Bar signal."
+                  title={
+                    blockingShort === 'Shock'
+                      ? 'Which condition is blocking. Shock (ShockZ): a z-scored spike in correlation/covariance instability — relationships are breaking even if the index looks fine.'
+                      : 'Which condition is currently preventing a Green Bar signal.'
+                  }
                 >
                   Blocking: {blockingShort}
                 </span>
@@ -569,11 +602,16 @@ export function Trend100Dashboard({
                 className={chipBase}
                 title={
                   deltaToTrigger != null
-                    ? 'Δz: distance from the ShockZ trigger (2.0). Lower is closer; 0 means ShockZ meets the trigger.'
+                    ? momentumArrow
+                      ? `Δz: distance from the ShockZ trigger (2.0). Lower is closer. Arrow/streak shows whether ShockZ has been moving toward the trigger over the last N trading days.`
+                      : 'Δz: distance from the ShockZ trigger (2.0). Lower is closer; 0 means ShockZ meets the trigger.'
                     : 'ShockZ not available for the latest date.'
                 }
               >
                 {deltaToTrigger != null ? deltaToTrigger.toFixed(2) : '—'} from trigger
+                {deltaToTrigger != null && momentumArrow && (
+                  <> {momentumArrow}{momentumStreak > 0 ? ` ${momentumStreak}D` : ''}</>
+                )}
               </span>
               <span className={chipBase} title={timerChipTitle}>
                 {timerChipText}
@@ -593,7 +631,7 @@ export function Trend100Dashboard({
                 aria-expanded={showChipGlossary}
                 aria-controls="chip-glossary-panel"
                 aria-label="Chip glossary"
-                className="shrink-0 inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1 focus:ring-offset-zinc-950 rounded"
+                className={`shrink-0 ${chipBase} cursor-pointer hover:bg-zinc-800/60 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1 focus:ring-offset-zinc-950`}
               >
                 <svg
                   className="h-3 w-3 shrink-0"
@@ -622,7 +660,8 @@ export function Trend100Dashboard({
                 <div className="font-medium text-slate-300">Chip glossary</div>
                 <div><span className="text-slate-300">Conditions N/3</span> — how many of the 3 Green Bar conditions are currently met.</div>
                 <div><span className="text-slate-300">Blocking: Shock|SPX|VIX</span> — what&apos;s preventing a Green Bar right now.</div>
-                <div><span className="text-slate-300">X from trigger</span> — distance to the ShockZ trigger (2.0). 0 means ShockZ meets trigger.</div>
+                <div><span className="text-slate-300">Shock (ShockZ)</span> — a z-scored spike in correlation/covariance instability across the ETF universe. Relationships are breaking even if the index looks fine.</div>
+                <div><span className="text-slate-300">X from trigger</span> — distance to the ShockZ trigger (2.0). 0 means ShockZ meets trigger. Arrow/streak shows momentum toward or away.</div>
                 <div><span className="text-slate-300">Timer</span> — day N of event, or trading days since last event ended.</div>
                 <div><span className="text-slate-300">Gates pending</span> — FRED gates (SPX/VIX) can lag 0–1 days behind shock.</div>
               </div>

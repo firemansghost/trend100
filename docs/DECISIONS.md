@@ -5,10 +5,17 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
-### 2026-02-19 — (Data/UI) Turbulence Green Bar null-aware PENDING state when gates lag
-**Choice:** When FRED gates (turbulence.gates.json) lag shock (turbulence.shock.json) by a day—e.g., gates last date 2026-02-17 vs shock 2026-02-18—greenbar uses an explicit PENDING state instead of treating missing gates as false. For dates with shock but no gates: `spxAbove50dma`, `vixBelow25`, and `isGreenBar` are set to `null`. UI shows "Turbulence: PENDING (waiting on FRED gates)" with subtext explaining the lag. Chart overlays render only when `isGreenBar === true` (never for null). verify-artifacts enforces: if gate fields are null, isGreenBar must be null; if gates present, isGreenBar must be boolean.
+### 2026-02 — (Data/Ops) Turbulence gates from Stooq instead of FRED (PR26)
+**Choice:** Switched `update-turbulence-gates.ts` from FRED (SP500 + VIXCLS) to Stooq CSV for SPX and VIX EOD closes. Eliminates 0–1 day FRED lag so gates align with ShockZ timing. No API key required. Env: `TURBULENCE_GATES_START`, `TURBULENCE_STOOQ_SPX_SYMBOL` (default ^spx), `TURBULENCE_STOOQ_VIX_SYMBOL` (default ^vix). Output schema unchanged.
 
-**Why:** FRED updates can lag EOD by 0–1 days. Treating missing gates as false would mislead users (e.g., showing NORMAL when we simply don't know). PENDING state is honest and avoids false negatives.
+**Why:** FRED can lag ShockZ by 0–1 days, causing "Gates pending" mismatches. Stooq EOD aligns with same-day close timing.
+
+---
+
+### 2026-02-19 — (Data/UI) Turbulence Green Bar null-aware PENDING state when gates lag
+**Choice:** When gates (turbulence.gates.json) lag shock (turbulence.shock.json) by a day—e.g., gates last date 2026-02-17 vs shock 2026-02-18—greenbar uses an explicit PENDING state instead of treating missing gates as false. For dates with shock but no gates: `spxAbove50dma`, `vixBelow25`, and `isGreenBar` are set to `null`. UI shows "Turbulence: PENDING" with subtext explaining. Chart overlays render only when `isGreenBar === true` (never for null). verify-artifacts enforces: if gate fields are null, isGreenBar must be null; if gates present, isGreenBar must be boolean.
+
+**Why:** When gates are missing (e.g., market holiday or data timing), treating them as false would mislead users. PENDING state is honest and avoids false negatives.
 
 ---
 
@@ -26,10 +33,10 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
-### 2026-02-19 — (Ops) CI-generated turbulence gates artifact from FRED
-**Choice:** Added `public/turbulence.gates.json` artifact built from FRED data (SP500 + VIXCLS). The script `update-turbulence-gates.ts` fetches both series, computes SPX 50-day moving average, and outputs daily gate booleans (`spxAbove50dma`, `vixBelow25`) for Turbulence Model alignment (Jordi Visser). Artifacts are generated in CI (vercel-prebuilt-prod, daily-artifacts-deploy) before build; no runtime fetch in the deployed app. Generated JSON is not committed (ignored via .gitignore).
+### 2026-02-19 — (Ops) CI-generated turbulence gates artifact (now Stooq; see PR26)
+**Choice:** `public/turbulence.gates.json` artifact built from Stooq EOD (SPX + VIX). The script `update-turbulence-gates.ts` fetches both series, computes SPX 50-day moving average, and outputs daily gate booleans (`spxAbove50dma`, `vixBelow25`) for Turbulence Model alignment (Jordi Visser). Artifacts are generated in CI before build; no runtime fetch. No API key required.
 
-**Why:** PR8 prerequisites for the Green Bar require SPX above 50-day MA and VIX below 25. Precomputing these gates in CI keeps the app statically deployable and avoids runtime FRED API calls. `FRED_API_KEY` is a CI-only secret; not added to Vercel env.
+**Why:** Green Bar requires SPX above 50-day MA and VIX below 25. Precomputing in CI keeps the app statically deployable. Stooq aligns gates with ShockZ timing (no FRED lag).
 
 ---
 

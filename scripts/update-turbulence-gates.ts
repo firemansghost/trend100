@@ -1,12 +1,16 @@
 /**
- * Update turbulence gates artifact from FRED (SP500 + VIXCLS)
+ * Update turbulence gates artifact from Stooq (SPX + VIX EOD closes)
  *
- * Fetches SP500 and VIXCLS from FRED, computes SPX 50-day MA and gate booleans,
- * writes public/turbulence.gates.json for Turbulence Model alignment (PR8).
+ * Fetches SPX and VIX daily closes from Stooq CSV, computes SPX 50-day MA and
+ * gate booleans, writes public/turbulence.gates.json for Turbulence Model (PR26).
+ *
+ * Replaces FRED to eliminate 0–1 day lag — gates now align with ShockZ timing.
  *
  * Env:
- * - FRED_API_KEY (required)
  * - TURBULENCE_GATES_START (optional; default "2019-10-01")
+ * - TURBULENCE_STOOQ_SPX_SYMBOL (optional; default "^spx")
+ * - TURBULENCE_STOOQ_VIX_SYMBOL (optional; default "^vix")
+ *   If Stooq returns no data for VIX, try ^VIX or vix.us via env.
  */
 
 import './load-env';
@@ -14,16 +18,7 @@ import './load-env';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 
-const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations';
-
-interface FredObservation {
-  date: string;
-  value: string;
-}
-
-interface FredResponse {
-  observations?: FredObservation[];
-}
+const STOOQ_BASE = 'https://stooq.com/q/d/l/';
 
 interface TurbulenceGatePoint {
   date: string;
@@ -34,37 +29,67 @@ interface TurbulenceGatePoint {
   vixBelow25: boolean | null;
 }
 
-function parseValue(val: string): number | null {
-  if (!val || val === '.') return null;
-  const n = parseFloat(val);
-  return Number.isFinite(n) ? n : null;
+function toYyyyMmDd(dateStr: string): string {
+  return dateStr.replace(/-/g, '');
 }
 
-async function fetchFredSeries(
-  seriesId: string,
-  apiKey: string,
+async function fetchStooqCsv(
+  symbol: string,
   start: string,
   end: string
 ): Promise<Map<string, number>> {
-  const url = new URL(FRED_BASE);
-  url.searchParams.set('series_id', seriesId);
-  url.searchParams.set('api_key', apiKey);
-  url.searchParams.set('file_type', 'json');
-  url.searchParams.set('observation_start', start);
-  url.searchParams.set('observation_end', end);
-  url.searchParams.set('sort_order', 'asc');
+  const d1 = toYyyyMmDd(start);
+  const d2 = toYyyyMmDd(end);
+  const url = `${STOOQ_BASE}?s=${encodeURIComponent(symbol)}&d1=${d1}&d2=${d2}&i=d`;
 
-  const res = await fetch(url.toString());
+  const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`FRED API error for ${seriesId}: ${res.status} ${res.statusText}`);
+    throw new Error(`Stooq fetch failed for ${symbol}: ${res.status} ${res.statusText}\nURL: ${url}`);
   }
-  const data = (await res.json()) as FredResponse;
-  const obs = data.observations ?? [];
+
+  const text = await res.text();
+  const trimmed = text.trim();
+
+  if (!trimmed || trimmed === 'No data.' || trimmed.toLowerCase().includes('no data')) {
+    throw new Error(
+      `Stooq returned no data for symbol "${symbol}". URL used: ${url}\n` +
+        'Hint: The symbol may be wrong. Try ^spx, ^gspc for SPX; ^vix for VIX.'
+    );
+  }
+
+  const lines = trimmed.split('\n').filter((l) => l.trim());
+  if (lines.length < 2) {
+    throw new Error(
+      `Stooq CSV has no data rows for symbol "${symbol}". URL used: ${url}\n` +
+        'Hint: Check the symbol and date range.'
+    );
+  }
+
+  const header = lines[0]!.toLowerCase();
+  const closeIdx = header.split(',').findIndex((c) => c.trim() === 'close');
+  const dateIdx = header.split(',').findIndex((c) => c.trim() === 'date');
+
+  if (closeIdx < 0 || dateIdx < 0) {
+    throw new Error(`Stooq CSV missing Date or Close column. URL: ${url}`);
+  }
+
   const map = new Map<string, number>();
-  for (const o of obs) {
-    const v = parseValue(o.value);
-    if (v !== null) map.set(o.date, v);
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i]!.split(',');
+    const date = cols[dateIdx]?.trim();
+    const closeStr = cols[closeIdx]?.trim();
+    if (!date || !closeStr) continue;
+    const close = parseFloat(closeStr);
+    if (Number.isFinite(close)) map.set(date, close);
   }
+
+  if (map.size === 0) {
+    throw new Error(
+      `Stooq CSV parsed 0 valid rows for symbol "${symbol}". URL used: ${url}\n` +
+        'Hint: The symbol may be incorrect for this exchange.'
+    );
+  }
+
   return map;
 }
 
@@ -90,19 +115,16 @@ function computeSpx50dma(
 }
 
 async function main() {
-  const apiKey = process.env.FRED_API_KEY;
-  if (!apiKey || apiKey.trim() === '') {
-    throw new Error('FRED_API_KEY environment variable is required');
-  }
-
   const start = process.env.TURBULENCE_GATES_START || '2019-10-01';
   const end = new Date().toISOString().split('T')[0]!;
+  const spxSymbol = process.env.TURBULENCE_STOOQ_SPX_SYMBOL || '^spx';
+  const vixSymbol = process.env.TURBULENCE_STOOQ_VIX_SYMBOL || '^vix';
 
-  console.log(`Fetching FRED SP500 and VIXCLS (${start} to ${end})...`);
+  console.log(`Fetching Stooq ${spxSymbol} and ${vixSymbol} (${start} to ${end})...`);
 
   const [spxMap, vixMap] = await Promise.all([
-    fetchFredSeries('SP500', apiKey, start, end),
-    fetchFredSeries('VIXCLS', apiKey, start, end),
+    fetchStooqCsv(spxSymbol, start, end),
+    fetchStooqCsv(vixSymbol, start, end),
   ]);
 
   const allDates = new Set<string>([...spxMap.keys(), ...vixMap.keys()]);

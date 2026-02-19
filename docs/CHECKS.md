@@ -42,7 +42,7 @@
 
 ### CI pipeline checks
 - **Artifact validation:** CI must pass `pnpm artifacts:refresh` before deploy (vercel-prebuilt-prod.yml on push; daily-artifacts-deploy.yml on schedule)
-- **FRED_API_KEY:** Required secret for turbulence gates generation; must be set in GitHub Actions secrets for both deploy workflows
+- **Turbulence gates:** Fetched from Stooq (SPX + VIX EOD); no API key required
 - **Daily deploy:** `daily-artifacts-deploy.yml` runs Mon–Fri 22:15 UTC; must pass update:snapshots + verify:artifacts before deploying
 - **Production smoke checks:** After deploy, key artifact endpoints should return 200:
   - https://trend100.vercel.app/snapshot.MACRO.json
@@ -93,9 +93,9 @@
 - **Fix:** Create `.env.local` in repo root with `MARKETSTACK_API_KEY=your_key_here`
 - **Verify:** Scripts import `'./load-env'` as first import (check `scripts/*.ts` files)
 
-### "FRED_API_KEY environment variable is required"
-- **Fix:** Add `FRED_API_KEY=your_key_here` to `.env.local` for local runs; ensure `FRED_API_KEY` is set as a GitHub Actions secret for CI
-- **Use case:** Required by `update:turbulence-gates` to fetch SP500 and VIXCLS from FRED
+### "Stooq returned no data for symbol"
+- **Fix:** Set `TURBULENCE_STOOQ_SPX_SYMBOL` or `TURBULENCE_STOOQ_VIX_SYMBOL` in `.env.local` if the default (^spx, ^vix) fails. Try ^gspc for SPX; ^VIX or vix.us for VIX.
+- **Use case:** `update:turbulence-gates` fetches SPX and VIX from Stooq CSV; symbol availability may vary
 
 ### "Needs extension but budget exhausted"
 - **Fix:** Increase `MARKETSTACK_EXTEND_MAX_SYMBOLS` (default: 10) or run multiple times

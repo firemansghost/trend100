@@ -430,6 +430,104 @@ export function Trend100Dashboard({
         const spxKnown = displayGateRow.spxAbove50dma != null;
         const vixKnown = displayGateRow.vixBelow25 != null;
 
+        // PR19: Signal light — runs, timer, proximity
+        const TRIGGER_Z = 2.0;
+        const WATCH_Z = 1.5;
+        const dateToIdx = new Map<string, number>();
+        greenbarData.forEach((p, i) => dateToIdx.set(p.date, i));
+        const greenBarDatesSorted = greenbarData
+          .filter((p) => p.isGreenBar === true)
+          .map((p) => p.date)
+          .sort();
+        const runs: Array<{ startDate: string; endDate: string; nDays: number }> = [];
+        for (let i = 0; i < greenBarDatesSorted.length; i++) {
+          const d = greenBarDatesSorted[i]!;
+          const prev = greenBarDatesSorted[i - 1];
+          const prevIdx = prev != null ? dateToIdx.get(prev) : undefined;
+          const currIdx = dateToIdx.get(d);
+          const contiguous =
+            prevIdx != null && currIdx != null && currIdx === prevIdx + 1;
+          if (contiguous && runs.length > 0) {
+            const last = runs[runs.length - 1]!;
+            last.endDate = d;
+            last.nDays += 1;
+          } else {
+            runs.push({ startDate: d, endDate: d, nDays: 1 });
+          }
+        }
+        const lastRun = runs.length > 0 ? runs[runs.length - 1]! : null;
+        const isActiveNow =
+          lastRun != null && lastRun.endDate === latestShockDate;
+        const daysIntoEvent = isActiveNow && lastRun ? lastRun.nDays : null;
+        const daysSinceEvent =
+          !isActiveNow &&
+          lastRun != null &&
+          latestShockDate != null &&
+          dateToIdx.has(latestShockDate) &&
+          dateToIdx.has(lastRun.endDate)
+            ? (dateToIdx.get(latestShockDate) ?? 0) -
+              (dateToIdx.get(lastRun.endDate) ?? 0)
+            : null;
+
+        const shockZ = latest.shockZ;
+        const deltaToTrigger =
+          shockZ != null ? TRIGGER_Z - shockZ : null;
+        const metCount = [shockMet, spxMet, vixMet].filter(Boolean).length;
+        const blockingStr = !shockMet
+          ? 'ShockZ<2.0'
+          : !spxMet
+            ? 'SPX<50DMA'
+            : !vixMet
+              ? 'VIX>25'
+              : null;
+
+        const signalLabel = pendingGates
+          ? 'PENDING'
+          : isActiveNow
+            ? 'ACTIVE'
+            : shockZ != null &&
+                shockZ >= WATCH_Z &&
+                (spxMet || vixMet)
+              ? 'WATCH'
+              : 'QUIET';
+
+        const dotClass =
+          signalLabel === 'QUIET'
+            ? 'inline-block h-2 w-2 shrink-0 rounded-full bg-slate-600/60'
+            : signalLabel === 'WATCH'
+              ? 'inline-block h-2 w-2 shrink-0 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.35)]'
+              : signalLabel === 'ACTIVE'
+                ? 'inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.35)]'
+                : 'inline-block h-2 w-2 shrink-0 rounded-full bg-amber-300/70';
+        const labelClass =
+          signalLabel === 'QUIET'
+            ? 'text-slate-400'
+            : signalLabel === 'WATCH'
+              ? 'text-amber-400/90'
+              : signalLabel === 'ACTIVE'
+                ? 'text-emerald-400/90'
+                : 'text-amber-300/80';
+
+        const signalParts: string[] = [];
+        if (signalLabel === 'ACTIVE' && lastRun && daysIntoEvent != null) {
+          signalParts.push(`Day ${daysIntoEvent} of event (started ${lastRun.startDate})`);
+        } else if (signalLabel === 'QUIET' && !lastRun) {
+          signalParts.push('No events in range');
+        } else if (signalLabel === 'PENDING') {
+          const lag = lagDays != null ? `${lagDays}d` : '—';
+          signalParts.push(`Shock updated ${latestShockDate}; gates lag ${lag}`);
+        } else if (lastRun && !isActiveNow) {
+          const td = daysSinceEvent != null ? `${daysSinceEvent} td ago` : '—';
+          signalParts.push(`Last event ended ${lastRun.endDate} (${td})`);
+        }
+        if (deltaToTrigger != null) {
+          signalParts.push(`Δz ${deltaToTrigger.toFixed(2)}`);
+        }
+        signalParts.push(`Conditions ${metCount}/3`);
+        if (blockingStr) {
+          signalParts.push(`Blocking: ${blockingStr}`);
+        }
+
         return (
           <div className="container mx-auto px-4 py-2 border-b border-zinc-800">
             <div className="text-xs text-slate-400">
@@ -514,6 +612,18 @@ export function Trend100Dashboard({
                   </>
                 ) : (
                   '—'
+                )}
+              </div>
+              {/* PR19: Signal light — current state, timer, proximity */}
+              <div className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400 mt-1.5">
+                <span className="font-medium text-slate-300">Signal:</span>
+                <span className={dotClass} aria-hidden />
+                <span className={`font-medium ${labelClass}`}>{signalLabel}</span>
+                {signalParts.length > 0 && (
+                  <>
+                    <span className="text-slate-500">—</span>
+                    <span>{signalParts.join(' — ')}</span>
+                  </>
                 )}
               </div>
               <button

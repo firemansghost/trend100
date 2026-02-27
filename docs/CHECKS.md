@@ -51,6 +51,37 @@
   - https://trend100.vercel.app/turbulence.shock.json
   - https://trend100.vercel.app/turbulence.greenbar.json
 
+### PLUMBING smoke checks (PowerShell)
+
+After deploy, run these to verify PLUMBING endpoints:
+
+```powershell
+# plumbing.war_lie_detector.json (asOf, label, score)
+$ts=[DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+$r=Invoke-WebRequest -Uri "https://trend100.vercel.app/plumbing.war_lie_detector.json?v=$ts" -Headers @{ "Cache-Control"="no-store" } -UseBasicParsing
+$j=$r.Content | ConvertFrom-Json
+"plumbing.war_lie_detector: asOf=$($j.asOf) label=$($j.label) score=$($j.score)"
+
+# snapshot.PLUMBING.json (universeSize, asOfDate, runDate)
+$r=Invoke-WebRequest -Uri "https://trend100.vercel.app/snapshot.PLUMBING.json?v=$ts" -Headers @{ "Cache-Control"="no-store" } -UseBasicParsing
+$j=$r.Content | ConvertFrom-Json
+"snapshot.PLUMBING: universeSize=$($j.universeSize) asOfDate=$($j.asOfDate) runDate=$($j.runDate)"
+
+# health-history.PLUMBING.json (points, first, last)
+$r=Invoke-WebRequest -Uri "https://trend100.vercel.app/health-history.PLUMBING.json?v=$ts" -Headers @{ "Cache-Control"="no-store" } -UseBasicParsing
+$j=$r.Content | ConvertFrom-Json
+"health-history.PLUMBING: points=$($j.Count) first=$($j[0].date) last=$($j[-1].date)"
+```
+
+### Local cleanup (if you ran artifacts locally)
+
+If you ran `pnpm artifacts:refresh` or similar locally and want to discard generated artifacts before committing:
+
+```bash
+git restore public data/marketstack/eod
+git clean -fd public data/marketstack/eod
+```
+
 ### verify:artifacts checks
 - **Turbulence gates:** Validates `public/turbulence.gates.json`:
   - File exists, is an array, ≥250 points
@@ -70,11 +101,21 @@
   - File exists, valid JSON
   - `asOf` within 10 calendar days (weekends/holidays can delay updates)
   - `label` in ["THEATER","WATCH","REAL_RISK"]
-  - `latest.spread`, `latest.spread_z30` are finite numbers
-  - `history` is array, sorted ascending by date
+  - `score` finite number in [0, 3]
+  - `latest.spread`, `latest.spread_z30`, `latest.spread_roc3` are finite numbers
+  - `history` is array, sorted ascending by date, length >= 60
+  - `labelHistory` (if present): non-empty, sorted ascending by date
   - Run locally: `pnpm -s update:plumbing-war-lie-detector`
   - Verify: `pnpm -s verify:artifacts`
   - Common failures: missing ticker (BNO not cached — run `pnpm -s update:snapshots` first), insufficient history (< 60 bars — extend EOD cache)
+- **Snapshot PLUMBING:** Validates `public/snapshot.PLUMBING.json`:
+  - File exists, valid JSON
+  - `universeSize` === 6
+  - `asOfDate` within 10 calendar days
+- **Health history PLUMBING:** Validates `public/health-history.PLUMBING.json`:
+  - File exists, valid JSON
+  - Points >= 200 (Market Health Over Time chart)
+  - Last date within 10 calendar days
 - **Turbulence green bar:** Validates `public/turbulence.greenbar.json`:
   - File exists, is an array, ≥250 rows
   - Sorted ascending by date

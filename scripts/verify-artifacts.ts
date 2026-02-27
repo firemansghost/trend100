@@ -87,6 +87,23 @@ function printHealthHistoryStatsForFile(
     
     const earliest = history[0]!.date;
     const latest = history[history.length - 1]!.date;
+
+    // PLUMBING: last date must be within 10 days (weekends/holidays)
+    if (deckIdForConfig === 'PLUMBING') {
+      const today = new Date().toISOString().split('T')[0]!;
+      const lastDateObj = new Date(latest);
+      const todayObj = new Date(today);
+      const daysSinceLast = Math.floor(
+        (todayObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      if (daysSinceLast > 10) {
+        console.error(
+          `  ❌ ${label}: Stale (last date ${latest} is ${daysSinceLast} days ago, max 10)`
+        );
+        return false;
+      }
+    }
+
     const days = Math.ceil(
       (new Date(latest).getTime() - new Date(earliest).getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -583,6 +600,7 @@ function printPlumbingWarLieDetectorStats(): boolean {
     }
     const spread = latest.spread;
     const spreadZ30 = latest.spread_z30;
+    const spreadRoc3 = latest.spread_roc3;
     if (typeof spread !== 'number' || !Number.isFinite(spread)) {
       console.error('  ❌ plumbing.war_lie_detector.json: latest.spread must be finite number');
       return false;
@@ -591,10 +609,28 @@ function printPlumbingWarLieDetectorStats(): boolean {
       console.error('  ❌ plumbing.war_lie_detector.json: latest.spread_z30 must be finite number');
       return false;
     }
+    if (typeof spreadRoc3 !== 'number' || !Number.isFinite(spreadRoc3)) {
+      console.error('  ❌ plumbing.war_lie_detector.json: latest.spread_roc3 must be finite number');
+      return false;
+    }
+
+    const score = obj.score;
+    if (typeof score !== 'number' || !Number.isFinite(score) || score < 0 || score > 3) {
+      console.error(
+        `  ❌ plumbing.war_lie_detector.json: score must be finite number in [0,3], got ${score}`
+      );
+      return false;
+    }
 
     const history = obj.history;
     if (!Array.isArray(history)) {
       console.error('  ❌ plumbing.war_lie_detector.json: history must be array');
+      return false;
+    }
+    if (history.length < 60) {
+      console.error(
+        `  ❌ plumbing.war_lie_detector.json: history too short (${history.length}, need >= 60)`
+      );
       return false;
     }
     for (let i = 1; i < history.length; i++) {
@@ -603,6 +639,28 @@ function printPlumbingWarLieDetectorStats(): boolean {
       if (curr?.date && prev?.date && curr.date <= prev.date) {
         console.error(`  ❌ plumbing.war_lie_detector.json: history not sorted ascending (${prev.date} vs ${curr.date})`);
         return false;
+      }
+    }
+
+    const labelHistory = obj.labelHistory;
+    if (labelHistory != null) {
+      if (!Array.isArray(labelHistory)) {
+        console.error('  ❌ plumbing.war_lie_detector.json: labelHistory must be array if present');
+        return false;
+      }
+      if (labelHistory.length === 0) {
+        console.error('  ❌ plumbing.war_lie_detector.json: labelHistory must be non-empty if present');
+        return false;
+      }
+      for (let i = 1; i < labelHistory.length; i++) {
+        const prev = labelHistory[i - 1] as { date?: string };
+        const curr = labelHistory[i] as { date?: string };
+        if (curr?.date && prev?.date && curr.date <= prev.date) {
+          console.error(
+            `  ❌ plumbing.war_lie_detector.json: labelHistory not sorted ascending (${prev.date} vs ${curr.date})`
+          );
+          return false;
+        }
       }
     }
 
@@ -615,6 +673,59 @@ function printPlumbingWarLieDetectorStats(): boolean {
     return true;
   } catch (error) {
     console.error(`  plumbing.war_lie_detector.json: Error - ${error}`);
+    return false;
+  }
+}
+
+function printSnapshotPlumbingStats(): boolean {
+  const filePath = join(PUBLIC_DIR, 'snapshot.PLUMBING.json');
+  if (!existsSync(filePath)) {
+    console.error('  ❌ snapshot.PLUMBING.json: File not found');
+    return false;
+  }
+
+  try {
+    const content = readFileSync(filePath, 'utf-8');
+    const data = JSON.parse(content) as unknown;
+    if (typeof data !== 'object' || data === null) {
+      console.error('  ❌ snapshot.PLUMBING.json: Invalid JSON');
+      return false;
+    }
+
+    const obj = data as Record<string, unknown>;
+    const universeSize = obj.universeSize;
+    if (typeof universeSize !== 'number' || universeSize !== 6) {
+      console.error(
+        `  ❌ snapshot.PLUMBING.json: universeSize must be 6, got ${universeSize}`
+      );
+      return false;
+    }
+
+    const asOfDate = obj.asOfDate;
+    if (typeof asOfDate !== 'string') {
+      console.error('  ❌ snapshot.PLUMBING.json: Missing or invalid asOfDate');
+      return false;
+    }
+    const today = new Date().toISOString().split('T')[0]!;
+    const asOfObj = new Date(asOfDate);
+    const todayObj = new Date(today);
+    const daysSince = Math.floor(
+      (todayObj.getTime() - asOfObj.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    if (daysSince > PLUMBING_ASOF_MAX_DAYS) {
+      console.error(
+        `  ❌ snapshot.PLUMBING.json: Stale (asOfDate ${asOfDate} is ${daysSince} days ago, max ${PLUMBING_ASOF_MAX_DAYS})`
+      );
+      return false;
+    }
+
+    const runDate = obj.runDate;
+    console.log(
+      `  snapshot.PLUMBING.json: universeSize=${universeSize}, asOfDate=${asOfDate}, runDate=${runDate ?? '?'}`
+    );
+    return true;
+  } catch (error) {
+    console.error(`  snapshot.PLUMBING.json: Error - ${error}`);
     return false;
   }
 }
@@ -637,8 +748,9 @@ function main() {
     const groupKeys = getGroupKeysForDeck(deckId);
     const sectionKeys = getSectionKeysForDeck(deckId);
 
-    // Always validate the base (ALL) file. Require it if deck has group or section variants.
-    const requireBase = groupKeys.length > 0 || sectionKeys.length > 0;
+    // Always validate the base (ALL) file. Require it if deck has group or section variants, or PLUMBING.
+    const requireBase =
+      groupKeys.length > 0 || sectionKeys.length > 0 || deckId === 'PLUMBING';
     const baseOk = printHealthHistoryStatsForFile(
       deckId,
       `health-history.${deckId}.json`,
@@ -702,7 +814,12 @@ function main() {
     process.exit(1);
   }
 
-  console.log('\nPlumbing War Lie Detector:');
+  console.log('\nPLUMBING Artifacts:');
+  const snapshotPlumbingOk = printSnapshotPlumbingStats();
+  if (!snapshotPlumbingOk) {
+    console.error('\n❌ Validation failed: snapshot.PLUMBING.json invalid or stale');
+    process.exit(1);
+  }
   const plumbingOk = printPlumbingWarLieDetectorStats();
   if (!plumbingOk) {
     console.error('\n❌ Validation failed: plumbing.war_lie_detector.json invalid or stale');

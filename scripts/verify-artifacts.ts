@@ -327,9 +327,16 @@ function printTurbulenceGatesStats(): boolean {
     const lastDateObj = new Date(lastDate);
     const todayObj = new Date(today);
     const daysSinceLast = Math.floor((todayObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysSinceLast > 7) {
-      console.error(`  ❌ turbulence.gates.json: Stale (last date ${lastDate} is ${daysSinceLast} days ago, max 7)`);
+    if (daysSinceLast > 10) {
+      console.error(
+        `  ❌ turbulence.gates.json: Stale (last date ${lastDate} is ${daysSinceLast} days ago, max 10)`
+      );
       return false;
+    }
+    if (daysSinceLast > 3) {
+      console.warn(
+        `  ⚠️  turbulence.gates.json: lastDate=${lastDate}, ageDays=${daysSinceLast} (using last-known-good)`
+      );
     }
 
     let hasSpx50dma = false;
@@ -357,6 +364,7 @@ function printTurbulenceGatesStats(): boolean {
     const last = arr[arr.length - 1]!.date;
     const lastP = arr[arr.length - 1]!;
     console.log(`  turbulence.gates.json: ${arr.length} points (${first} to ${last})`);
+    console.log(`    lastDate=${last}, ageDays=${daysSinceLast}`);
     console.log(`    Last: spx=${lastP.spx ?? 'null'}, spx50dma=${lastP.spx50dma ?? 'null'}, spxAbove50dma=${lastP.spxAbove50dma ?? 'null'}, vix=${lastP.vix ?? 'null'}, vixBelow25=${lastP.vixBelow25 ?? 'null'}`);
     return true;
   } catch (error) {

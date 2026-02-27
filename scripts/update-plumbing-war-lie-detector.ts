@@ -30,6 +30,12 @@ interface PlumbingHistoryPoint {
   gld_spy_ratio: number;
 }
 
+interface PlumbingLabelHistoryPoint {
+  date: string;
+  label: PlumbingLabel;
+  score: number;
+}
+
 interface PlumbingWarLieDetector {
   asOf: string;
   inputs: {
@@ -63,6 +69,7 @@ interface PlumbingWarLieDetector {
   score: number;
   label: PlumbingLabel;
   history: PlumbingHistoryPoint[];
+  labelHistory: PlumbingLabelHistoryPoint[];
 }
 
 function loadEodCache(symbol: string): EodBar[] | null {
@@ -253,6 +260,8 @@ function main() {
   // History: last 90 trading days
   const historyStart = Math.max(0, lastIdx - HISTORY_DAYS + 1);
   const history: PlumbingHistoryPoint[] = [];
+  const labelHistory: PlumbingLabelHistoryPoint[] = [];
+
   for (let i = historyStart; i <= lastIdx; i++) {
     const d = alignedDates[i]!;
     const s = spread[i]!;
@@ -266,6 +275,42 @@ function main() {
       spread_ma5: Math.round(ma5 * 100) / 100,
       gld_spy_ratio: Math.round(gs * 10000) / 10000,
     });
+
+    // Compute label/score for this day
+    let dayZ30 = NaN;
+    if (i >= 29) {
+      const win30 = ratio.slice(i - 29, i + 1);
+      const mean30 = win30.reduce((a, b) => a + b, 0) / 30;
+      const var30 = win30.reduce((a, b) => a + (b - mean30) ** 2, 0) / 30;
+      const std30 = Math.sqrt(var30) || 1e-10;
+      dayZ30 = (r - mean30) / std30;
+    }
+    let dayGldSpyRoc5 = NaN;
+    let dayGldTipRoc5 = NaN;
+    if (i >= 5 && gldSpyRatio[i - 5]! > 0) {
+      dayGldSpyRoc5 = ((gs - gldSpyRatio[i - 5]!) / gldSpyRatio[i - 5]!) * 100;
+    }
+    if (i >= 5 && gldTipRatio[i - 5]! > 0) {
+      dayGldTipRoc5 = ((gldTipRatio[i]! - gldTipRatio[i - 5]!) / gldTipRatio[i - 5]!) * 100;
+    }
+    const dayGoldConfirm =
+      Number.isFinite(dayGldSpyRoc5) && Number.isFinite(dayGldTipRoc5) && dayGldSpyRoc5 > 0 && dayGldTipRoc5 > 0;
+    const daySpreadWatch = Number.isFinite(dayZ30) && dayZ30 >= 1;
+    const daySpreadActive = Number.isFinite(dayZ30) && dayZ30 >= 2;
+
+    let dayScore = 0;
+    if (Number.isFinite(dayZ30)) {
+      if (dayZ30 >= 2) dayScore += 2;
+      else if (dayZ30 >= 1) dayScore += 1;
+    }
+    if (dayGoldConfirm) dayScore += 1;
+    dayScore = Math.min(3, dayScore);
+
+    let dayLabel: PlumbingLabel = 'THEATER';
+    if (daySpreadActive && dayGoldConfirm) dayLabel = 'REAL_RISK';
+    else if (daySpreadWatch || dayGoldConfirm) dayLabel = 'WATCH';
+
+    labelHistory.push({ date: d, label: dayLabel, score: dayScore });
   }
 
   const asOf = alignedDates[lastIdx]!;
@@ -314,6 +359,7 @@ function main() {
     score,
     label,
     history,
+    labelHistory,
   };
 
   const outPath = join(process.cwd(), 'public', 'plumbing.war_lie_detector.json');

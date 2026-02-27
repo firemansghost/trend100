@@ -178,6 +178,7 @@ export interface PlumbingWarLieDetector {
     spread_ma5: number;
     gld_spy_ratio: number;
   }>;
+  labelHistory?: Array<{ date: string; label: 'THEATER' | 'WATCH' | 'REAL_RISK'; score: number }>;
 }
 
 export interface TrendDeckSection {

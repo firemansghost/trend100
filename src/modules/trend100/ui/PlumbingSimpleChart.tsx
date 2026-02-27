@@ -12,6 +12,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  ReferenceArea,
 } from 'recharts';
 
 export interface PlumbingChartLine {
@@ -20,10 +21,17 @@ export interface PlumbingChartLine {
   name?: string;
 }
 
+export interface PlumbingRegimeBand {
+  x1: string;
+  x2: string;
+  fill: string;
+}
+
 interface PlumbingSimpleChartProps {
   data: Array<{ date: string; [key: string]: string | number }>;
   lines: PlumbingChartLine[];
   height?: number;
+  regimeBands?: PlumbingRegimeBand[];
 }
 
 function formatTickLabel(dateStr: string): string {
@@ -47,10 +55,13 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
   );
 }
 
-export function PlumbingSimpleChart({ data, lines, height = 200 }: PlumbingSimpleChartProps) {
+export function PlumbingSimpleChart({ data, lines, height = 200, regimeBands }: PlumbingSimpleChartProps) {
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+        {regimeBands?.map((band, idx) => (
+          <ReferenceArea key={idx} x1={band.x1} x2={band.x2} fill={band.fill} fillOpacity={0.15} strokeOpacity={0.3} />
+        ))}
         <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
         <XAxis
           dataKey="date"

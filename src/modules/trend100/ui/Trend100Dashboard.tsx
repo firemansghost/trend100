@@ -98,6 +98,8 @@ export function Trend100Dashboard({
   const [showTurbulenceExplainer, setShowTurbulenceExplainer] = useState(false);
   const [showChipGlossary, setShowChipGlossary] = useState(false);
 
+  const isPlumbing = deckId === 'PLUMBING';
+
   useEffect(() => {
     // One-time hint for metric discoverability (client-only)
     try {
@@ -786,7 +788,8 @@ export function Trend100Dashboard({
       })()}
 
       <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Health History Chart */}
+        {/* Health History Chart — hidden on PLUMBING (single-dot chart looks broken) */}
+        {!isPlumbing && (
         <div>
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -941,6 +944,7 @@ export function Trend100Dashboard({
             greenBarDates={greenBarDates}
           />
         </div>
+        )}
 
         {/* Heatmap Grid */}
         <div>

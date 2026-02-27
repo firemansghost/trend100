@@ -12,3 +12,4 @@ export { TagPickerModal } from './TagPickerModal';
 export { DemoBadge } from './DemoBadge';
 export { HealthHistoryChart } from './HealthHistoryChart';
 export { TrendChart } from './TrendChart';
+export { PlumbingWarLieDetectorPanel } from './PlumbingWarLieDetectorPanel';

@@ -527,6 +527,90 @@ function printTurbulenceGreenBarStats(): boolean {
   }
 }
 
+const PLUMBING_ASOF_MAX_DAYS = 10;
+
+function printPlumbingWarLieDetectorStats(): boolean {
+  const filePath = join(PUBLIC_DIR, 'plumbing.war_lie_detector.json');
+  if (!existsSync(filePath)) {
+    console.error('  ❌ plumbing.war_lie_detector.json: File not found');
+    return false;
+  }
+
+  try {
+    const content = readFileSync(filePath, 'utf-8');
+    const data = JSON.parse(content) as unknown;
+    if (typeof data !== 'object' || data === null) {
+      console.error('  ❌ plumbing.war_lie_detector.json: Invalid JSON');
+      return false;
+    }
+
+    const obj = data as Record<string, unknown>;
+    const asOf = obj.asOf;
+    if (typeof asOf !== 'string') {
+      console.error('  ❌ plumbing.war_lie_detector.json: Missing or invalid asOf');
+      return false;
+    }
+
+    const today = new Date().toISOString().split('T')[0]!;
+    const lastDateObj = new Date(asOf);
+    const todayObj = new Date(today);
+    const daysSinceLast = Math.floor((todayObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceLast > PLUMBING_ASOF_MAX_DAYS) {
+      console.error(
+        `  ❌ plumbing.war_lie_detector.json: Stale (asOf ${asOf} is ${daysSinceLast} days ago, max ${PLUMBING_ASOF_MAX_DAYS})`
+      );
+      return false;
+    }
+
+    const label = obj.label;
+    if (!['THEATER', 'WATCH', 'REAL_RISK'].includes(String(label))) {
+      console.error(`  ❌ plumbing.war_lie_detector.json: Invalid label "${label}"`);
+      return false;
+    }
+
+    const latest = obj.latest as Record<string, unknown> | undefined;
+    if (!latest || typeof latest !== 'object') {
+      console.error('  ❌ plumbing.war_lie_detector.json: Missing latest');
+      return false;
+    }
+    const spread = latest.spread;
+    const spreadZ30 = latest.spread_z30;
+    if (typeof spread !== 'number' || !Number.isFinite(spread)) {
+      console.error('  ❌ plumbing.war_lie_detector.json: latest.spread must be finite number');
+      return false;
+    }
+    if (typeof spreadZ30 !== 'number' || !Number.isFinite(spreadZ30)) {
+      console.error('  ❌ plumbing.war_lie_detector.json: latest.spread_z30 must be finite number');
+      return false;
+    }
+
+    const history = obj.history;
+    if (!Array.isArray(history)) {
+      console.error('  ❌ plumbing.war_lie_detector.json: history must be array');
+      return false;
+    }
+    for (let i = 1; i < history.length; i++) {
+      const prev = history[i - 1] as { date?: string };
+      const curr = history[i] as { date?: string };
+      if (curr?.date && prev?.date && curr.date <= prev.date) {
+        console.error(`  ❌ plumbing.war_lie_detector.json: history not sorted ascending (${prev.date} vs ${curr.date})`);
+        return false;
+      }
+    }
+
+    const lastH = history[history.length - 1] as { date?: string } | undefined;
+    console.log(`  plumbing.war_lie_detector.json: asOf=${asOf}, label=${label}, score=${obj.score ?? '?'}`);
+    console.log(`    Latest: spread=${spread}, spread_z30=${spreadZ30}, history=${history.length} points`);
+    if (lastH?.date) {
+      console.log(`    Last history date: ${lastH.date}`);
+    }
+    return true;
+  } catch (error) {
+    console.error(`  plumbing.war_lie_detector.json: Error - ${error}`);
+    return false;
+  }
+}
+
 /**
  * Main function
  */
@@ -607,6 +691,13 @@ function main() {
   const greenBarOk = printTurbulenceGreenBarStats();
   if (!greenBarOk) {
     console.error('\n❌ Validation failed: turbulence.greenbar.json invalid or stale');
+    process.exit(1);
+  }
+
+  console.log('\nPlumbing War Lie Detector:');
+  const plumbingOk = printPlumbingWarLieDetectorStats();
+  if (!plumbingOk) {
+    console.error('\n❌ Validation failed: plumbing.war_lie_detector.json invalid or stale');
     process.exit(1);
   }
   

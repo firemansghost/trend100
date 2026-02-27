@@ -66,6 +66,15 @@
   - nPairs = nAssets*(nAssets-1)/2 when shockRaw is non-null
   - At least one non-null shockRaw; at least one non-null shockZ (if enough history)
   - Warns on high nulls (minAssets/windows)
+- **Plumbing War Lie Detector:** Validates `public/plumbing.war_lie_detector.json`:
+  - File exists, valid JSON
+  - `asOf` within 10 calendar days (weekends/holidays can delay updates)
+  - `label` in ["THEATER","WATCH","REAL_RISK"]
+  - `latest.spread`, `latest.spread_z30` are finite numbers
+  - `history` is array, sorted ascending by date
+  - Run locally: `pnpm -s update:plumbing-war-lie-detector`
+  - Verify: `pnpm -s verify:artifacts`
+  - Common failures: missing ticker (BNO not cached — run `pnpm -s update:snapshots` first), insufficient history (< 60 bars — extend EOD cache)
 - **Turbulence green bar:** Validates `public/turbulence.greenbar.json`:
   - File exists, is an array, ≥250 rows
   - Sorted ascending by date
@@ -92,6 +101,10 @@
 ### "MARKETSTACK_API_KEY environment variable is not set"
 - **Fix:** Create `.env.local` in repo root with `MARKETSTACK_API_KEY=your_key_here`
 - **Verify:** Scripts import `'./load-env'` as first import (check `scripts/*.ts` files)
+
+### "Missing or insufficient EOD cache for: BNO, ..." (plumbing)
+- **Fix:** Run `pnpm -s update:snapshots` first to populate BNO (added to MACRO deck). The plumbing script requires BNO, USO, GLD, SPY, TIP, UUP with ≥60 bars each.
+- **Insufficient aligned bars:** Extend EOD cache; ensure all 6 symbols have overlapping history.
 
 ### "Stooq returned no data" / "Stooq VIX: all symbols failed"
 - **Fix:** Set `TURBULENCE_STOOQ_VIX_SYMBOL` in `.env.local` or CI env. CI pins `vi.c` (S&P 500 VIX Cash). Fallback list: vi.c, ^vix, ^VIX, vi.f. For SPX, set `TURBULENCE_STOOQ_SPX_SYMBOL` (default ^spx; try ^gspc if needed).

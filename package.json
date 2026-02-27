@@ -14,8 +14,9 @@
     "update:turbulence-gates": "tsx scripts/update-turbulence-gates.ts",
     "update:turbulence-shock": "tsx scripts/update-turbulence-shock.ts",
     "update:turbulence-greenbar": "tsx scripts/update-turbulence-greenbar.ts",
+    "update:plumbing-war-lie-detector": "tsx scripts/update-plumbing-war-lie-detector.ts",
     "verify:artifacts": "tsx scripts/verify-artifacts.ts",
-    "artifacts:refresh": "pnpm -s update:snapshots && pnpm -s update:turbulence-gates && pnpm -s update:turbulence-shock && pnpm -s update:turbulence-greenbar && pnpm -s verify:artifacts",
+    "artifacts:refresh": "pnpm -s update:snapshots && pnpm -s update:turbulence-gates && pnpm -s update:turbulence-shock && pnpm -s update:turbulence-greenbar && pnpm -s update:plumbing-war-lie-detector && pnpm -s verify:artifacts",
     "verify:history-retention": "tsx scripts/verify-history-retention.ts",
     "analyze:plateaus": "tsx scripts/analyze-health-plateaus.ts",
     "analyze:coverage": "tsx scripts/analyze-known-coverage.ts"

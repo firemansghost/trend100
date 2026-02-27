@@ -20,8 +20,9 @@ import { HealthHistoryChart } from './HealthHistoryChart';
 import { applyFilters, getAllTags, getTagCounts } from './tagUtils';
 import { sortTickers, type SortKey } from './sortUtils';
 import { SectionPills } from './SectionPills';
-import type { TrendDeckSection } from '../types';
+import type { TrendDeckSection, PlumbingWarLieDetector } from '../types';
 import { toSectionKey } from '../data/sectionKey';
+import { PlumbingWarLieDetectorPanel } from './PlumbingWarLieDetectorPanel';
 
 /** Format boolean for display: "true"/"false"/"—" when null. */
 function fmtBool(b: boolean | null): string {
@@ -60,6 +61,8 @@ interface Trend100DashboardProps {
   historyVariantFallback?: boolean;
   /** Turbulence green bar data (from /turbulence.greenbar.json). */
   greenbarData?: Array<{ date: string; shockZ: number | null; spxAbove50dma: boolean | null; vixBelow25: boolean | null; isGreenBar: boolean | null }> | null;
+  /** Plumbing War Lie Detector data (when deckId === 'PLUMBING'). */
+  plumbingData?: PlumbingWarLieDetector | null;
 }
 
 export function Trend100Dashboard({
@@ -75,6 +78,7 @@ export function Trend100Dashboard({
   initialMetric = 'health',
   historyVariantFallback = false,
   greenbarData = null,
+  plumbingData = null,
 }: Trend100DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -380,6 +384,16 @@ export function Trend100Dashboard({
               counts={sectionCounts}
             />
           </div>
+        </div>
+      )}
+
+      {/* Plumbing War Lie Detector panel (PLUMBING deck only) */}
+      {deckId === 'PLUMBING' && plumbingData && (
+        <PlumbingWarLieDetectorPanel data={plumbingData} />
+      )}
+      {deckId === 'PLUMBING' && !plumbingData && (
+        <div className="container mx-auto px-4 py-4 border-b border-zinc-800 text-slate-500 text-sm">
+          Data loading... (run <code className="bg-zinc-800 px-1 rounded">pnpm -s update:plumbing-war-lie-detector</code> to generate artifact)
         </div>
       )}
 

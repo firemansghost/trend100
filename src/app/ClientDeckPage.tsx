@@ -9,7 +9,7 @@
 
 import { useMemo, useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import type { TrendHealthHistoryPoint, TrendDeckId } from '@/modules/trend100/types';
+import type { TrendHealthHistoryPoint, TrendDeckId, PlumbingWarLieDetector } from '@/modules/trend100/types';
 import { Trend100Dashboard } from '@/modules/trend100/ui';
 import { getLatestSnapshot } from '@/modules/trend100/data/getLatestSnapshot';
 import { getDeck, isDeckId, getAllDeckIds } from '@/modules/trend100/data/decks';
@@ -92,6 +92,9 @@ function ClientDeckPageContent() {
     loadSnapshot();
   }, [deckId]);
 
+  // Plumbing War Lie Detector state (when deckId === 'PLUMBING')
+  const [plumbingData, setPlumbingData] = useState<PlumbingWarLieDetector | null>(null);
+
   // Turbulence green bar state (optional artifact)
   const [greenbarData, setGreenbarData] = useState<
     Array<{ date: string; shockZ: number | null; spxAbove50dma: boolean | null; vixBelow25: boolean | null; isGreenBar: boolean | null }> | null
@@ -160,6 +163,24 @@ function ClientDeckPageContent() {
     })();
   }, [deckId, historyVariantKey]);
 
+  // Load plumbing War Lie Detector when on PLUMBING deck
+  useEffect(() => {
+    if (deckId !== 'PLUMBING') {
+      setPlumbingData(null);
+      return;
+    }
+    fetch('/plumbing.war_lie_detector.json', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && typeof data === 'object' && 'label' in data && 'latest' in data) {
+          setPlumbingData(data as PlumbingWarLieDetector);
+        } else {
+          setPlumbingData(null);
+        }
+      })
+      .catch(() => setPlumbingData(null));
+  }, [deckId]);
+
   // Load turbulence green bar (global, not deck-specific)
   useEffect(() => {
     fetch('/turbulence.greenbar.json', { cache: 'no-store' })
@@ -221,6 +242,7 @@ function ClientDeckPageContent() {
         initialMetric={metricKey as any}
         historyVariantFallback={historyVariantFallback}
         greenbarData={greenbarData}
+        plumbingData={plumbingData}
       />
     </>
   );

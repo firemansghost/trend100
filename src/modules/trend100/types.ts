@@ -135,7 +135,50 @@ export type TrendDeckId =
   | 'GLOBAL_EQUITIES'
   | 'FIXED_INCOME'
   | 'MACRO'
-  | 'METALS_MINING';
+  | 'METALS_MINING'
+  | 'PLUMBING';
+
+/** Plumbing War Lie Detector artifact (geopolitical plumbing indicator) */
+export interface PlumbingWarLieDetector {
+  asOf: string;
+  inputs: {
+    brentProxy: string;
+    wtiProxy: string;
+    goldProxy: string;
+    riskProxy: string;
+    tipsProxy: string;
+    dxyProxy: string;
+  };
+  latest: {
+    bno: number;
+    uso: number;
+    spread: number;
+    bno_uso_ratio: number;
+    spread_ma5: number;
+    spread_roc3: number;
+    spread_z30: number;
+    spread_z60: number;
+    gld: number;
+    gld_spy_ratio: number;
+    gld_spy_roc5: number;
+    gld_tip_ratio: number;
+    gld_tip_roc5: number;
+  };
+  signals: {
+    spreadWatch: boolean;
+    spreadActive: boolean;
+    goldConfirm: boolean;
+  };
+  score: number;
+  label: 'THEATER' | 'WATCH' | 'REAL_RISK';
+  history: Array<{
+    date: string;
+    spread: number;
+    bno_uso_ratio: number;
+    spread_ma5: number;
+    gld_spy_ratio: number;
+  }>;
+}
 
 export interface TrendDeckSection {
   id: string;

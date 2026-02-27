@@ -92,6 +92,7 @@ const MACRO_UNIVERSE: TrendUniverse = [
   { ticker: 'DBA', tags: ['etf', 'commodities', 'agriculture'], section: 'Commodities', subtitle: 'Agriculture', name: 'Invesco DB Agriculture Fund' },
   { ticker: 'DBB', tags: ['etf', 'commodities', 'metals'], section: 'Commodities', subtitle: 'Base Metals', name: 'Invesco DB Base Metals Fund' },
   { ticker: 'PDBC', tags: ['etf', 'commodities', 'diversified'], section: 'Commodities', subtitle: 'Commodities', name: 'Invesco Optimum Yield Diversified Commodity Strategy No K-1 ETF' },
+  { ticker: 'BNO', tags: ['etf', 'commodities', 'energy', 'oil'], section: 'Energy', subtitle: 'Brent', name: 'United States Brent Oil Fund' },
   { ticker: 'USO', tags: ['etf', 'commodities', 'energy', 'oil'], section: 'Energy', subtitle: 'Oil', name: 'United States Oil Fund LP' },
   // FX
   { ticker: 'FXA', tags: ['etf', 'fx', 'australia'], section: 'FX', subtitle: 'AUD', name: 'Invesco CurrencyShares Australian Dollar Trust' },
@@ -115,6 +116,18 @@ const MACRO_UNIVERSE: TrendUniverse = [
 /**
  * Metals & Mining deck (11 tickers)
  */
+/**
+ * Plumbing deck (War Lie Detector — geopolitical plumbing)
+ */
+const PLUMBING_UNIVERSE: TrendUniverse = [
+  { ticker: 'BNO', tags: ['etf', 'oil', 'brent'], section: 'Oil', subtitle: 'Brent', name: 'United States Brent Oil Fund' },
+  { ticker: 'USO', tags: ['etf', 'oil', 'wti'], section: 'Oil', subtitle: 'WTI', name: 'United States Oil Fund' },
+  { ticker: 'GLD', tags: ['etf', 'gold'], section: 'Metals', subtitle: 'Gold', name: 'SPDR Gold Trust' },
+  { ticker: 'SPY', tags: ['etf', 'risk'], section: 'Risk', subtitle: 'S&P 500', name: 'SPDR S&P 500 ETF' },
+  { ticker: 'TIP', tags: ['etf', 'tips'], section: 'Rates', subtitle: 'TIPS', name: 'iShares TIPS Bond ETF' },
+  { ticker: 'UUP', tags: ['etf', 'dollar'], section: 'FX', subtitle: 'Dollar', name: 'Invesco DB US Dollar Index Bullish Fund' },
+];
+
 const METALS_MINING_UNIVERSE: TrendUniverse = [
   // Metals (physical/basket ETFs)
   { ticker: 'GLTR', tags: ['etf', 'metals', 'precious'], group: 'METALS', section: 'Metals', subtitle: 'Precious Metals', name: 'abrdn Physical Precious Metals Basket Shares ETF' },
@@ -137,6 +150,7 @@ validateUniverse(US_FACTORS_UNIVERSE);
 validateUniverse(GLOBAL_EQUITIES_UNIVERSE);
 validateUniverse(FIXED_INCOME_UNIVERSE);
 validateUniverse(MACRO_UNIVERSE);
+validateUniverse(PLUMBING_UNIVERSE);
 validateUniverse(METALS_MINING_UNIVERSE);
 
 /**
@@ -220,6 +234,12 @@ export const DECKS: TrendDeck[] = [
       { id: 'Metals', label: 'Metals' },
       { id: 'Miners', label: 'Miners' },
     ],
+  },
+  {
+    id: 'PLUMBING',
+    label: 'War Lie Detector',
+    description: 'Geopolitical plumbing: physical market vs narrative',
+    universe: PLUMBING_UNIVERSE,
   },
 ];
 

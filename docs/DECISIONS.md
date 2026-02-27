@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-02 — (Data/Ops) Plumbing War Lie Detector artifact (geopolitical plumbing)
+**Choice:** Added `public/plumbing.war_lie_detector.json` artifact that answers whether physical markets support the political narrative (real shipping/war risk) or are mostly "theater." Uses proxy tickers: BNO (Brent), USO (WTI), GLD (gold), SPY (risk), TIP (TIPS), UUP (dollar). Core metric for z-score and ROC: BNO/USO ratio (more stable than level spread); spread (BNO−USO) kept for display. Label logic: THEATER (z30 < 1 and !goldConfirm), WATCH (z30 ≥ 1 or goldConfirm), REAL_RISK (z30 ≥ 2 and goldConfirm). Score: +2 if z30 ≥ 2, +1 if z30 ≥ 1, +1 if goldConfirm (max 3). Artifacts are generated in CI (workflows/build); never committed. Run `pnpm -s update:plumbing-war-lie-detector` locally; verify with `pnpm -s verify:artifacts`.
+
+**Why:** Geopolitical narrative often diverges from physical market signals. BNO/USO spread widening (Brent premium) can indicate real supply risk; gold confirmation (GLD/SPY and GLD/TIP ROC > 0) supports flight-to-quality. Ratio-based z-score is more stable than level spread for regime detection.
+
+---
+
 ### 2026-02 — (Data/Ops) Turbulence gates from Stooq instead of FRED (PR26)
 **Choice:** Switched `update-turbulence-gates.ts` from FRED (SP500 + VIXCLS) to Stooq CSV for SPX and VIX EOD closes. Eliminates 0–1 day FRED lag so gates align with ShockZ timing. No API key required. Env: `TURBULENCE_GATES_START`, `TURBULENCE_STOOQ_SPX_SYMBOL` (default ^spx), `TURBULENCE_STOOQ_VIX_SYMBOL` (default vi.c = S&P 500 VIX Cash). Output schema unchanged.
 

@@ -472,6 +472,90 @@ function getUniverseForSectionByKey(deckId: TrendDeckId, sectionKey: HistoryVari
   return deck.universe.filter((item) => toSectionKey(item.section ?? '') === sectionKey);
 }
 
+/** Minimum points required for health-history.PLUMBING; below this triggers backfill. */
+const PLUMBING_BACKFILL_THRESHOLD = 200;
+
+/** Calendar ticker for PLUMBING backfill (SPY has longest history in the deck). */
+const PLUMBING_CALENDAR_TICKER = 'SPY';
+
+/** Backfill days when PLUMBING history is short (enough for ~1 year of trading days). */
+const PLUMBING_BACKFILL_DAYS = 500;
+
+/**
+ * Get trading days from a single ticker's EOD cache (used as calendar for PLUMBING backfill).
+ */
+function getTradingDaysFromCalendarTicker(
+  symbol: string,
+  startDate: string,
+  endDate: string
+): string[] {
+  const eodBars = loadEodCache(symbol);
+  if (!eodBars || eodBars.length === 0) return [];
+  return eodBars
+    .filter((bar) => bar.date >= startDate && bar.date <= endDate)
+    .map((bar) => bar.date)
+    .sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Backfill PLUMBING health history using SPY as the calendar ticker.
+ * Uses SPY's date series so a single missing ticker doesn't collapse the series.
+ */
+function backfillPlumbingFromSpyCalendar(
+  metaIndex: Record<string, { subtitle?: string; name?: string }>,
+  universe: TrendUniverseItem[]
+): TrendHealthHistoryPoint[] {
+  const spyBars = loadEodCache(PLUMBING_CALENDAR_TICKER);
+  if (!spyBars || spyBars.length === 0) {
+    console.log(`  ⚠️  PLUMBING backfill: No SPY EOD cache, skipping`);
+    return [];
+  }
+
+  const endDate = new Date().toISOString().split('T')[0]!;
+  const start = new Date();
+  start.setDate(start.getDate() - PLUMBING_BACKFILL_DAYS);
+  const startDate = start.toISOString().split('T')[0]!;
+
+  const tradingDays = getTradingDaysFromCalendarTicker(PLUMBING_CALENDAR_TICKER, startDate, endDate);
+  if (tradingDays.length === 0) {
+    console.log(`  ⚠️  PLUMBING backfill: No SPY dates in range ${startDate}–${endDate}`);
+    return [];
+  }
+
+  console.log(`  📈 PLUMBING backfill: Using SPY calendar (${tradingDays.length} trading days)`);
+
+  const newPoints: TrendHealthHistoryPoint[] = [];
+  let prevDate: string | null = null;
+
+  for (const date of tradingDays) {
+    if (isWeekend(date)) continue;
+
+    const result = computeHealthForDate('PLUMBING', date, metaIndex, universe);
+    let point = result.point;
+
+    if (prevDate && point.regimeLabel !== 'UNKNOWN') {
+      const diffusion = computeDiffusion('PLUMBING', prevDate, date, metaIndex, universe);
+      point = {
+        ...point,
+        diffusionPct: diffusion.diffusionPct ?? 0,
+        diffusionCount: diffusion.diffusionCount,
+        diffusionTotalCompared: diffusion.diffusionTotalCompared,
+      };
+    } else {
+      point = {
+        ...point,
+        diffusionPct: 0,
+        diffusionCount: 0,
+        diffusionTotalCompared: point.totalTickers,
+      };
+    }
+    newPoints.push(point);
+    prevDate = date;
+  }
+
+  return newPoints;
+}
+
 // Get today's date in YYYY-MM-DD format
 function getTodayDate(): string {
   return new Date().toISOString().split('T')[0]!;
@@ -796,7 +880,28 @@ async function main() {
         console.log(`  [${deckId}] section=${variant.sectionLabel} key=${variantKey} tickers=${universe.length}`);
       }
 
-      const existingHistory = loadHistory(deckId, variantKey);
+      let existingHistory = loadHistory(deckId, variantKey);
+
+      // PLUMBING-only: backfill from SPY calendar when history is too short
+      if (
+        deckId === 'PLUMBING' &&
+        !variantKey &&
+        existingHistory.length < PLUMBING_BACKFILL_THRESHOLD
+      ) {
+        const backfilled = backfillPlumbingFromSpyCalendar(metaIndex, universe);
+        if (backfilled.length > 0) {
+          const retentionDays = getHealthHistoryRetentionDays();
+          existingHistory = mergeAndTrimTimeSeries(
+            existingHistory,
+            backfilled,
+            (point) => point.date,
+            retentionDays
+          );
+          console.log(
+            `  ✓ PLUMBING backfill: ${backfilled.length} points → ${existingHistory.length} total`
+          );
+        }
+      }
 
       const todayResult = computeHealthForDate(deckId, snapshot.asOfDate, metaIndex, universe);
       let entry = todayResult.point;

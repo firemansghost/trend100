@@ -54,6 +54,14 @@ function printHealthHistoryStatsForFile(
       return true; // Not a validation failure
     }
 
+    // PLUMBING requires sufficient depth for Market Health Over Time chart
+    if (deckIdForConfig === 'PLUMBING' && history.length < 200) {
+      console.error(
+        `  ❌ ${label}: Too few points (${history.length}, need >= 200) - run artifacts:refresh with EOD cache`
+      );
+      return false;
+    }
+
     // Validate: check for weekend points and partial-schema points
     const weekendPoints: string[] = [];
     const partialSchemaPoints: string[] = [];

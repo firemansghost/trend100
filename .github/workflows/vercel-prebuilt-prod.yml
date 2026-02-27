@@ -39,6 +39,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Prefetch last-known-good turbulence gates
+        run: |
+          mkdir -p public
+          ts=$(date +%s)
+          curl -sf -o public/turbulence.gates.json \
+            "https://trend100.vercel.app/turbulence.gates.json?v=$ts" \
+            --max-time 30 \
+            --retry 2 \
+            --retry-delay 2 \
+            || true
+
       - name: Generate and verify artifacts
         env:
           DATA_PROVIDER: marketstack

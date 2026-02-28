@@ -13,7 +13,7 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 ---
 
 ### 2026-02 — (Data/Ops) Pilot Stooq EOD provider for deck cache (EOD_STOOQ_DECKS)
-**Choice:** Added optional Stooq EOD provider for deck cache generation. When `EOD_STOOQ_DECKS` is set (comma-separated, case-insensitive deck IDs, e.g. `METALS_MINING`), symbols belonging to those decks use Stooq-first with Marketstack fallback: try Stooq for each symbol; on failure (timeout/no data/parse), fall back to Marketstack for that symbol. Same cache format and path (`data/marketstack/eod/*.json`); no workflow changes. Pilot: METALS_MINING (11 tickers) only. Not switching everything yet—Marketstack remains default for all other decks.
+**Choice:** Added optional Stooq EOD provider for deck cache generation. When `EOD_STOOQ_DECKS` is set (comma-separated, case-insensitive deck IDs, e.g. `METALS_MINING`, `PLUMBING`), symbols belonging to those decks use Stooq-first with Marketstack fallback: try Stooq for each symbol; on failure (timeout/no data/parse), fall back to Marketstack for that symbol. Same cache format and path (`data/marketstack/eod/*.json`); no workflow changes. Pilot decks: METALS_MINING (11 tickers), PLUMBING (deck ID; UI label "War Lie Detector", 6 tickers: BNO, USO, GLD, SPY, TIP, UUP). Not switching everything yet—Marketstack remains default for all other decks.
 
 **Why:** Reduces Marketstack API usage when hitting monthly limits. Stooq has no API key; fallback ensures update:snapshots completes even if Stooq has uptime or symbol quirks.
 

@@ -666,10 +666,15 @@ export async function ensureHistoryStooqWithFallback(
       console.log(`  📥 [Stooq] Backfilling ${symbol} (${cacheDays} days)...`);
       try {
         const bars = await fetchStooqEodSeries(symbol, startDateStr, today);
-        saveCachedBars(symbol, bars);
-        result.set(symbol, bars);
-        stooqOk.push(symbol);
-        console.log(`    ✓ Cached ${bars.length} bars`);
+        if (bars.length === 0) {
+          console.warn(`    ⚠️  Stooq returned 0 bars for ${symbol}, falling back to Marketstack`);
+          fallback.push(symbol);
+        } else {
+          saveCachedBars(symbol, bars);
+          result.set(symbol, bars);
+          stooqOk.push(symbol);
+          console.log(`    ✓ Cached ${bars.length} bars`);
+        }
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
         console.warn(`    ⚠️  Stooq failed for ${symbol}, falling back to Marketstack: ${reason}`);
@@ -695,11 +700,16 @@ export async function ensureHistoryStooqWithFallback(
     console.log(`  🔄 [Stooq] Updating ${symbol} (last: ${lastCachedDate})...`);
     try {
       const newBars = await fetchStooqEodSeries(symbol, gapStartStr, today);
-      const merged = mergeBars(cached, newBars);
-      saveCachedBars(symbol, merged);
-      result.set(symbol, merged);
-      stooqOk.push(symbol);
-      console.log(`    ✓ Merged ${newBars.length} new bars, total: ${merged.length}`);
+      if (newBars.length === 0) {
+        console.warn(`    ⚠️  Stooq returned 0 bars for ${symbol}, falling back to Marketstack`);
+        fallback.push(symbol);
+      } else {
+        const merged = mergeBars(cached, newBars);
+        saveCachedBars(symbol, merged);
+        result.set(symbol, merged);
+        stooqOk.push(symbol);
+        console.log(`    ✓ Merged ${newBars.length} new bars, total: ${merged.length}`);
+      }
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       console.warn(`    ⚠️  Stooq failed for ${symbol}, falling back to Marketstack: ${reason}`);

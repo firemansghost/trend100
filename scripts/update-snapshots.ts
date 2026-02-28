@@ -30,7 +30,7 @@ import type {
 } from '../src/modules/trend100/types';
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
 import { toSectionKey } from '../src/modules/trend100/data/sectionKey';
-import { ensureHistoryBatch } from './marketstack-cache';
+import { ensureHistoryBatch, ensureHistoryStooqBatch } from './marketstack-cache';
 import { calcSMA, calcEMA, resampleDailyToWeekly } from '../src/modules/trend100/engine/movingAverages';
 import { classifyTrend } from '../src/modules/trend100/engine/classifyTrend';
 import { computeHealthScore } from '../src/modules/trend100/engine/healthScore';
@@ -744,11 +744,42 @@ async function main() {
   console.log(`📊 Found ${symbolMap.size} unique symbols across ${deckIds.length} decks\n`);
 
   // Step 2: Ensure history exists for all symbols (uses cache, backfills if needed, updates incrementally)
+  // Provider routing: EOD_STOOQ_DECKS=METALS_MINING routes those deck symbols to Stooq; rest use Marketstack
+  const stooqDecksRaw = process.env.EOD_STOOQ_DECKS ?? '';
+  const stooqDecks = stooqDecksRaw
+    .split(',')
+    .map((d) => d.trim().toUpperCase())
+    .filter(Boolean);
+  const stooqSymbols: string[] = [];
+  const marketstackSymbols: string[] = [];
+  for (const [providerSymbol, entries] of symbolMap.entries()) {
+    const hasStooqDeck = entries.some((e) => stooqDecks.includes(e.deckId));
+    if (hasStooqDeck) {
+      stooqSymbols.push(providerSymbol);
+    } else {
+      marketstackSymbols.push(providerSymbol);
+    }
+  }
+  if (stooqDecks.length > 0) {
+    console.log(`📡 Provider routing: Stooq for ${stooqSymbols.length} symbols (decks: ${stooqDecks.join(', ')}), Marketstack for ${marketstackSymbols.length}\n`);
+  }
   console.log('📥 Ensuring EOD history (using cache, backfilling if needed)...\n');
-  
+
+  const seriesCache = new Map<string, EodBar[]>();
+  if (stooqSymbols.length > 0) {
+    const stooqResult = await ensureHistoryStooqBatch(stooqSymbols);
+    for (const [sym, bars] of stooqResult) {
+      seriesCache.set(sym, bars);
+    }
+  }
+  if (marketstackSymbols.length > 0) {
+    const msResult = await ensureHistoryBatch(marketstackSymbols);
+    for (const [sym, bars] of msResult) {
+      seriesCache.set(sym, bars);
+    }
+  }
+
   const allSymbols = Array.from(symbolMap.keys());
-  const seriesCache = await ensureHistoryBatch(allSymbols);
-  
   const backfilledCount = Array.from(seriesCache.values()).filter((bars) => {
     // Rough heuristic: if we have ~365 bars, likely backfilled
     return bars.length >= historyDays * 0.8;

@@ -10,6 +10,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
 import { fetchEodSeries, fetchEodLatestBatch } from '../src/modules/trend100/data/providers/marketstack';
+import { fetchStooqEodSeries } from './stooq-eod';
 
 const CACHE_DIR = join(process.cwd(), 'data', 'marketstack', 'eod');
 const META_DIR = join(CACHE_DIR, '.meta');
@@ -564,5 +565,70 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
     console.warn(`\n  ⚠️  ${failures.length} symbol(s) unavailable: ${failures.join(', ')}`);
   }
   
+  return result;
+}
+
+/**
+ * Ensure history for symbols using Stooq (pilot provider for selected decks).
+ *
+ * Same cache format and path as Marketstack; uses Stooq CSV API for fetch.
+ * No API key required.
+ *
+ * @param symbols Array of provider symbols (e.g. GLTR, GDX)
+ * @returns Map of symbol -> EOD bars (only successful symbols)
+ */
+export async function ensureHistoryStooqBatch(symbols: string[]): Promise<Map<string, EodBar[]>> {
+  const result = new Map<string, EodBar[]>();
+  const today = new Date().toISOString().split('T')[0]!;
+  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '2300', 10);
+
+  for (const symbol of symbols) {
+    const cached = loadCachedBars(symbol);
+
+    if (!cached || cached.length === 0) {
+      // Backfill full range
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - cacheDays);
+      const startDateStr = startDate.toISOString().split('T')[0]!;
+      console.log(`  📥 [Stooq] Backfilling ${symbol} (${cacheDays} days)...`);
+      try {
+        const bars = await fetchStooqEodSeries(symbol, startDateStr, today);
+        saveCachedBars(symbol, bars);
+        result.set(symbol, bars);
+        console.log(`    ✓ Cached ${bars.length} bars`);
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        console.warn(`    ⚠️  Failed to backfill ${symbol}: ${reason}`);
+      }
+      continue;
+    }
+
+    // Cache exists - check if update needed
+    const lastCachedDate = cached[cached.length - 1]!.date;
+    const daysSinceLastCache = getTradingDaysBetween(lastCachedDate, today);
+
+    if (daysSinceLastCache <= 3) {
+      result.set(symbol, cached);
+      continue;
+    }
+
+    // Gap - fetch from Stooq and merge
+    const gapStartDate = new Date(lastCachedDate);
+    gapStartDate.setDate(gapStartDate.getDate() - 5);
+    const gapStartStr = gapStartDate.toISOString().split('T')[0]!;
+    console.log(`  🔄 [Stooq] Updating ${symbol} (last: ${lastCachedDate})...`);
+    try {
+      const newBars = await fetchStooqEodSeries(symbol, gapStartStr, today);
+      const merged = mergeBars(cached, newBars);
+      saveCachedBars(symbol, merged);
+      result.set(symbol, merged);
+      console.log(`    ✓ Merged ${newBars.length} new bars, total: ${merged.length}`);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      console.warn(`    ⚠️  Failed to update ${symbol}, using cache: ${reason}`);
+      result.set(symbol, cached);
+    }
+  }
+
   return result;
 }

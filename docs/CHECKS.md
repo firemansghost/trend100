@@ -39,6 +39,25 @@
 - Skips wasting budget on inception-limited symbols (uses metadata in `data/marketstack/eod/.meta/`)
 - Fetches "latest" for symbols with recent cache (batched updates)
 - Logs clear messages for inception-limited symbols: `"ℹ️ <SYMBOL> cannot extend earlier than <date> (provider limit/inception)"`
+- **Stooq pilot:** When `EOD_STOOQ_DECKS=METALS_MINING`, METALS_MINING symbols (11 tickers) are fetched from Stooq; all other decks use Marketstack. Run locally without Marketstack quota for pilot decks.
+
+### Stooq EOD pilot verification (PowerShell)
+
+```powershell
+# Typecheck
+pnpm -s tsc --noEmit
+
+# Pilot refresh for METALS_MINING only (Stooq, no Marketstack for those symbols)
+$env:EOD_STOOQ_DECKS="METALS_MINING"
+pnpm -s update:snapshots
+
+# Confirm snapshot.METALS_MINING.json updates; verify artifacts
+pnpm -s verify:artifacts
+
+# Ensure no cache/artifacts staged
+git status
+# Should NOT show public/*.json or data/marketstack/eod/*.json staged
+```
 
 ### CI pipeline checks
 - **Artifact validation:** CI must pass `pnpm artifacts:refresh` before deploy (vercel-prebuilt-prod.yml on push; daily-artifacts-deploy.yml on schedule)

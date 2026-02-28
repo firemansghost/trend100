@@ -10,7 +10,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
 import { fetchEodSeries, fetchEodLatestBatch } from '../src/modules/trend100/data/providers/marketstack';
-import { fetchStooqEodSeries } from './stooq-eod';
+import { fetchStooqEodSeries, isForceFallback } from './stooq-eod';
 
 const CACHE_DIR = join(process.cwd(), 'data', 'marketstack', 'eod');
 const META_DIR = join(CACHE_DIR, '.meta');
@@ -656,6 +656,12 @@ export async function ensureHistoryStooqWithFallback(
   const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '2300', 10);
 
   for (const symbol of symbols) {
+    if (isForceFallback(symbol)) {
+      console.log(`  Stooq forced fallback: ${symbol}`);
+      fallback.push(symbol);
+      continue;
+    }
+
     const cached = loadCachedBars(symbol);
 
     if (!cached || cached.length === 0) {

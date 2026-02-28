@@ -12,6 +12,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-02 — (Data/Ops) Pilot Stooq EOD provider for deck cache (EOD_STOOQ_DECKS)
+**Choice:** Added optional Stooq EOD provider for deck cache generation. When `EOD_STOOQ_DECKS` is set (comma-separated, case-insensitive deck IDs, e.g. `METALS_MINING`), symbols belonging to those decks are fetched from Stooq CSV instead of Marketstack. Same cache format and path (`data/marketstack/eod/*.json`); no workflow changes. Pilot: METALS_MINING (11 tickers) only. Not switching everything yet—Marketstack remains default for all other decks.
+
+**Why:** Reduces Marketstack API usage when hitting monthly limits. Stooq has no API key; pilot validates feasibility before broader migration.
+
+---
+
 ### 2026-02 — (Data/Ops) Turbulence gates from Stooq instead of FRED (PR26)
 **Choice:** Switched `update-turbulence-gates.ts` from FRED (SP500 + VIXCLS) to Stooq CSV for SPX and VIX EOD closes. Eliminates 0–1 day FRED lag so gates align with ShockZ timing. No API key required. Env: `TURBULENCE_GATES_START`, `TURBULENCE_STOOQ_SPX_SYMBOL` (default ^spx), `TURBULENCE_STOOQ_VIX_SYMBOL` (default vi.c = S&P 500 VIX Cash). Output schema unchanged.
 

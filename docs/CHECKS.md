@@ -39,7 +39,7 @@
 - Skips wasting budget on inception-limited symbols (uses metadata in `data/marketstack/eod/.meta/`)
 - Fetches "latest" for symbols with recent cache (batched updates)
 - Logs clear messages for inception-limited symbols: `"ℹ️ <SYMBOL> cannot extend earlier than <date> (provider limit/inception)"`
-- **Stooq pilot:** When `EOD_STOOQ_DECKS=METALS_MINING`, METALS_MINING symbols (11 tickers) use Stooq-first with Marketstack fallback; all other decks use Marketstack. Run locally without Marketstack quota for pilot decks when Stooq succeeds.
+- **Stooq pilot:** When `EOD_STOOQ_DECKS` includes `METALS_MINING` and/or `PLUMBING`, those deck symbols use Stooq-first with Marketstack fallback; all other decks use Marketstack. PLUMBING deck (deck ID PLUMBING; UI label "War Lie Detector") has 6 tickers: BNO, USO, GLD, SPY, TIP, UUP. Run locally without Marketstack quota for pilot decks when Stooq succeeds.
 
 ### Stooq EOD pilot verification (PowerShell)
 
@@ -47,14 +47,16 @@
 # Typecheck
 pnpm -s tsc --noEmit
 
-# Pilot refresh for METALS_MINING (Stooq-first, Marketstack fallback on Stooq failure)
-$env:EOD_STOOQ_DECKS="METALS_MINING"
+# Pilot refresh for METALS_MINING + PLUMBING (deck ID PLUMBING; UI label "War Lie Detector")
+$env:EOD_STOOQ_DECKS="METALS_MINING,PLUMBING"
 pnpm -s update:snapshots
+pnpm -s update:plumbing-war-lie-detector
+pnpm -s verify:artifacts
+# Expected log: "Stooq-first (fallback to Marketstack) for N symbols (decks: METALS_MINING, PLUMBING)"
 # Expected log: "Stooq OK: N | Stooq failed → Marketstack fallback: M (tickers)" when fallback occurs
 # Expected log: "Marketstack direct: K" for non-Stooq deck symbols
 
-# Confirm snapshot.METALS_MINING.json updates; verify artifacts
-pnpm -s verify:artifacts
+# Manual UI check: pnpm dev, open /?deck=PLUMBING, confirm War Lie Detector panel loads
 
 # Fallback test (optional): temporarily break one Stooq symbol (e.g. override in stooq-eod.ts)
 # to verify run still succeeds via Marketstack fallback. Remove sabotage before commit.
@@ -77,7 +79,7 @@ git status
 
 ### PLUMBING smoke checks (PowerShell)
 
-After deploy, run these to verify PLUMBING endpoints:
+PLUMBING deck (deck ID PLUMBING; UI label "War Lie Detector"). After deploy, run these to verify PLUMBING endpoints:
 
 ```powershell
 # plumbing.war_lie_detector.json (asOf, label, score)
@@ -132,11 +134,11 @@ git clean -fd public data/marketstack/eod
   - Run locally: `pnpm -s update:plumbing-war-lie-detector`
   - Verify: `pnpm -s verify:artifacts`
   - Common failures: missing ticker (BNO not cached — run `pnpm -s update:snapshots` first), insufficient history (< 60 bars — extend EOD cache)
-- **Snapshot PLUMBING:** Validates `public/snapshot.PLUMBING.json`:
+- **Snapshot PLUMBING** (deck ID PLUMBING; UI label "War Lie Detector"): Validates `public/snapshot.PLUMBING.json`:
   - File exists, valid JSON
   - `universeSize` === 6
   - `asOfDate` within 10 calendar days
-- **Health history PLUMBING:** Validates `public/health-history.PLUMBING.json`:
+- **Health history PLUMBING** (deck ID PLUMBING; UI label "War Lie Detector"): Validates `public/health-history.PLUMBING.json`:
   - File exists, valid JSON
   - Points >= 200 (Market Health Over Time chart)
   - Last date within 10 calendar days
@@ -168,7 +170,7 @@ git clean -fd public data/marketstack/eod
 - **Verify:** Scripts import `'./load-env'` as first import (check `scripts/*.ts` files)
 
 ### "Missing or insufficient EOD cache for: BNO, ..." (plumbing)
-- **Fix:** Run `pnpm -s update:snapshots` first to populate BNO (added to MACRO deck). The plumbing script requires BNO, USO, GLD, SPY, TIP, UUP with ≥60 bars each.
+- **Fix:** Run `pnpm -s update:snapshots` first to populate BNO (added to MACRO deck). The plumbing script (PLUMBING deck; deck ID PLUMBING, UI label "War Lie Detector") requires BNO, USO, GLD, SPY, TIP, UUP with ≥60 bars each.
 - **Insufficient aligned bars:** Extend EOD cache; ensure all 6 symbols have overlapping history.
 
 ### "Stooq returned no data" / "Stooq VIX: all symbols failed"

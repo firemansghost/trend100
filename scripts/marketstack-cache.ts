@@ -632,3 +632,95 @@ export async function ensureHistoryStooqBatch(symbols: string[]): Promise<Map<st
 
   return result;
 }
+
+export interface StooqWithFallbackResult {
+  result: Map<string, EodBar[]>;
+  stooqOk: string[];
+  fallback: string[];
+}
+
+/**
+ * Stooq-first with Marketstack fallback for pilot decks.
+ * Tries Stooq for each symbol; on failure (timeout/no data/parse), falls back to Marketstack.
+ *
+ * @param symbols Array of provider symbols (e.g. GLTR, GDX)
+ * @returns Result with bars map and summary (stooqOk, fallback)
+ */
+export async function ensureHistoryStooqWithFallback(
+  symbols: string[]
+): Promise<StooqWithFallbackResult> {
+  const stooqOk: string[] = [];
+  const fallback: string[] = [];
+  const result = new Map<string, EodBar[]>();
+  const today = new Date().toISOString().split('T')[0]!;
+  const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '2300', 10);
+
+  for (const symbol of symbols) {
+    const cached = loadCachedBars(symbol);
+
+    if (!cached || cached.length === 0) {
+      // Backfill: try Stooq first
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - cacheDays);
+      const startDateStr = startDate.toISOString().split('T')[0]!;
+      console.log(`  📥 [Stooq] Backfilling ${symbol} (${cacheDays} days)...`);
+      try {
+        const bars = await fetchStooqEodSeries(symbol, startDateStr, today);
+        saveCachedBars(symbol, bars);
+        result.set(symbol, bars);
+        stooqOk.push(symbol);
+        console.log(`    ✓ Cached ${bars.length} bars`);
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        console.warn(`    ⚠️  Stooq failed for ${symbol}, falling back to Marketstack: ${reason}`);
+        fallback.push(symbol);
+      }
+      continue;
+    }
+
+    // Cache exists - check if update needed
+    const lastCachedDate = cached[cached.length - 1]!.date;
+    const daysSinceLastCache = getTradingDaysBetween(lastCachedDate, today);
+
+    if (daysSinceLastCache <= 3) {
+      result.set(symbol, cached);
+      stooqOk.push(symbol);
+      continue;
+    }
+
+    // Gap - try Stooq, fallback to Marketstack on failure
+    const gapStartDate = new Date(lastCachedDate);
+    gapStartDate.setDate(gapStartDate.getDate() - 5);
+    const gapStartStr = gapStartDate.toISOString().split('T')[0]!;
+    console.log(`  🔄 [Stooq] Updating ${symbol} (last: ${lastCachedDate})...`);
+    try {
+      const newBars = await fetchStooqEodSeries(symbol, gapStartStr, today);
+      const merged = mergeBars(cached, newBars);
+      saveCachedBars(symbol, merged);
+      result.set(symbol, merged);
+      stooqOk.push(symbol);
+      console.log(`    ✓ Merged ${newBars.length} new bars, total: ${merged.length}`);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      console.warn(`    ⚠️  Stooq failed for ${symbol}, falling back to Marketstack: ${reason}`);
+      fallback.push(symbol);
+    }
+  }
+
+  // Fallback: fetch failed symbols via Marketstack
+  if (fallback.length > 0) {
+    console.log(`\n  📥 [Marketstack fallback] Fetching ${fallback.length} symbol(s): ${fallback.join(', ')}`);
+    const msResult = await ensureHistoryBatch(fallback);
+    for (const [sym, bars] of msResult) {
+      result.set(sym, bars);
+    }
+    // Symbols Marketstack couldn't fetch stay missing from result (same as ensureHistoryBatch)
+  }
+
+  // Summary log
+  console.log(
+    `\n  📊 Stooq OK: ${stooqOk.length} | Stooq failed → Marketstack fallback: ${fallback.length}${fallback.length > 0 ? ` (${fallback.join(', ')})` : ''}`
+  );
+
+  return { result, stooqOk, fallback };
+}

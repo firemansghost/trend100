@@ -49,11 +49,15 @@ pnpm -s tsc --noEmit
 
 # Pilot refresh for METALS_MINING + PLUMBING (deck ID PLUMBING; UI label "War Lie Detector")
 $env:EOD_STOOQ_DECKS="METALS_MINING,PLUMBING"
+$env:EOD_STOOQ_FORCE_FALLBACK="BNO"
+# optional: $env:EOD_STOOQ_SYMBOL_OVERRIDES="BRK_B=brk.b.us"
 pnpm -s update:snapshots
 pnpm -s update:plumbing-war-lie-detector
 pnpm -s verify:artifacts
 # Expected log: "Stooq-first (fallback to Marketstack) for N symbols (decks: METALS_MINING, PLUMBING)"
-# Expected log: "Stooq OK: N | Stooq failed → Marketstack fallback: M (tickers)" when fallback occurs
+# Expected log: "Stooq forced fallback: BNO" when EOD_STOOQ_FORCE_FALLBACK includes BNO
+# Expected log: "Stooq override: TICKER -> symbolUsed" when override used
+# Expected log: "Stooq OK: N | Stooq failed → Marketstack fallback: M (tickers)" (BNO in fallback when forced)
 # Expected log: "Marketstack direct: K" for non-Stooq deck symbols
 
 # Manual UI check: pnpm dev, open /?deck=PLUMBING, confirm War Lie Detector panel loads

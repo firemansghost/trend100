@@ -19,6 +19,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-02 — (Data/Ops) Stooq symbol overrides + forced Marketstack fallback
+**Choice:** Added two env vars to improve Stooq pilot reliability. Stooq coverage is inconsistent (e.g. BNO returns 0 bars via default `bno.us`). (1) **EOD_STOOQ_SYMBOL_OVERRIDES** — mapping string, e.g. `BNO=bno.us,BRK_B=brk.b.us` or multi-candidate `BNO=bno.us|bno|bno.uk` (tries in order until one returns bars). (2) **EOD_STOOQ_FORCE_FALLBACK** — comma-separated tickers that skip Stooq entirely and go straight to Marketstack (e.g. `BNO,FBTC`). Logs: `Stooq override: TICKER -> symbolUsed`, `Stooq forced fallback: TICKER`.
+
+**Why:** Some tickers have no usable Stooq data; forcing fallback avoids wasted Stooq attempts. Overrides let us pin weird tickers to the right Stooq symbol or try alternatives.
+
+---
+
 ### 2026-02 — (Data/Ops) Turbulence gates from Stooq instead of FRED (PR26)
 **Choice:** Switched `update-turbulence-gates.ts` from FRED (SP500 + VIXCLS) to Stooq CSV for SPX and VIX EOD closes. Eliminates 0–1 day FRED lag so gates align with ShockZ timing. No API key required. Env: `TURBULENCE_GATES_START`, `TURBULENCE_STOOQ_SPX_SYMBOL` (default ^spx), `TURBULENCE_STOOQ_VIX_SYMBOL` (default vi.c = S&P 500 VIX Cash). Output schema unchanged.
 

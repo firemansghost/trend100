@@ -2,11 +2,17 @@
  * Stooq EOD fetcher for deck cache generation
  *
  * Fetches daily OHLCV from Stooq CSV API. Used as pilot provider for selected decks
- * (e.g. METALS_MINING) when EOD_STOOQ_DECKS is set, to reduce Marketstack API usage.
+ * (e.g. METALS_MINING, PLUMBING) when EOD_STOOQ_DECKS is set, to reduce Marketstack API usage.
  *
  * Symbol mapping: US tickers use .us suffix (e.g. GLTR → gltr.us).
  * Underscores become dots (e.g. BRK_B → brk.b.us).
+ *
+ * Env vars:
+ * - EOD_STOOQ_FORCE_FALLBACK: comma-separated tickers to skip Stooq, use Marketstack only
+ * - EOD_STOOQ_SYMBOL_OVERRIDES: TICKER=symbol or TICKER=s1|s2|s3 (multi-candidate)
  */
+
+import './load-env';
 
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
 
@@ -14,21 +20,80 @@ const STOOQ_BASE = 'https://stooq.com/q/d/l/';
 const FETCH_TIMEOUT_MS = 28000;
 const RETRY_DELAYS_MS = [1000, 2000, 4000];
 
-/** Override map for symbols that need non-default Stooq mapping (ticker -> stooq symbol) */
-const STOOQ_SYMBOL_OVERRIDES: Record<string, string> = {
-  // METALS_MINING tickers use default .us mapping; add overrides here if needed
-};
-
-/**
- * Map provider ticker to Stooq symbol.
- * Default: ticker.toLowerCase() + ".us"
- * Underscores: BRK_B → brk.b.us
- */
-export function toStooqSymbol(ticker: string): string {
-  const override = STOOQ_SYMBOL_OVERRIDES[ticker];
-  if (override) return override;
+function getDefaultStooqSymbol(ticker: string): string {
   const base = ticker.toLowerCase().replace(/_/g, '.');
   return `${base}.us`;
+}
+
+function parseForceFallback(): Set<string> {
+  const raw = process.env.EOD_STOOQ_FORCE_FALLBACK ?? '';
+  const set = new Set<string>();
+  for (const t of raw.split(',')) {
+    const trimmed = t.trim().toUpperCase();
+    if (trimmed) set.add(trimmed);
+  }
+  return set;
+}
+
+function parseSymbolOverrides(): Map<string, string[]> {
+  const raw = process.env.EOD_STOOQ_SYMBOL_OVERRIDES ?? '';
+  const map = new Map<string, string[]>();
+  for (const pair of raw.split(',')) {
+    const eq = pair.indexOf('=');
+    if (eq < 0) continue;
+    const ticker = pair.slice(0, eq).trim().toUpperCase();
+    const value = pair.slice(eq + 1).trim();
+    if (!ticker || !value) continue;
+    const candidates = value.split('|').map((s) => s.trim()).filter(Boolean);
+    if (candidates.length > 0) map.set(ticker, candidates);
+  }
+  return map;
+}
+
+let _forceFallback: Set<string> | null = null;
+let _symbolOverrides: Map<string, string[]> | null = null;
+
+function getForceFallback(): Set<string> {
+  if (_forceFallback === null) _forceFallback = parseForceFallback();
+  return _forceFallback;
+}
+
+function getSymbolOverrides(): Map<string, string[]> {
+  if (_symbolOverrides === null) _symbolOverrides = parseSymbolOverrides();
+  return _symbolOverrides;
+}
+
+/**
+ * Check if ticker is in EOD_STOOQ_FORCE_FALLBACK (skip Stooq, use Marketstack only).
+ */
+export function isForceFallback(ticker: string): boolean {
+  return getForceFallback().has(ticker.toUpperCase());
+}
+
+/**
+ * Get Stooq symbol candidates for a ticker (override or default).
+ * Tries in order; first success wins when using fetchStooqEodSeries.
+ */
+export function getStooqSymbolCandidates(ticker: string): string[] {
+  const overrides = getSymbolOverrides();
+  const candidates = overrides.get(ticker.toUpperCase());
+  if (candidates && candidates.length > 0) return candidates;
+  return [getDefaultStooqSymbol(ticker)];
+}
+
+/**
+ * Check if ticker has a symbol override (from EOD_STOOQ_SYMBOL_OVERRIDES).
+ */
+export function hasSymbolOverride(ticker: string): boolean {
+  return getSymbolOverrides().has(ticker.toUpperCase());
+}
+
+/**
+ * Map provider ticker to single Stooq symbol (first candidate).
+ * For multi-candidate, use getStooqSymbolCandidates.
+ */
+export function toStooqSymbol(ticker: string): string {
+  return getStooqSymbolCandidates(ticker)[0]!;
 }
 
 function toYyyyMmDd(dateStr: string): string {
@@ -69,20 +134,12 @@ async function fetchWithRetry(url: string): Promise<Response> {
   throw lastErr ?? new Error('fetchWithRetry failed');
 }
 
-/**
- * Fetch EOD bars from Stooq for a given symbol and date range.
- *
- * @param providerSymbol Provider symbol (e.g. GLTR, GDX)
- * @param startDate YYYY-MM-DD
- * @param endDate YYYY-MM-DD
- * @returns EodBar[] sorted ascending by date
- */
-export async function fetchStooqEodSeries(
+async function fetchStooqEodSeriesForSymbol(
   providerSymbol: string,
+  stooqSymbol: string,
   startDate: string,
   endDate: string
 ): Promise<EodBar[]> {
-  const stooqSymbol = toStooqSymbol(providerSymbol);
   const d1 = toYyyyMmDd(startDate);
   const d2 = toYyyyMmDd(endDate);
   const url = `${STOOQ_BASE}?s=${encodeURIComponent(stooqSymbol)}&d1=${d1}&d2=${d2}&i=d`;
@@ -132,4 +189,44 @@ export async function fetchStooqEodSeries(
   }
 
   return bars.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * Fetch EOD bars from Stooq for a given symbol and date range.
+ * Tries symbol candidates (override or default) in order; first success wins.
+ *
+ * @param providerSymbol Provider symbol (e.g. GLTR, GDX)
+ * @param startDate YYYY-MM-DD
+ * @param endDate YYYY-MM-DD
+ * @returns EodBar[] sorted ascending by date
+ */
+export async function fetchStooqEodSeries(
+  providerSymbol: string,
+  startDate: string,
+  endDate: string
+): Promise<EodBar[]> {
+  const candidates = getStooqSymbolCandidates(providerSymbol);
+  let lastError: Error | null = null;
+
+  for (const stooqSymbol of candidates) {
+    try {
+      const bars = await fetchStooqEodSeriesForSymbol(
+        providerSymbol,
+        stooqSymbol,
+        startDate,
+        endDate
+      );
+      if (bars.length > 0) {
+        if (hasSymbolOverride(providerSymbol)) {
+          console.log(`    Stooq override: ${providerSymbol} -> ${stooqSymbol}`);
+        }
+        return bars;
+      }
+      lastError = new Error(`Stooq returned 0 bars for ${providerSymbol} (${stooqSymbol})`);
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+    }
+  }
+
+  throw lastError ?? new Error(`All Stooq candidates failed for ${providerSymbol}`);
 }

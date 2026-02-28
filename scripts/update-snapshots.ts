@@ -30,7 +30,7 @@ import type {
 } from '../src/modules/trend100/types';
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
 import { toSectionKey } from '../src/modules/trend100/data/sectionKey';
-import { ensureHistoryBatch, ensureHistoryStooqBatch } from './marketstack-cache';
+import { ensureHistoryBatch, ensureHistoryStooqWithFallback } from './marketstack-cache';
 import { calcSMA, calcEMA, resampleDailyToWeekly } from '../src/modules/trend100/engine/movingAverages';
 import { classifyTrend } from '../src/modules/trend100/engine/classifyTrend';
 import { computeHealthScore } from '../src/modules/trend100/engine/healthScore';
@@ -761,18 +761,23 @@ async function main() {
     }
   }
   if (stooqDecks.length > 0) {
-    console.log(`📡 Provider routing: Stooq for ${stooqSymbols.length} symbols (decks: ${stooqDecks.join(', ')}), Marketstack for ${marketstackSymbols.length}\n`);
+    console.log(
+      `📡 Provider routing: Stooq-first (fallback to Marketstack) for ${stooqSymbols.length} symbols (decks: ${stooqDecks.join(', ')}), Marketstack direct: ${marketstackSymbols.length}\n`
+    );
   }
   console.log('📥 Ensuring EOD history (using cache, backfilling if needed)...\n');
 
   const seriesCache = new Map<string, EodBar[]>();
   if (stooqSymbols.length > 0) {
-    const stooqResult = await ensureHistoryStooqBatch(stooqSymbols);
+    const { result: stooqResult } = await ensureHistoryStooqWithFallback(stooqSymbols);
     for (const [sym, bars] of stooqResult) {
       seriesCache.set(sym, bars);
     }
   }
   if (marketstackSymbols.length > 0) {
+    if (stooqDecks.length > 0) {
+      console.log(`\n  📥 [Marketstack direct] ${marketstackSymbols.length} symbols (non-Stooq decks)\n`);
+    }
     const msResult = await ensureHistoryBatch(marketstackSymbols);
     for (const [sym, bars] of msResult) {
       seriesCache.set(sym, bars);

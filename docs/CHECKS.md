@@ -39,7 +39,7 @@
 - Skips wasting budget on inception-limited symbols (uses metadata in `data/marketstack/eod/.meta/`)
 - Fetches "latest" for symbols with recent cache (batched updates)
 - Logs clear messages for inception-limited symbols: `"ℹ️ <SYMBOL> cannot extend earlier than <date> (provider limit/inception)"`
-- **Stooq pilot:** When `EOD_STOOQ_DECKS=METALS_MINING`, METALS_MINING symbols (11 tickers) are fetched from Stooq; all other decks use Marketstack. Run locally without Marketstack quota for pilot decks.
+- **Stooq pilot:** When `EOD_STOOQ_DECKS=METALS_MINING`, METALS_MINING symbols (11 tickers) use Stooq-first with Marketstack fallback; all other decks use Marketstack. Run locally without Marketstack quota for pilot decks when Stooq succeeds.
 
 ### Stooq EOD pilot verification (PowerShell)
 
@@ -47,12 +47,17 @@
 # Typecheck
 pnpm -s tsc --noEmit
 
-# Pilot refresh for METALS_MINING only (Stooq, no Marketstack for those symbols)
+# Pilot refresh for METALS_MINING (Stooq-first, Marketstack fallback on Stooq failure)
 $env:EOD_STOOQ_DECKS="METALS_MINING"
 pnpm -s update:snapshots
+# Expected log: "Stooq OK: N | Stooq failed → Marketstack fallback: M (tickers)" when fallback occurs
+# Expected log: "Marketstack direct: K" for non-Stooq deck symbols
 
 # Confirm snapshot.METALS_MINING.json updates; verify artifacts
 pnpm -s verify:artifacts
+
+# Fallback test (optional): temporarily break one Stooq symbol (e.g. override in stooq-eod.ts)
+# to verify run still succeeds via Marketstack fallback. Remove sabotage before commit.
 
 # Ensure no cache/artifacts staged
 git status

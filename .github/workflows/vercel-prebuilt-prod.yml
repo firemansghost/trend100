@@ -39,6 +39,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Cache Marketstack EOD
+        uses: actions/cache@v4
+        with:
+          path: data/marketstack/eod
+          key: ${{ runner.os }}-marketstack-eod-v1-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-marketstack-eod-v1-
+
       - name: Prefetch last-known-good turbulence gates
         run: |
           mkdir -p public

@@ -100,6 +100,30 @@ function toYyyyMmDd(dateStr: string): string {
   return dateStr.replace(/-/g, '');
 }
 
+/**
+ * Build a diagnostic summary of a Stooq response for CI debugging.
+ */
+function summarizeResponse(res: Response, text: string): string {
+  const contentType = res.headers.get('content-type') ?? '(none)';
+  const contentLength = res.headers.get('content-length') ?? '(none)';
+  const snippet = text
+    .slice(0, 350)
+    .replace(/\r?\n/g, ' ')
+    .trim();
+  return `status=${res.status} content-type=${contentType} content-length=${contentLength} body_preview="${snippet}"`;
+}
+
+function isNonCsvResponse(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed) return true;
+  const first500 = trimmed.slice(0, 500).toLowerCase();
+  return (
+    first500.startsWith('<!doctype') ||
+    first500.startsWith('<html') ||
+    first500.includes('<title>')
+  );
+}
+
 async function fetchWithRetry(url: string): Promise<Response> {
   let lastErr: Error | null = null;
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -146,34 +170,41 @@ async function fetchStooqEodSeriesForSymbol(
 
   const res = await fetchWithRetry(url);
   if (!res.ok) {
+    const text = await res.text();
     throw new Error(
-      `Stooq fetch failed for ${providerSymbol} (${stooqSymbol}): ${res.status} ${res.statusText}\nURL: ${url}`
+      `Stooq fetch failed for ${providerSymbol} (${stooqSymbol}): ${res.status} ${res.statusText}. ${summarizeResponse(res, text)} URL: ${url}`
     );
   }
 
   const text = await res.text();
   const trimmed = text.trim();
 
+  if (isNonCsvResponse(text)) {
+    throw new Error(
+      `Stooq returned non-CSV/HTML response for ${providerSymbol} (${stooqSymbol}). ${summarizeResponse(res, text)} URL: ${url}`
+    );
+  }
+
   if (!trimmed || trimmed === 'No data.' || trimmed.toLowerCase().includes('no data')) {
     throw new Error(
-      `Stooq returned no data for symbol "${providerSymbol}" (${stooqSymbol}). URL used: ${url}\n` +
-        'Hint: Check symbol mapping. US tickers use .us suffix (e.g. gltr.us).'
+      `Stooq returned no data for symbol "${providerSymbol}" (${stooqSymbol}). ${summarizeResponse(res, text)} URL: ${url}`
     );
   }
 
-  const lines = trimmed.split('\n').filter((l) => l.trim());
+  const lines = trimmed.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   if (lines.length < 2) {
     throw new Error(
-      `Stooq CSV has no data rows for symbol "${providerSymbol}" (${stooqSymbol}). URL used: ${url}`
+      `Stooq CSV has no data rows for symbol "${providerSymbol}" (${stooqSymbol}). ${summarizeResponse(res, text)} URL: ${url}`
     );
   }
 
-  const header = lines[0]!.toLowerCase();
-  const dateIdx = header.indexOf('date');
-  const closeIdx = header.indexOf('close');
+  const headerRow = lines[0]!.toLowerCase();
+  const headerCols = headerRow.split(',').map((c) => c.trim());
+  const dateIdx = headerCols.indexOf('date');
+  const closeIdx = headerCols.indexOf('close');
   if (dateIdx < 0 || closeIdx < 0) {
     throw new Error(
-      `Stooq CSV missing Date or Close column for ${providerSymbol}. URL: ${url}\nHeader: ${lines[0]}`
+      `Stooq CSV missing Date or Close column for ${providerSymbol}. ${summarizeResponse(res, text)} URL: ${url} Header: ${lines[0]}`
     );
   }
 
@@ -186,6 +217,12 @@ async function fetchStooqEodSeriesForSymbol(
     const close = parseFloat(closeStr);
     if (!Number.isFinite(close)) continue;
     bars.push({ date, close });
+  }
+
+  if (bars.length === 0) {
+    throw new Error(
+      `Stooq parsed 0 bars for ${providerSymbol} (${stooqSymbol}). ${summarizeResponse(res, text)} URL: ${url}`
+    );
   }
 
   return bars.sort((a, b) => a.date.localeCompare(b.date));
@@ -217,6 +254,8 @@ export async function fetchStooqEodSeries(
         endDate
       );
       if (bars.length > 0) {
+        const lastDate = bars[bars.length - 1]!.date;
+        console.log(`    Stooq OK ${providerSymbol} symbol=${stooqSymbol} bars=${bars.length} last=${lastDate}`);
         if (hasSymbolOverride(providerSymbol)) {
           console.log(`    Stooq override: ${providerSymbol} -> ${stooqSymbol}`);
         }

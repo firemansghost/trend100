@@ -26,6 +26,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-02 — (Data/Ops) CI Stooq routing from GitHub Actions Variables
+**Choice:** CI workflows (vercel-prebuilt-prod.yml, daily-artifacts-deploy.yml) now read Stooq routing config from GitHub Actions Variables: `EOD_STOOQ_DECKS`, `EOD_STOOQ_FORCE_FALLBACK`, `EOD_STOOQ_SYMBOL_OVERRIDES`. Set in repo Settings → Secrets and variables → Actions → Variables. Empty/unset preserves default (all Marketstack). Enables Stooq-first for pilot decks in CI without editing workflow YAML.
+
+**Why:** Scheduled/CI runs were burning Marketstack unnecessarily. Variables let us toggle Stooq routing centrally; no code changes needed to adjust which decks use Stooq.
+
+---
+
 ### 2026-02 — (Data/Ops) Turbulence gates from Stooq instead of FRED (PR26)
 **Choice:** Switched `update-turbulence-gates.ts` from FRED (SP500 + VIXCLS) to Stooq CSV for SPX and VIX EOD closes. Eliminates 0–1 day FRED lag so gates align with ShockZ timing. No API key required. Env: `TURBULENCE_GATES_START`, `TURBULENCE_STOOQ_SPX_SYMBOL` (default ^spx), `TURBULENCE_STOOQ_VIX_SYMBOL` (default vi.c = S&P 500 VIX Cash). Output schema unchanged.
 

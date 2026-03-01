@@ -72,6 +72,7 @@ git status
 
 ### CI pipeline checks
 - **Artifact validation:** CI must pass `pnpm artifacts:refresh` before deploy (vercel-prebuilt-prod.yml on push; daily-artifacts-deploy.yml on schedule)
+- **Stooq routing in CI:** Workflows read `EOD_STOOQ_DECKS`, `EOD_STOOQ_FORCE_FALLBACK`, `EOD_STOOQ_SYMBOL_OVERRIDES` from GitHub Actions Variables (Settings → Secrets and variables → Actions → Variables). Set e.g. `EOD_STOOQ_DECKS=METALS_MINING,PLUMBING` and `EOD_STOOQ_FORCE_FALLBACK=BNO` to enable Stooq-first for pilot decks. Expected log from update:snapshots: `Provider routing: Stooq-first (fallback to Marketstack) for N symbols (decks: METALS_MINING, PLUMBING)`
 - **Turbulence gates:** Fetched from Stooq (SPX + VIX EOD); no API key required
 - **Daily deploy:** `daily-artifacts-deploy.yml` runs Mon–Fri 22:15 UTC; must pass update:snapshots + verify:artifacts before deploying
 - **Production smoke checks:** After deploy, key artifact endpoints should return 200:

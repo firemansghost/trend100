@@ -61,6 +61,9 @@ jobs:
           TURBULENCE_STOOQ_VIX_SYMBOL: "vi.c"
           TURBULENCE_SHOCK_START: "2019-10-01"
           TURBULENCE_SHOCK_Z_THRESHOLD: "2.0"
+          EOD_STOOQ_DECKS: ${{ vars.EOD_STOOQ_DECKS || '' }}
+          EOD_STOOQ_FORCE_FALLBACK: ${{ vars.EOD_STOOQ_FORCE_FALLBACK || '' }}
+          EOD_STOOQ_SYMBOL_OVERRIDES: ${{ vars.EOD_STOOQ_SYMBOL_OVERRIDES || '' }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: pnpm -s artifacts:refresh

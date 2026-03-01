@@ -683,7 +683,8 @@ export async function ensureHistoryStooqWithFallback(
         }
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
-        console.warn(`    ⚠️  Stooq failed for ${symbol}, falling back to Marketstack: ${reason}`);
+        const truncated = reason.length > 300 ? reason.slice(0, 297) + '...' : reason;
+        console.warn(`    ⚠️  Stooq failed for ${symbol}, falling back to Marketstack: ${truncated}`);
         fallback.push(symbol);
       }
       continue;
@@ -718,7 +719,8 @@ export async function ensureHistoryStooqWithFallback(
       }
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      console.warn(`    ⚠️  Stooq failed for ${symbol}, falling back to Marketstack: ${reason}`);
+      const truncated = reason.length > 300 ? reason.slice(0, 297) + '...' : reason;
+      console.warn(`    ⚠️  Stooq failed for ${symbol}, falling back to Marketstack: ${truncated}`);
       fallback.push(symbol);
     }
   }

@@ -636,6 +636,8 @@ export async function ensureHistoryStooqBatch(symbols: string[]): Promise<Map<st
 export interface StooqWithFallbackResult {
   result: Map<string, EodBar[]>;
   stooqOk: string[];
+  forcedFallback: string[];
+  stooqFailedFallback: string[];
   fallback: string[];
 }
 
@@ -650,7 +652,8 @@ export async function ensureHistoryStooqWithFallback(
   symbols: string[]
 ): Promise<StooqWithFallbackResult> {
   const stooqOk: string[] = [];
-  const fallback: string[] = [];
+  const forcedFallback: string[] = [];
+  const stooqFailedFallback: string[] = [];
   const result = new Map<string, EodBar[]>();
   const today = new Date().toISOString().split('T')[0]!;
   const cacheDays = parseInt(process.env.MARKETSTACK_CACHE_DAYS || '2300', 10);
@@ -658,7 +661,7 @@ export async function ensureHistoryStooqWithFallback(
   for (const symbol of symbols) {
     if (isForceFallback(symbol)) {
       console.log(`  Stooq forced fallback: ${symbol}`);
-      fallback.push(symbol);
+      forcedFallback.push(symbol);
       continue;
     }
 
@@ -674,7 +677,7 @@ export async function ensureHistoryStooqWithFallback(
         const bars = await fetchStooqEodSeries(symbol, startDateStr, today);
         if (bars.length === 0) {
           console.warn(`    ⚠️  Stooq returned 0 bars for ${symbol}, falling back to Marketstack`);
-          fallback.push(symbol);
+          stooqFailedFallback.push(symbol);
         } else {
           saveCachedBars(symbol, bars);
           result.set(symbol, bars);
@@ -685,7 +688,7 @@ export async function ensureHistoryStooqWithFallback(
         const reason = error instanceof Error ? error.message : String(error);
         const truncated = reason.length > 300 ? reason.slice(0, 297) + '...' : reason;
         console.warn(`    ⚠️  Stooq failed for ${symbol}, falling back to Marketstack: ${truncated}`);
-        fallback.push(symbol);
+        stooqFailedFallback.push(symbol);
       }
       continue;
     }
@@ -709,7 +712,7 @@ export async function ensureHistoryStooqWithFallback(
       const newBars = await fetchStooqEodSeries(symbol, gapStartStr, today);
       if (newBars.length === 0) {
         console.warn(`    ⚠️  Stooq returned 0 bars for ${symbol}, falling back to Marketstack`);
-        fallback.push(symbol);
+        stooqFailedFallback.push(symbol);
       } else {
         const merged = mergeBars(cached, newBars);
         saveCachedBars(symbol, merged);
@@ -721,13 +724,16 @@ export async function ensureHistoryStooqWithFallback(
       const reason = error instanceof Error ? error.message : String(error);
       const truncated = reason.length > 300 ? reason.slice(0, 297) + '...' : reason;
       console.warn(`    ⚠️  Stooq failed for ${symbol}, falling back to Marketstack: ${truncated}`);
-      fallback.push(symbol);
+      stooqFailedFallback.push(symbol);
     }
   }
 
+  const fallback = [...forcedFallback, ...stooqFailedFallback];
+
   // Fallback: fetch failed symbols via Marketstack
   if (fallback.length > 0) {
-    console.log(`\n  📥 [Marketstack fallback] Fetching ${fallback.length} symbol(s): ${fallback.join(', ')}`);
+    const listPreview = fallback.length <= 10 ? fallback.join(', ') : fallback.slice(0, 10).join(', ') + ` +${fallback.length - 10} more`;
+    console.log(`\n  📥 [Marketstack fallback] Fetching ${fallback.length} symbol(s): ${listPreview}`);
     const msResult = await ensureHistoryBatch(fallback);
     for (const [sym, bars] of msResult) {
       result.set(sym, bars);
@@ -735,10 +741,14 @@ export async function ensureHistoryStooqWithFallback(
     // Symbols Marketstack couldn't fetch stay missing from result (same as ensureHistoryBatch)
   }
 
-  // Summary log
+  // Compact summary log
+  const fallbackPreview =
+    fallback.length <= 10
+      ? fallback.join(', ')
+      : fallback.slice(0, 10).join(', ') + ` +${fallback.length - 10} more`;
   console.log(
-    `\n  📊 Stooq OK: ${stooqOk.length} | Stooq failed → Marketstack fallback: ${fallback.length}${fallback.length > 0 ? ` (${fallback.join(', ')})` : ''}`
+    `\n  📊 Stooq OK: ${stooqOk.length} | Forced fallback: ${forcedFallback.length} | Stooq failed → Marketstack fallback: ${stooqFailedFallback.length}${fallback.length > 0 ? ` (${fallbackPreview})` : ''}`
   );
 
-  return { result, stooqOk, fallback };
+  return { result, stooqOk, forcedFallback, stooqFailedFallback, fallback };
 }

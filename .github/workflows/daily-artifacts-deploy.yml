@@ -40,13 +40,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Cache Marketstack EOD
-        uses: actions/cache@v4
+      - name: Restore Marketstack EOD cache
+        uses: actions/cache/restore@v4
         with:
           path: data/marketstack/eod
-          key: ${{ runner.os }}-marketstack-eod-v1-${{ hashFiles('pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-marketstack-eod-v1-
+            ${{ runner.os }}-marketstack-eod-v2-
+
+      - name: EOD cache diagnostics (after restore)
+        run: |
+          echo "EOD cache file count: $(ls -1 data/marketstack/eod 2>/dev/null | wc -l || true)"
+          du -sh data/marketstack/eod 2>/dev/null || true
 
       - name: Prefetch last-known-good turbulence gates
         run: |
@@ -75,6 +80,18 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: pnpm -s artifacts:refresh
+
+      - name: EOD cache diagnostics (after artifacts)
+        run: |
+          echo "EOD cache file count: $(ls -1 data/marketstack/eod 2>/dev/null | wc -l || true)"
+          du -sh data/marketstack/eod 2>/dev/null || true
+
+      - name: Save Marketstack EOD cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/marketstack/eod
+          key: ${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}
 
       - name: Pull Vercel project config
         env:

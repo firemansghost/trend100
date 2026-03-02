@@ -762,7 +762,7 @@ async function main() {
   }
   if (stooqDecks.length > 0) {
     console.log(
-      `📡 Provider routing: Stooq-first (fallback to Marketstack) for ${stooqSymbols.length} symbols (decks: ${stooqDecks.join(', ')}), Marketstack direct: ${marketstackSymbols.length}\n`
+      `📡 Provider routing: Stooq-first for ${stooqSymbols.length} symbols (decks: ${stooqDecks.join(', ')}), Marketstack direct: ${marketstackSymbols.length}\n`
     );
   }
   console.log('📥 Ensuring EOD history (using cache, backfilling if needed)...\n');

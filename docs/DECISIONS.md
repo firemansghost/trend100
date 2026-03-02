@@ -13,9 +13,9 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 ---
 
 ### 2026-02 — (Data/Ops) Pilot Stooq EOD provider for deck cache (EOD_STOOQ_DECKS)
-**Choice:** Added optional Stooq EOD provider for deck cache generation. When `EOD_STOOQ_DECKS` is set (comma-separated, case-insensitive deck IDs, e.g. `METALS_MINING`, `PLUMBING`), symbols belonging to those decks use Stooq-first with Marketstack fallback: try Stooq for each symbol; on failure (timeout/no data/parse), fall back to Marketstack for that symbol. Same cache format and path (`data/marketstack/eod/*.json`); no workflow changes. Pilot decks: METALS_MINING (11 tickers), PLUMBING (deck ID; UI label "War Lie Detector", 6 tickers: BNO, USO, GLD, SPY, TIP, UUP). Not switching everything yet—Marketstack remains default for all other decks.
+**Choice:** Added optional Stooq EOD provider for deck cache generation. When `EOD_STOOQ_DECKS` is set (comma-separated, case-insensitive deck IDs), symbols belonging to those decks use Stooq-first with Marketstack fallback: try Stooq for each symbol; on failure (timeout/no data/parse), fall back to Marketstack for that symbol. Same cache format and path (`data/marketstack/eod/*.json`). Pilot decks: METALS_MINING (11), PLUMBING (6; deck ID PLUMBING, UI "War Lie Detector"), US_SECTORS (12), US_FACTORS (10), GLOBAL_EQUITIES (11). `EOD_STOOQ_FORCE_FALLBACK` skips Stooq for tickers not reliably on Stooq (e.g. BNO, FBTC, FETH, SRUUF—commodity/crypto/trust). Not switching everything yet—Marketstack remains default for LEADERSHIP, FIXED_INCOME, MACRO.
 
-**Why:** Reduces Marketstack API usage when hitting monthly limits. Stooq has no API key; fallback ensures update:snapshots completes even if Stooq has uptime or symbol quirks.
+**Why:** Reduces Marketstack API usage when hitting monthly limits. Stooq has no API key; forced fallback avoids wasted attempts on known non-Stooq tickers.
 
 ---
 

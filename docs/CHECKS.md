@@ -39,7 +39,7 @@
 - Skips wasting budget on inception-limited symbols (uses metadata in `data/marketstack/eod/.meta/`)
 - Fetches "latest" for symbols with recent cache (batched updates)
 - Logs clear messages for inception-limited symbols: `"ℹ️ <SYMBOL> cannot extend earlier than <date> (provider limit/inception)"`
-- **Stooq pilot:** When `EOD_STOOQ_DECKS` includes `METALS_MINING` and/or `PLUMBING`, those deck symbols use Stooq-first with Marketstack fallback; all other decks use Marketstack. PLUMBING deck (deck ID PLUMBING; UI label "War Lie Detector") has 6 tickers: BNO, USO, GLD, SPY, TIP, UUP. Run locally without Marketstack quota for pilot decks when Stooq succeeds.
+- **Stooq pilot:** When `EOD_STOOQ_DECKS` includes pilot decks (METALS_MINING, PLUMBING, US_SECTORS, US_FACTORS, GLOBAL_EQUITIES), those symbols use Stooq-first with Marketstack fallback. `EOD_STOOQ_FORCE_FALLBACK` (e.g. BNO,FBTC,FETH,SRUUF) skips Stooq for tickers not reliably on Stooq. All other decks use Marketstack.
 
 ### Stooq EOD pilot verification (PowerShell)
 
@@ -47,18 +47,16 @@
 # Typecheck
 pnpm -s tsc --noEmit
 
-# Pilot refresh for METALS_MINING + PLUMBING (deck ID PLUMBING; UI label "War Lie Detector")
-$env:EOD_STOOQ_DECKS="METALS_MINING,PLUMBING"
-$env:EOD_STOOQ_FORCE_FALLBACK="BNO"
+# Pilot refresh (METALS_MINING, PLUMBING, US_SECTORS, US_FACTORS, GLOBAL_EQUITIES)
+$env:EOD_STOOQ_DECKS="METALS_MINING,PLUMBING,US_SECTORS,US_FACTORS,GLOBAL_EQUITIES"
+$env:EOD_STOOQ_FORCE_FALLBACK="BNO,FBTC,FETH,SRUUF"
 # optional: $env:EOD_STOOQ_SYMBOL_OVERRIDES="BRK_B=brk.b.us"
 pnpm -s update:snapshots
 pnpm -s update:plumbing-war-lie-detector
 pnpm -s verify:artifacts
-# Expected log: "Stooq-first (fallback to Marketstack) for N symbols (decks: METALS_MINING, PLUMBING)"
-# Expected log: "Stooq forced fallback: BNO" when EOD_STOOQ_FORCE_FALLBACK includes BNO
-# Expected log: "Stooq override: TICKER -> symbolUsed" when override used
-# Expected log: "Stooq OK: N | Stooq failed → Marketstack fallback: M (tickers)" (BNO in fallback when forced)
-# Expected log: "Marketstack direct: K" for non-Stooq deck symbols
+# Expected log: "Provider routing: Stooq-first for N symbols (decks: ...), Marketstack direct: K"
+# Expected log: "Stooq OK: X | Forced fallback: Y | Stooq failed → Marketstack fallback: Z (tickers...)"
+# Forced fallback tickers (BNO, FBTC, FETH, SRUUF) skip Stooq; list truncated to first 10 + "+N more" if >10
 
 # Manual UI check: pnpm dev, open /?deck=PLUMBING, confirm War Lie Detector panel loads
 
@@ -73,7 +71,7 @@ git status
 ### CI pipeline checks
 - **Artifact validation:** CI must pass `pnpm artifacts:refresh` before deploy (vercel-prebuilt-prod.yml on push; daily-artifacts-deploy.yml on schedule)
 - **CI cache: Marketstack EOD:** CI caches `data/marketstack/eod` via actions/cache to reduce Marketstack API calls between runs. First run backfills; subsequent runs update incrementally. To force a full rebuild (e.g. if cache format changes), bump the key in workflow YAML from `marketstack-eod-v1` to `marketstack-eod-v2`. This does not commit `data/marketstack/eod` to git.
-- **Stooq routing in CI:** Workflows read `EOD_STOOQ_DECKS`, `EOD_STOOQ_FORCE_FALLBACK`, `EOD_STOOQ_SYMBOL_OVERRIDES` from GitHub Actions Variables (Settings → Secrets and variables → Actions → Variables). Set e.g. `EOD_STOOQ_DECKS=METALS_MINING,PLUMBING` and `EOD_STOOQ_FORCE_FALLBACK=BNO` to enable Stooq-first for pilot decks. Expected log from update:snapshots: `Provider routing: Stooq-first (fallback to Marketstack) for N symbols (decks: METALS_MINING, PLUMBING)`
+- **Stooq routing in CI:** Workflows read `EOD_STOOQ_DECKS`, `EOD_STOOQ_FORCE_FALLBACK`, `EOD_STOOQ_SYMBOL_OVERRIDES` from GitHub Actions Variables. Recommended: `EOD_STOOQ_DECKS=METALS_MINING,PLUMBING,US_SECTORS,US_FACTORS,GLOBAL_EQUITIES` and `EOD_STOOQ_FORCE_FALLBACK=BNO,FBTC,FETH,SRUUF`. Expected log: `Provider routing: Stooq-first for N symbols (decks: ...), Marketstack direct: K` and `Stooq OK: X | Forced fallback: Y | Stooq failed → Marketstack fallback: Z`
 - **Turbulence gates:** Fetched from Stooq (SPX + VIX EOD); no API key required
 - **Daily deploy:** `daily-artifacts-deploy.yml` runs Mon–Fri 22:15 UTC; must pass update:snapshots + verify:artifacts before deploying
 - **Production smoke checks:** After deploy, key artifact endpoints should return 200:

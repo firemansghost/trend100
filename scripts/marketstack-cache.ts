@@ -6,7 +6,7 @@
 
 import './load-env';
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from 'fs';
 import { join } from 'path';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
 import { fetchEodSeries, fetchEodLatestBatch } from '../src/modules/trend100/data/providers/marketstack';
@@ -14,6 +14,42 @@ import { fetchStooqEodSeries, isForceFallback } from './stooq-eod';
 
 const CACHE_DIR = join(process.cwd(), 'data', 'marketstack', 'eod');
 const META_DIR = join(CACHE_DIR, '.meta');
+const EARLIEST_META_DIR = join(process.cwd(), 'data', 'marketstack', 'meta');
+const EARLIEST_FILE = join(EARLIEST_META_DIR, 'earliest.json');
+
+/**
+ * Earliest-available floor per symbol (committed; reduces repeated Marketstack extend attempts).
+ * When Marketstack returns 0 bars for an extension request, we record the floor and skip future attempts.
+ */
+function loadEarliestFloors(): Record<string, string> {
+  if (!existsSync(EARLIEST_FILE)) {
+    return {};
+  }
+  try {
+    const content = readFileSync(EARLIEST_FILE, 'utf-8').replace(/\r\n/g, '\n').trim();
+    const data = JSON.parse(content) as Record<string, string>;
+    return typeof data === 'object' && data !== null ? data : {};
+  } catch {
+    return {};
+  }
+}
+
+function getEarliestFloor(symbol: string): string | null {
+  const floors = loadEarliestFloors();
+  const key = symbol.toUpperCase();
+  return floors[key] ?? null;
+}
+
+function saveEarliestFloor(symbol: string, date: string): void {
+  if (!existsSync(EARLIEST_META_DIR)) {
+    mkdirSync(EARLIEST_META_DIR, { recursive: true });
+  }
+  const floors = loadEarliestFloors();
+  floors[symbol.toUpperCase()] = date;
+  const tmpPath = join(EARLIEST_META_DIR, 'earliest.json.tmp');
+  writeFileSync(tmpPath, JSON.stringify(floors, null, 2) + '\n', 'utf-8');
+  renameSync(tmpPath, EARLIEST_FILE);
+}
 
 /**
  * Metadata for inception-limited symbols
@@ -209,7 +245,7 @@ export interface EnsureHistoryResult {
  * @returns Result with ok flag and bars (or reason if failed)
  */
 export async function ensureHistory(symbol: string): Promise<EnsureHistoryResult> {
-  const cached = loadCachedBars(symbol);
+  let cached = loadCachedBars(symbol);
   const today = new Date().toISOString().split('T')[0]!;
 
   // Get cache days from env (default 2300 for lookback buffer)
@@ -263,7 +299,11 @@ export async function ensureHistory(symbol: string): Promise<EnsureHistoryResult
       
       const extendStartStr = extendStartDate.toISOString().split('T')[0]!;
       const extendEndStr = extendEndDate.toISOString().split('T')[0]!;
-      
+
+      const knownFloor = getEarliestFloor(symbol);
+      if (knownFloor && extendStartStr < knownFloor) {
+        console.log(`    ℹ️  SKIP extend ${symbol}: known floor ${knownFloor}`);
+      } else {
       console.log(`  📥 Extending ${symbol} cache backwards (${missingDays} days, ${extendStartStr} to ${extendEndStr})...`);
       try {
         const olderBars = await fetchEodSeries(symbol, {
@@ -280,6 +320,7 @@ export async function ensureHistory(symbol: string): Promise<EnsureHistoryResult
             oldestCachedDate: earliestCachedDate,
             checkedAt: today,
           });
+          saveEarliestFloor(symbol, earliestCachedDate);
           console.log(`    ℹ️  ${symbol} cannot extend earlier than ${earliestCachedDate} (provider limit/inception)`);
         } else {
           // Successfully extended
@@ -297,6 +338,7 @@ export async function ensureHistory(symbol: string): Promise<EnsureHistoryResult
         const reason = error instanceof Error ? error.message : String(error);
         console.warn(`    ⚠️  Failed to extend cache for ${symbol}, using existing: ${reason}`);
         // Continue with existing cache - not fatal
+      }
       }
     }
   }
@@ -429,7 +471,9 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
   if (symbolsNeedingExtension.length > 0) {
     const symbolsToExtend = symbolsNeedingExtension.slice(0, extendMaxSymbols);
     console.log(`  📥 Extending cache for ${symbolsToExtend.length} symbol(s) (budget: ${extendMaxSymbols}, ${symbolsNeedingExtension.length} total need extension)...`);
-    
+    let extendSkippedFloor = 0;
+    let extendFloorsUpdated = 0;
+
     for (const symbol of symbolsToExtend) {
       const cached = cachedMap.get(symbol)!;
       const earliestCachedDate = cached[0]!.date;
@@ -448,7 +492,15 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
       
       const extendStartStr = extendStartDate.toISOString().split('T')[0]!;
       const extendEndStr = extendEndDate.toISOString().split('T')[0]!;
-      
+
+      const knownFloor = getEarliestFloor(symbol);
+      if (knownFloor && extendStartStr < knownFloor) {
+        console.log(`      ℹ️  SKIP extend ${symbol}: known floor ${knownFloor}`);
+        extendSkippedFloor++;
+        symbolsNeedingUpdate.push(symbol);
+        continue;
+      }
+
       console.log(`    Extending cache for ${symbol} back to ${extendStartStr}...`);
       try {
         const olderBars = await fetchEodSeries(symbol, {
@@ -465,6 +517,8 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
             oldestCachedDate: earliestCachedDate,
             checkedAt: today,
           });
+          saveEarliestFloor(symbol, earliestCachedDate);
+          extendFloorsUpdated++;
           console.log(`      ℹ️  ${symbol} cannot extend earlier than ${earliestCachedDate} (provider limit/inception)`);
           // Move to update queue since extension is not possible
           symbolsNeedingUpdate.push(symbol);
@@ -487,6 +541,9 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
       }
     }
     
+    if (extendSkippedFloor > 0 || extendFloorsUpdated > 0) {
+      console.log(`    📊 Extend phase: ${extendSkippedFloor} skipped (known floor), ${extendFloorsUpdated} floor(s) updated`);
+    }
     if (symbolsNeedingExtension.length > extendMaxSymbols) {
       console.log(`    ℹ️  ${symbolsNeedingExtension.length - extendMaxSymbols} more symbol(s) need extension (budget exhausted). Run again or increase MARKETSTACK_EXTEND_MAX_SYMBOLS.`);
     }

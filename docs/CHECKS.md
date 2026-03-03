@@ -36,9 +36,10 @@
 
 ### update:snapshots behavior
 - Extends EOD cache up to configured budget (`MARKETSTACK_EXTEND_MAX_SYMBOLS`, default: 10)
-- Skips wasting budget on inception-limited symbols (uses metadata in `data/marketstack/eod/.meta/`)
+- Skips wasting budget on inception-limited symbols (uses `data/marketstack/eod/.meta/` and `data/marketstack/meta/earliest.json`)
+- **Earliest floor metadata:** `data/marketstack/meta/earliest.json` stores provider earliest-available date per symbol (e.g. `{"SNOW":"2020-09-16","FBTC":"2024-01-11"}`). When Marketstack returns 0 bars for an extension request, we record the floor and skip future attempts. Before extending, we check this file; if we would request dates before the known floor, we skip and log `ℹ️ SKIP extend <SYMBOL>: known floor <date>`. To reset (e.g. provider adds history): delete `data/marketstack/meta/earliest.json`.
 - Fetches "latest" for symbols with recent cache (batched updates)
-- Logs clear messages for inception-limited symbols: `"ℹ️ <SYMBOL> cannot extend earlier than <date> (provider limit/inception)"`
+- Logs: `ℹ️ SKIP extend X: known floor Y` (skipped), `ℹ️ X cannot extend earlier than Y (provider limit/inception)` (API returned 0 bars), `📊 Extend phase: N skipped (known floor), M floor(s) updated`
 - **Stooq pilot:** When `EOD_STOOQ_DECKS` includes pilot decks (METALS_MINING, PLUMBING, US_SECTORS, US_FACTORS, GLOBAL_EQUITIES), those symbols use Stooq-first with Marketstack fallback. `EOD_STOOQ_FORCE_FALLBACK` (e.g. BNO,FBTC,FETH,SRUUF) skips Stooq for tickers not reliably on Stooq. All other decks use Marketstack.
 
 ### Stooq EOD pilot verification (PowerShell)
@@ -188,6 +189,10 @@ git clean -fd public data/marketstack/eod
 ### "Force retry inception-limited symbol"
 - **Fix:** Set `MARKETSTACK_FORCE_EXTEND=1` to override inception-limited metadata check
 - **Use case:** When you suspect metadata is stale or want to retry after provider adds history
+
+### "Reset earliest floor metadata (provider added history)"
+- **Fix:** Delete `data/marketstack/meta/earliest.json` to clear known floors
+- **Use case:** When Marketstack adds earlier history for a symbol and you want to retry extension
 
 ### "Mystery weekend dip in chart"
 - **Fix:** Health history sanitization automatically removes weekend points. If you see this:

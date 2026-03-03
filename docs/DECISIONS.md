@@ -163,6 +163,11 @@ The UI chart can switch between Health/Heat/%AboveUpper/Stretch using `?metric=h
 **Why:** Some symbols (ARM, PLTR, SNOW, etc.) legitimately cannot extend back to 2019 because Marketstack has no historical data. Without metadata, the script would waste extension budget on these symbols every run.  
 **Alternatives considered:** Heuristic-based detection only (unreliable), hardcoded allowlist (not scalable), accepting wasted budget (inefficient).
 
+### 2026-01-23 — (Ops) Earliest-available floor metadata (`data/marketstack/meta/earliest.json`)
+**Choice:** Added committed `data/marketstack/meta/earliest.json` mapping symbol → earliest-available date. When Marketstack returns 0 bars for an extension request, we record the floor and skip future extension attempts that would request dates before it. Before each extension attempt, we check this file; if the request would go earlier than the known floor, we skip and log `SKIP extend X: known floor Y` (no API call). Writes are atomic (temp file then rename).  
+**Why:** CI repeatedly attempted extend for symbols like SNOW, FBTC—wasting Marketstack calls. The `.meta/` per-symbol files are in the cache (which may not persist across runs); `.meta/` is gitignored. A committed `earliest.json` lets CI learn over time and avoid repeated attempts.  
+**Alternatives considered:** Rely only on `.meta/` (not committed, cache-dependent), hardcoded allowlist (not scalable), accepting wasted budget (inefficient).
+
 ---
 
 ### 2026-01-23 — (Data) Increase Marketstack cache retention to 2300 calendar days

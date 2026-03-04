@@ -660,20 +660,17 @@ export async function ensureHistoryStooqBatch(symbols: string[]): Promise<Map<st
       continue;
     }
 
-    // Cache exists - check if update needed
+    // Cache exists - always refresh last N days (Stooq is free; ensures daily freshness)
     const lastCachedDate = cached[cached.length - 1]!.date;
-    const daysSinceLastCache = getTradingDaysBetween(lastCachedDate, today);
-
-    if (daysSinceLastCache <= 3) {
-      result.set(symbol, cached);
-      continue;
-    }
-
-    // Gap - fetch from Stooq and merge
+    const lookbackDays = parseInt(process.env.EOD_STOOQ_LOOKBACK_DAYS || '20', 10);
     const gapStartDate = new Date(lastCachedDate);
-    gapStartDate.setDate(gapStartDate.getDate() - 5);
-    const gapStartStr = gapStartDate.toISOString().split('T')[0]!;
-    console.log(`  🔄 [Stooq] Updating ${symbol} (last: ${lastCachedDate})...`);
+    gapStartDate.setDate(gapStartDate.getDate() - lookbackDays);
+    const earliestCachedStr = cached[0]!.date;
+    const gapStartStr =
+      gapStartDate.toISOString().split('T')[0]! < earliestCachedStr
+        ? earliestCachedStr
+        : gapStartDate.toISOString().split('T')[0]!;
+    console.log(`  🔄 [Stooq] Refreshing ${symbol} (last: ${lastCachedDate}, lookback: ${lookbackDays}d)...`);
     try {
       const newBars = await fetchStooqEodSeries(symbol, gapStartStr, today);
       const merged = mergeBars(cached, newBars);
@@ -750,21 +747,17 @@ export async function ensureHistoryStooqWithFallback(
       continue;
     }
 
-    // Cache exists - check if update needed
+    // Cache exists - always refresh last N days (Stooq is free; ensures daily freshness)
     const lastCachedDate = cached[cached.length - 1]!.date;
-    const daysSinceLastCache = getTradingDaysBetween(lastCachedDate, today);
-
-    if (daysSinceLastCache <= 3) {
-      result.set(symbol, cached);
-      stooqOk.push(symbol);
-      continue;
-    }
-
-    // Gap - try Stooq, fallback to Marketstack on failure
+    const lookbackDays = parseInt(process.env.EOD_STOOQ_LOOKBACK_DAYS || '20', 10);
     const gapStartDate = new Date(lastCachedDate);
-    gapStartDate.setDate(gapStartDate.getDate() - 5);
-    const gapStartStr = gapStartDate.toISOString().split('T')[0]!;
-    console.log(`  🔄 [Stooq] Updating ${symbol} (last: ${lastCachedDate})...`);
+    gapStartDate.setDate(gapStartDate.getDate() - lookbackDays);
+    const earliestCachedStr = cached[0]!.date;
+    const gapStartStr =
+      gapStartDate.toISOString().split('T')[0]! < earliestCachedStr
+        ? earliestCachedStr
+        : gapStartDate.toISOString().split('T')[0]!;
+    console.log(`  🔄 [Stooq] Refreshing ${symbol} (last: ${lastCachedDate}, lookback: ${lookbackDays}d)...`);
     try {
       const newBars = await fetchStooqEodSeries(symbol, gapStartStr, today);
       if (newBars.length === 0) {
@@ -786,6 +779,32 @@ export async function ensureHistoryStooqWithFallback(
   }
 
   const fallback = [...forcedFallback, ...stooqFailedFallback];
+
+  // Stooq freshness summary
+  const lastBySymbol = new Map<string, string>();
+  for (const sym of stooqOk) {
+    const bars = result.get(sym);
+    if (bars && bars.length > 0) {
+      lastBySymbol.set(sym, bars[bars.length - 1]!.date);
+    }
+  }
+  if (lastBySymbol.size > 0) {
+    const lastDates = [...lastBySymbol.values()];
+    const minLast = lastDates.reduce((a, b) => (a < b ? a : b));
+    const maxLast = lastDates.reduce((a, b) => (a > b ? a : b));
+    console.log(
+      `\n  📊 Stooq freshness: minLast=${minLast} maxLast=${maxLast} symbols=${lastBySymbol.size}`
+    );
+    const gapDays = getTradingDaysBetween(minLast, maxLast);
+    if (gapDays > 1) {
+      const lagging = [...lastBySymbol.entries()]
+        .filter(([, d]) => d === minLast)
+        .map(([s]) => s);
+      const preview =
+        lagging.length <= 10 ? lagging.join(', ') : lagging.slice(0, 10).join(', ') + ` +${lagging.length - 10} more`;
+      console.warn(`  ⚠️  Stooq lag: ${gapDays} trading days between min/max. Lagging: ${preview}`);
+    }
+  }
 
   // Fallback: fetch failed symbols via Marketstack
   if (fallback.length > 0) {

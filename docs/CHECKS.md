@@ -41,6 +41,7 @@
 - Fetches "latest" for symbols with recent cache (batched updates)
 - Logs: `ℹ️ SKIP extend X: known floor Y` (skipped), `ℹ️ X cannot extend earlier than Y (provider limit/inception)` (API returned 0 bars), `📊 Extend phase: N skipped (known floor), M floor(s) updated`
 - **Stooq pilot:** When `EOD_STOOQ_DECKS` includes pilot decks (METALS_MINING, PLUMBING, US_SECTORS, US_FACTORS, GLOBAL_EQUITIES), those symbols use Stooq-first with Marketstack fallback. `EOD_STOOQ_FORCE_FALLBACK` (e.g. BNO,FBTC,FETH,SRUUF) skips Stooq for tickers not reliably on Stooq. All other decks use Marketstack.
+- **Stooq daily freshness:** Stooq always refreshes last N days (default 20 via `EOD_STOOQ_LOOKBACK_DAYS`) for cached symbols—no "stale ≤3 days" skip. Ensures pilot decks advance daily. Logs: `🔄 [Stooq] Refreshing X (last: YYYY-MM-DD, lookback: 20d)...`, `📊 Stooq freshness: minLast=... maxLast=... symbols=N`, and `⚠️ Stooq lag: N trading days between min/max. Lagging: ...` when symbols lag.
 
 ### Stooq EOD pilot verification (PowerShell)
 
@@ -57,6 +58,8 @@ pnpm -s update:plumbing-war-lie-detector
 pnpm -s verify:artifacts
 # Expected log: "Provider routing: Stooq-first for N symbols (decks: ...), Marketstack direct: K"
 # Expected log: "Stooq OK: X | Forced fallback: Y | Stooq failed → Marketstack fallback: Z (tickers...)"
+# Expected log: "Stooq freshness: minLast=... maxLast=... symbols=N"
+# update:plumbing-war-lie-detector logs: "PLUMBING inputs last: BNO=... USO=... GLD=... SPY=... TIP=... UUP=..."
 # Forced fallback tickers (BNO, FBTC, FETH, SRUUF) skip Stooq; list truncated to first 10 + "+N more" if >10
 
 # Manual UI check: pnpm dev, open /?deck=PLUMBING, confirm War Lie Detector panel loads

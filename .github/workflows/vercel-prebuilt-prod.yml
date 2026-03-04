@@ -76,6 +76,7 @@ jobs:
           EOD_STOOQ_DECKS: ${{ vars.EOD_STOOQ_DECKS || '' }}
           EOD_STOOQ_FORCE_FALLBACK: ${{ vars.EOD_STOOQ_FORCE_FALLBACK || '' }}
           EOD_STOOQ_SYMBOL_OVERRIDES: ${{ vars.EOD_STOOQ_SYMBOL_OVERRIDES || '' }}
+          SNAPSHOT_STRICT_ASOF_DECKS: ${{ vars.SNAPSHOT_STRICT_ASOF_DECKS || '' }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: pnpm -s artifacts:refresh

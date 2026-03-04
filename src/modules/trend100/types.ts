@@ -91,12 +91,23 @@ export interface TrendHealthSummary {
   regimeLabel: 'RISK_ON' | 'TRANSITION' | 'RISK_OFF';
 }
 
+/** Optional freshness metadata (informational; UI does not rely on it). */
+export interface TrendSnapshotDataFreshness {
+  minLastDate: string;
+  maxLastDate: string;
+  laggingTickers: string[];
+}
+
 export interface TrendSnapshot {
   runDate: string; // ISO YYYY-MM-DD - when the script ran
-  asOfDate: string; // ISO YYYY-MM-DD - latest market bar date used (max bar.date across tickers)
+  asOfDate: string; // ISO YYYY-MM-DD - latest market bar date used (max or min per mode)
   universeSize: number;
   tickers: TrendTickerSnapshot[];
   health: TrendHealthSummary;
+  /** Optional: STRICT_MIN = asOfDate is min across tickers; DEFAULT = max */
+  asOfDateMode?: 'DEFAULT' | 'STRICT_MIN';
+  /** Optional: freshness metadata when available */
+  dataFreshness?: TrendSnapshotDataFreshness;
 }
 
 // Health history types

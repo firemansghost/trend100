@@ -27,6 +27,7 @@ import type {
   TrendDeckId,
   TrendHealthHistoryPoint,
   TrendUniverseItem,
+  TrendSnapshotDataFreshness,
 } from '../src/modules/trend100/types';
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
 import { toSectionKey } from '../src/modules/trend100/data/sectionKey';
@@ -561,6 +562,25 @@ function getTodayDate(): string {
   return new Date().toISOString().split('T')[0]!;
 }
 
+/** Parse SNAPSHOT_STRICT_ASOF_DECKS env var (comma-separated deck IDs, case-insensitive). */
+function parseStrictAsOfDecks(): Set<string> {
+  const raw = process.env.SNAPSHOT_STRICT_ASOF_DECKS ?? '';
+  const set = new Set<string>();
+  for (const d of raw.split(',')) {
+    const trimmed = d.trim().toUpperCase();
+    if (trimmed) set.add(trimmed);
+  }
+  return set;
+}
+
+/** Approximate trading days between two dates (calendar days * 5/7). */
+function getTradingDaysApprox(startDate: string, endDate: string): number {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(0, Math.ceil(days * (5 / 7)));
+}
+
 // Get snapshot file path
 function getSnapshotFilePath(deckId: TrendDeckId): string {
   return join(process.cwd(), 'public', `snapshot.${deckId}.json`);
@@ -796,14 +816,48 @@ async function main() {
 
   // Step 3: Generate snapshots for each deck
   const snapshots = new Map<TrendDeckId, TrendSnapshot>();
+  const strictAsOfDecks = parseStrictAsOfDecks();
 
   for (const deckId of deckIds) {
     console.log(`\n📦 Generating snapshot for ${deckId}...`);
     const deck = getDeck(deckId);
     const tickers: TrendTickerSnapshot[] = [];
-    
-    // Track latest EOD bar date across all tickers that have data
-    let latestBarDate: string | null = null;
+
+    // Collect last bar date per ticker for freshness / strict asOf
+    const lastDateByTicker = new Map<string, string>();
+    for (const item of deck.universe) {
+      const providerSymbol = item.providerTicker ?? item.ticker;
+      const eodBars = seriesCache.get(providerSymbol);
+      if (eodBars && eodBars.length > 0) {
+        lastDateByTicker.set(item.ticker, eodBars[eodBars.length - 1]!.date);
+      }
+    }
+
+    const lastDates = [...lastDateByTicker.values()];
+    const minLastDate = lastDates.length > 0 ? lastDates.reduce((a, b) => (a < b ? a : b)) : null;
+    const maxLastDate = lastDates.length > 0 ? lastDates.reduce((a, b) => (a > b ? a : b)) : null;
+    const lagDays =
+      minLastDate && maxLastDate && minLastDate !== maxLastDate
+        ? getTradingDaysApprox(minLastDate, maxLastDate)
+        : 0;
+    const laggingTickers =
+      minLastDate != null
+        ? [...lastDateByTicker.entries()]
+            .filter(([, d]) => d === minLastDate)
+            .map(([t]) => t)
+        : [];
+    const laggingPreview =
+      laggingTickers.length <= 10
+        ? laggingTickers.join(', ')
+        : laggingTickers.slice(0, 10).join(', ') + ` +${laggingTickers.length - 10} more`;
+
+    const isStrict = strictAsOfDecks.has(deckId);
+    const deckAsOfDate = isStrict ? (minLastDate ?? maxLastDate ?? today) : (maxLastDate ?? today);
+    const mode = isStrict ? 'STRICT_MIN' : 'DEFAULT';
+
+    console.log(
+      `  🧭 Snapshot asOf: ${deckId} mode=${mode} min=${minLastDate ?? 'n/a'} max=${maxLastDate ?? 'n/a'}${lagDays > 0 ? ` lagTd=${lagDays}d lagging=${laggingPreview}` : ''}`
+    );
 
     // Iterate deck.universe as source of truth for metadata (subtitle, name, section, tags)
     for (const item of deck.universe) {
@@ -832,22 +886,16 @@ async function main() {
         continue;
       }
 
-      // Track latest bar date
-      const lastBar = eodBars[eodBars.length - 1];
-      if (lastBar && (!latestBarDate || lastBar.date > latestBarDate)) {
-        latestBarDate = lastBar.date;
-      }
-
-      const snapshot = computeTickerSnapshot(item, eodBars);
-      if (snapshot) {
-        // Ensure deck metadata is included (computeTickerSnapshot already includes it, but be explicit)
+      const tickerSnapshot = isStrict
+        ? computeTickerSnapshotForDate(item, eodBars, deckAsOfDate)
+        : computeTickerSnapshot(item, eodBars);
+      if (tickerSnapshot) {
         tickers.push({
           ...baseSnapshot,
-          ...snapshot,
+          ...tickerSnapshot,
         } as TrendTickerSnapshot);
       } else {
         console.log(`  ⚠️  Failed to compute snapshot for ${item.ticker}`);
-        // Create UNKNOWN snapshot with deck metadata
         tickers.push({
           ...baseSnapshot,
           status: 'UNKNOWN',
@@ -860,19 +908,23 @@ async function main() {
     const statuses = tickers.map((t) => t.status);
     const health = computeHealthScore({ statuses });
 
-    // Use latest bar date if available, otherwise fall back to today
-    const asOfDate = latestBarDate || today;
+    const dataFreshness: TrendSnapshotDataFreshness | undefined =
+      minLastDate != null && maxLastDate != null
+        ? { minLastDate, maxLastDate, laggingTickers }
+        : undefined;
 
     const snapshot: TrendSnapshot = {
       runDate: today,
-      asOfDate,
+      asOfDate: deckAsOfDate,
       universeSize: tickers.length,
       tickers,
       health,
+      asOfDateMode: mode,
+      dataFreshness,
     };
 
     snapshots.set(deckId, snapshot);
-    console.log(`  ✓ Generated snapshot: ${tickers.length} tickers, ${health.greenPct}% green, asOfDate: ${asOfDate}`);
+    console.log(`  ✓ Generated snapshot: ${tickers.length} tickers, ${health.greenPct}% green, asOfDate: ${deckAsOfDate}`);
   }
 
   // Step 4: Write snapshot files

@@ -33,6 +33,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-02 — (Data/Ops) Optional strict asOfDate for snapshots (SNAPSHOT_STRICT_ASOF_DECKS)
+**Choice:** Added optional `SNAPSHOT_STRICT_ASOF_DECKS` env var (comma-separated deck IDs). When a deck is in the list, snapshot asOfDate = min(lastDate) across that deck's tickers (STRICT_MIN mode). Otherwise asOfDate = max(lastDate) (DEFAULT). Snapshot computation uses `computeTickerSnapshotForDate` in strict mode to clamp bars to ≤ deckAsOfDate (no lookahead). Snapshot JSON may include optional `asOfDateMode` and `dataFreshness` (minLastDate, maxLastDate, laggingTickers) for debugging. CI workflows pass the var from GitHub Actions Variables.
+
+**Why:** Snapshots could appear fresher than reality when one ticker was stale (e.g. 10 tickers at 2026-03-03, 1 at 2026-02-27, but asOfDate showed 2026-03-03). Strict mode ensures the deck reflects the stalest component. Default behavior unchanged when var is unset.
+
+---
+
 ### 2026-02 — (Data/Ops) Turbulence gates from Stooq instead of FRED (PR26)
 **Choice:** Switched `update-turbulence-gates.ts` from FRED (SP500 + VIXCLS) to Stooq CSV for SPX and VIX EOD closes. Eliminates 0–1 day FRED lag so gates align with ShockZ timing. No API key required. Env: `TURBULENCE_GATES_START`, `TURBULENCE_STOOQ_SPX_SYMBOL` (default ^spx), `TURBULENCE_STOOQ_VIX_SYMBOL` (default vi.c = S&P 500 VIX Cash). Output schema unchanged.
 

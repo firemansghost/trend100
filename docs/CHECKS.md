@@ -42,6 +42,7 @@
 - Logs: `ℹ️ SKIP extend X: known floor Y` (skipped), `ℹ️ X cannot extend earlier than Y (provider limit/inception)` (API returned 0 bars), `📊 Extend phase: N skipped (known floor), M floor(s) updated`
 - **Stooq pilot:** When `EOD_STOOQ_DECKS` includes pilot decks (METALS_MINING, PLUMBING, US_SECTORS, US_FACTORS, GLOBAL_EQUITIES), those symbols use Stooq-first with Marketstack fallback. `EOD_STOOQ_FORCE_FALLBACK` (e.g. BNO,FBTC,FETH,SRUUF) skips Stooq for tickers not reliably on Stooq. All other decks use Marketstack.
 - **Stooq daily freshness:** Stooq always refreshes last N days (default 20 via `EOD_STOOQ_LOOKBACK_DAYS`) for cached symbols—no "stale ≤3 days" skip. Ensures pilot decks advance daily. Logs: `🔄 [Stooq] Refreshing X (last: YYYY-MM-DD, lookback: 20d)...`, `📊 Stooq freshness: minLast=... maxLast=... symbols=N`, and `⚠️ Stooq lag: N trading days between min/max. Lagging: ...` when symbols lag.
+- **Strict asOfDate (optional):** When `SNAPSHOT_STRICT_ASOF_DECKS` includes deck IDs (e.g. `US_SECTORS,US_FACTORS,GLOBAL_EQUITIES,METALS_MINING,PLUMBING`), snapshot asOfDate = min(lastDate) across that deck's tickers. Prevents decks from appearing fresher than reality when one ticker is stale. Log: `🧭 Snapshot asOf: <DECK> mode=STRICT_MIN min=... max=... lagTd=Nd lagging=...`. Snapshot JSON may include optional `asOfDateMode` and `dataFreshness` (informational).
 
 ### Stooq EOD pilot verification (PowerShell)
 
@@ -67,6 +68,12 @@ pnpm -s verify:artifacts
 # Fallback test (optional): temporarily break one Stooq symbol (e.g. override in stooq-eod.ts)
 # to verify run still succeeds via Marketstack fallback. Remove sabotage before commit.
 
+# Strict asOfDate check (optional)
+$env:SNAPSHOT_STRICT_ASOF_DECKS="US_SECTORS"
+pnpm -s update:snapshots
+# Confirm snapshot.US_SECTORS.json asOfDate equals minLastDate across its tickers
+# Log should show: "🧭 Snapshot asOf: US_SECTORS mode=STRICT_MIN min=... max=..."
+
 # Ensure no cache/artifacts staged
 git status
 # Should NOT show public/*.json or data/marketstack/eod/*.json staged
@@ -76,6 +83,7 @@ git status
 - **Artifact validation:** CI must pass `pnpm artifacts:refresh` before deploy (vercel-prebuilt-prod.yml on push; daily-artifacts-deploy.yml on schedule)
 - **CI cache: Marketstack EOD (rolling):** CI uses `actions/cache/restore@v4` and `actions/cache/save@v4` so the cache evolves run-to-run. Restore uses prefix `marketstack-eod-v2-` (restore-keys); save uses per-run key `${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}`. Each run saves a new cache; the next run restores the most recent match. To invalidate (e.g. cache format change), bump `v2`→`v3` in both restore-keys and save key. Diagnostics log file count and size after restore and after artifacts. Save runs with `if: always()` so partial improvements persist even on failure. This does not commit `data/marketstack/eod` to git.
 - **Stooq routing in CI:** Workflows read `EOD_STOOQ_DECKS`, `EOD_STOOQ_FORCE_FALLBACK`, `EOD_STOOQ_SYMBOL_OVERRIDES` from GitHub Actions Variables. Recommended: `EOD_STOOQ_DECKS=METALS_MINING,PLUMBING,US_SECTORS,US_FACTORS,GLOBAL_EQUITIES` and `EOD_STOOQ_FORCE_FALLBACK=BNO,FBTC,FETH,SRUUF`. Expected log: `Provider routing: Stooq-first for N symbols (decks: ...), Marketstack direct: K` and `Stooq OK: X | Forced fallback: Y | Stooq failed → Marketstack fallback: Z`
+- **Strict asOfDate in CI:** Workflows pass `SNAPSHOT_STRICT_ASOF_DECKS` from GitHub Actions Variables. When set (e.g. `US_SECTORS,US_FACTORS,GLOBAL_EQUITIES,METALS_MINING,PLUMBING`), those decks use min(lastDate) as asOfDate so snapshots don't appear fresher than the stalest ticker.
 - **Turbulence gates:** Fetched from Stooq (SPX + VIX EOD); no API key required
 - **Daily deploy:** `daily-artifacts-deploy.yml` runs Mon–Fri 22:15 UTC; must pass update:snapshots + verify:artifacts before deploying
 - **Production smoke checks:** After deploy, key artifact endpoints should return 200:

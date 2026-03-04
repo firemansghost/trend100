@@ -95,6 +95,9 @@ export interface TrendHealthSummary {
 export interface TrendSnapshotDataFreshness {
   minLastDate: string;
   maxLastDate: string;
+  /** Trading-day gap between min and max; 0 when aligned. */
+  lagTradingDays?: number;
+  /** Empty when aligned. STRICT_MIN: tickers at minLastDate. DEFAULT: tickers behind maxLastDate. */
   laggingTickers: string[];
 }
 

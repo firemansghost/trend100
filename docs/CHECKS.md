@@ -42,7 +42,7 @@
 - Logs: `ℹ️ SKIP extend X: known floor Y` (skipped), `ℹ️ X cannot extend earlier than Y (provider limit/inception)` (API returned 0 bars), `📊 Extend phase: N skipped (known floor), M floor(s) updated`
 - **Stooq pilot:** When `EOD_STOOQ_DECKS` includes pilot decks (METALS_MINING, PLUMBING, US_SECTORS, US_FACTORS, GLOBAL_EQUITIES), those symbols use Stooq-first with Marketstack fallback. `EOD_STOOQ_FORCE_FALLBACK` (e.g. BNO,FBTC,FETH,SRUUF) skips Stooq for tickers not reliably on Stooq. All other decks use Marketstack.
 - **Stooq daily freshness:** Stooq always refreshes last N days (default 20 via `EOD_STOOQ_LOOKBACK_DAYS`) for cached symbols—no "stale ≤3 days" skip. Ensures pilot decks advance daily. Logs: `🔄 [Stooq] Refreshing X (last: YYYY-MM-DD, lookback: 20d)...`, `📊 Stooq freshness: minLast=... maxLast=... symbols=N`, and `⚠️ Stooq lag: N trading days between min/max. Lagging: ...` when symbols lag.
-- **Strict asOfDate (optional):** When `SNAPSHOT_STRICT_ASOF_DECKS` includes deck IDs (e.g. `US_SECTORS,US_FACTORS,GLOBAL_EQUITIES,METALS_MINING,PLUMBING`), snapshot asOfDate = min(lastDate) across that deck's tickers. Prevents decks from appearing fresher than reality when one ticker is stale. Log: `🧭 Snapshot asOf: <DECK> mode=STRICT_MIN min=... max=... lagTd=Nd lagging=...`. Snapshot JSON may include optional `asOfDateMode` and `dataFreshness` (informational).
+- **Strict asOfDate (optional):** When `SNAPSHOT_STRICT_ASOF_DECKS` includes deck IDs (e.g. `US_SECTORS,US_FACTORS,GLOBAL_EQUITIES,METALS_MINING,PLUMBING`), snapshot asOfDate = min(lastDate) across that deck's tickers. Prevents decks from appearing fresher than reality when one ticker is stale. Log: `🧭 Snapshot asOf: <DECK> mode=STRICT_MIN min=... max=... lagTd=0 aligned` (when aligned) or `lagTd=Nd lagging=...` (when lag). Snapshot JSON may include optional `asOfDateMode` and `dataFreshness`. `dataFreshness.laggingTickers` is empty when aligned; when lag: STRICT_MIN = tickers at minLastDate (holding deck back), DEFAULT = tickers behind maxLastDate. `dataFreshness.lagTradingDays` = trading-day gap (0 when aligned).
 
 ### Stooq EOD pilot verification (PowerShell)
 
@@ -72,7 +72,8 @@ pnpm -s verify:artifacts
 $env:SNAPSHOT_STRICT_ASOF_DECKS="US_SECTORS"
 pnpm -s update:snapshots
 # Confirm snapshot.US_SECTORS.json asOfDate equals minLastDate across its tickers
-# Log should show: "🧭 Snapshot asOf: US_SECTORS mode=STRICT_MIN min=... max=..."
+# Log should show: "🧭 Snapshot asOf: US_SECTORS mode=STRICT_MIN min=... max=... lagTd=0 aligned" (when aligned)
+# When aligned: dataFreshness.laggingTickers=[], lagTradingDays=0
 
 # Ensure no cache/artifacts staged
 git status

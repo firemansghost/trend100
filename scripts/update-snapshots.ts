@@ -836,27 +836,28 @@ async function main() {
     const lastDates = [...lastDateByTicker.values()];
     const minLastDate = lastDates.length > 0 ? lastDates.reduce((a, b) => (a < b ? a : b)) : null;
     const maxLastDate = lastDates.length > 0 ? lastDates.reduce((a, b) => (a > b ? a : b)) : null;
-    const lagDays =
+    const lagTd =
       minLastDate && maxLastDate && minLastDate !== maxLastDate
         ? getTradingDaysApprox(minLastDate, maxLastDate)
         : 0;
+    const isStrict = strictAsOfDecks.has(deckId);
+    const deckAsOfDate = isStrict ? (minLastDate ?? maxLastDate ?? today) : (maxLastDate ?? today);
+    const mode = isStrict ? 'STRICT_MIN' : 'DEFAULT';
+
+    // laggingTickers: empty when aligned; otherwise STRICT_MIN = tickers at min, DEFAULT = tickers behind max
     const laggingTickers =
-      minLastDate != null
-        ? [...lastDateByTicker.entries()]
-            .filter(([, d]) => d === minLastDate)
-            .map(([t]) => t)
-        : [];
+      lagTd === 0
+        ? []
+        : isStrict
+          ? [...lastDateByTicker.entries()].filter(([, d]) => d === minLastDate).map(([t]) => t)
+          : [...lastDateByTicker.entries()].filter(([, d]) => d !== maxLastDate).map(([t]) => t);
     const laggingPreview =
       laggingTickers.length <= 10
         ? laggingTickers.join(', ')
         : laggingTickers.slice(0, 10).join(', ') + ` +${laggingTickers.length - 10} more`;
 
-    const isStrict = strictAsOfDecks.has(deckId);
-    const deckAsOfDate = isStrict ? (minLastDate ?? maxLastDate ?? today) : (maxLastDate ?? today);
-    const mode = isStrict ? 'STRICT_MIN' : 'DEFAULT';
-
     console.log(
-      `  🧭 Snapshot asOf: ${deckId} mode=${mode} min=${minLastDate ?? 'n/a'} max=${maxLastDate ?? 'n/a'}${lagDays > 0 ? ` lagTd=${lagDays}d lagging=${laggingPreview}` : ''}`
+      `  🧭 Snapshot asOf: ${deckId} mode=${mode} min=${minLastDate ?? 'n/a'} max=${maxLastDate ?? 'n/a'}${lagTd > 0 ? ` lagTd=${lagTd}d lagging=${laggingPreview}` : ' lagTd=0 aligned'}`
     );
 
     // Iterate deck.universe as source of truth for metadata (subtitle, name, section, tags)
@@ -910,7 +911,7 @@ async function main() {
 
     const dataFreshness: TrendSnapshotDataFreshness | undefined =
       minLastDate != null && maxLastDate != null
-        ? { minLastDate, maxLastDate, laggingTickers }
+        ? { minLastDate, maxLastDate, lagTradingDays: lagTd, laggingTickers }
         : undefined;
 
     const snapshot: TrendSnapshot = {

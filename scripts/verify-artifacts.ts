@@ -650,6 +650,45 @@ function printPlumbingWarLieDetectorStats(): boolean {
       }
     }
 
+    if (obj.inputsLast != null) {
+      const inputsLast = obj.inputsLast as Record<string, unknown>;
+      if (typeof inputsLast !== 'object' || inputsLast === null) {
+        console.error('  ❌ plumbing.war_lie_detector.json: inputsLast must be object if present');
+        return false;
+      }
+      const requiredKeys = ['BNO', 'USO', 'GLD', 'SPY', 'TIP', 'UUP'];
+      for (const k of requiredKeys) {
+        const v = inputsLast[k];
+        if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+          console.error(`  ❌ plumbing.war_lie_detector.json: inputsLast.${k} must be YYYY-MM-DD`);
+          return false;
+        }
+      }
+    }
+    if (obj.dataFreshness != null) {
+      const df = obj.dataFreshness as Record<string, unknown>;
+      if (typeof df !== 'object' || df === null) {
+        console.error('  ❌ plumbing.war_lie_detector.json: dataFreshness must be object if present');
+        return false;
+      }
+      if (df.lagTradingDays != null && (typeof df.lagTradingDays !== 'number' || !Number.isFinite(df.lagTradingDays) || df.lagTradingDays < 0)) {
+        console.error('  ❌ plumbing.war_lie_detector.json: dataFreshness.lagTradingDays must be finite number >= 0');
+        return false;
+      }
+      if (df.laggingTickers != null) {
+        if (!Array.isArray(df.laggingTickers)) {
+          console.error('  ❌ plumbing.war_lie_detector.json: dataFreshness.laggingTickers must be array');
+          return false;
+        }
+        for (const t of df.laggingTickers) {
+          if (typeof t !== 'string') {
+            console.error('  ❌ plumbing.war_lie_detector.json: dataFreshness.laggingTickers must be string[]');
+            return false;
+          }
+        }
+      }
+    }
+
     const labelHistory = obj.labelHistory;
     if (labelHistory != null) {
       if (!Array.isArray(labelHistory)) {

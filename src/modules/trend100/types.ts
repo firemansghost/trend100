@@ -149,6 +149,24 @@ export type TrendDeckId =
   | 'METALS_MINING'
   | 'PLUMBING';
 
+/** Plumbing input freshness (per-ticker last EOD date). */
+export interface PlumbingInputsLast {
+  BNO: string;
+  USO: string;
+  GLD: string;
+  SPY: string;
+  TIP: string;
+  UUP: string;
+}
+
+/** Plumbing data freshness (6 tickers only). */
+export interface PlumbingDataFreshness {
+  minLastDate: string;
+  maxLastDate: string;
+  lagTradingDays?: number;
+  laggingTickers: string[];
+}
+
 /** Plumbing War Lie Detector artifact (geopolitical plumbing indicator) */
 export interface PlumbingWarLieDetector {
   asOf: string;
@@ -160,6 +178,10 @@ export interface PlumbingWarLieDetector {
     tipsProxy: string;
     dxyProxy: string;
   };
+  /** Per-ticker last EOD date (YYYY-MM-DD). */
+  inputsLast?: PlumbingInputsLast;
+  /** Freshness of the 6 plumbing inputs. */
+  dataFreshness?: PlumbingDataFreshness;
   latest: {
     bno: number;
     uso: number;

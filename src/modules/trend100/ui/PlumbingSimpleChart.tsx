@@ -32,11 +32,31 @@ interface PlumbingSimpleChartProps {
   lines: PlumbingChartLine[];
   height?: number;
   regimeBands?: PlumbingRegimeBand[];
+  /** 'monthly' = show ~1 tick per month to reduce clutter */
+  tickInterval?: 'all' | 'monthly';
+  /** Optional label shown at right edge (e.g. last value + MA5) */
+  lastValueLabel?: React.ReactNode;
 }
 
 function formatTickLabel(dateStr: string): string {
   const date = new Date(dateStr);
   return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+/** Keep ~1 tick per month for less clutter. */
+function filterMonthlyTicks(data: Array<{ date: string }>): string[] {
+  if (!data.length) return [];
+  const ticks: string[] = [];
+  let lastMonth = -1;
+  for (let i = 0; i < data.length; i++) {
+    const d = new Date(data[i]!.date);
+    const m = d.getFullYear() * 12 + d.getMonth();
+    if (m !== lastMonth) {
+      ticks.push(data[i]!.date);
+      lastMonth = m;
+    }
+  }
+  return ticks;
 }
 
 function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name?: string; value?: number; dataKey: string; payload?: Record<string, unknown> }> }) {
@@ -55,20 +75,33 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
   );
 }
 
-export function PlumbingSimpleChart({ data, lines, height = 200, regimeBands }: PlumbingSimpleChartProps) {
+export function PlumbingSimpleChart({
+  data,
+  lines,
+  height = 200,
+  regimeBands,
+  tickInterval = 'all',
+  lastValueLabel,
+}: PlumbingSimpleChartProps) {
+  const xTicks = tickInterval === 'monthly' ? filterMonthlyTicks(data) : undefined;
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
-        {regimeBands?.map((band, idx) => (
-          <ReferenceArea key={idx} x1={band.x1} x2={band.x2} fill={band.fill} fillOpacity={0.15} strokeOpacity={0.3} />
-        ))}
-        <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
-        <XAxis
-          dataKey="date"
-          tickFormatter={formatTickLabel}
-          stroke="#71717a"
-          tick={{ fill: '#a1a1aa', fontSize: 10 }}
-        />
+    <div className="relative">
+      {lastValueLabel && (
+        <div className="absolute top-0 right-0 z-10 text-right">{lastValueLabel}</div>
+      )}
+      <ResponsiveContainer width="100%" height={height}>
+        <LineChart data={data} margin={{ top: 4, right: lastValueLabel ? 120 : 4, left: 4, bottom: 4 }}>
+          {regimeBands?.map((band, idx) => (
+            <ReferenceArea key={idx} x1={band.x1} x2={band.x2} fill={band.fill} fillOpacity={0.15} strokeOpacity={0.3} />
+          ))}
+          <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
+          <XAxis
+            dataKey="date"
+            tickFormatter={formatTickLabel}
+            stroke="#71717a"
+            tick={{ fill: '#a1a1aa', fontSize: 10 }}
+            ticks={xTicks}
+          />
         <YAxis stroke="#71717a" tick={{ fill: '#a1a1aa', fontSize: 10 }} tickFormatter={(v) => v.toFixed(2)} />
         <Tooltip content={<CustomTooltip />} />
         {lines.map((line) => (
@@ -84,5 +117,6 @@ export function PlumbingSimpleChart({ data, lines, height = 200, regimeBands }: 
         ))}
       </LineChart>
     </ResponsiveContainer>
+    </div>
   );
 }

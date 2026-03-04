@@ -313,6 +313,12 @@ function main() {
     labelHistory.push({ date: d, label: dayLabel, score: dayScore });
   }
 
+  const inputLastDates = SYMBOLS.map((s) => {
+    const bars = barsBySymbol.get(s);
+    return bars && bars.length > 0 ? `${s}=${bars[bars.length - 1]!.date}` : `${s}=missing`;
+  }).join(' ');
+  console.log(`PLUMBING inputs last: ${inputLastDates}`);
+
   const asOf = alignedDates[lastIdx]!;
   const artifact: PlumbingWarLieDetector = {
     asOf,

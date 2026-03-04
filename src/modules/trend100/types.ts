@@ -207,6 +207,11 @@ export interface PlumbingWarLieDetector {
   };
   score: number;
   label: 'THEATER' | 'WATCH' | 'REAL_RISK';
+  /** Optional secondary energy-complex confirms (UNG, KOL). Not part of label logic. */
+  energyComplex?: {
+    natGas?: { ticker: 'UNG'; asOf: string; roc3: number; z30: number; active: boolean };
+    coal?: { ticker: 'KOL'; asOf: string; roc3: number; z30: number; active: boolean };
+  };
   history: Array<{
     date: string;
     spread: number;

@@ -97,8 +97,13 @@ export function Trend100Dashboard({
   const [showMetricHint, setShowMetricHint] = useState(false);
   const [showTurbulenceExplainer, setShowTurbulenceExplainer] = useState(false);
   const [showChipGlossary, setShowChipGlossary] = useState(false);
+  const [turbulenceCollapsed, setTurbulenceCollapsed] = useState(deckId === 'PLUMBING');
 
   const isPlumbing = deckId === 'PLUMBING';
+
+  useEffect(() => {
+    setTurbulenceCollapsed(deckId === 'PLUMBING');
+  }, [deckId]);
 
   useEffect(() => {
     // One-time hint for metric discoverability (client-only)
@@ -582,7 +587,7 @@ export function Trend100Dashboard({
               ? `Shock: ${shockDate} • Gates: pending`
               : '—';
 
-        return (
+        const fullContent = (
           <div className="container mx-auto px-4 py-2 border-b border-zinc-800">
             {/* Row A: headline */}
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
@@ -591,7 +596,16 @@ export function Trend100Dashboard({
                 <span className={dotClass} aria-hidden />
                 <span className={`font-medium ${labelClass}`}>{signalLabel}</span>
               </div>
-              <div className="text-xs text-slate-500">{headerRight}</div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">{headerRight}</span>
+                <button
+                  type="button"
+                  onClick={() => setTurbulenceCollapsed(true)}
+                  className="text-xs text-slate-500 hover:text-slate-400 shrink-0"
+                >
+                  ▼ Collapse
+                </button>
+              </div>
             </div>
             {/* Row B: status-tag chips (narrative order) + Chip glossary */}
             <div className="flex flex-wrap items-center justify-between gap-2 mt-2">
@@ -784,6 +798,26 @@ export function Trend100Dashboard({
               </div>
             )}
           </div>
+        );
+
+        return turbulenceCollapsed ? (
+          <div className="container mx-auto px-4 py-2 border-b border-zinc-800">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="font-medium text-slate-300">Turbulence:</span>
+                <span className="text-slate-400">{signalLabel}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTurbulenceCollapsed(false)}
+                className="text-xs text-slate-500 hover:text-slate-400"
+              >
+                ▶ Expand
+              </button>
+            </div>
+          </div>
+        ) : (
+          fullContent
         );
       })()}
 

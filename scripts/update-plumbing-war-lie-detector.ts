@@ -14,6 +14,7 @@ import './load-env';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
+import { fetchStooqEodSeries } from './stooq-eod';
 
 const EOD_CACHE_DIR = join(process.cwd(), 'data', 'marketstack', 'eod');
 const SYMBOLS = ['BNO', 'USO', 'GLD', 'SPY', 'TIP', 'UUP'] as const;
@@ -86,6 +87,10 @@ interface PlumbingWarLieDetector {
   };
   score: number;
   label: PlumbingLabel;
+  energyComplex?: {
+    natGas?: { ticker: 'UNG'; asOf: string; roc3: number; z30: number; active: boolean };
+    coal?: { ticker: 'KOL'; asOf: string; roc3: number; z30: number; active: boolean };
+  };
   history: PlumbingHistoryPoint[];
   labelHistory: PlumbingLabelHistoryPoint[];
 }
@@ -102,6 +107,74 @@ function loadEodCache(symbol: string): EodBar[] | null {
   } catch {
     return null;
   }
+}
+
+/** Compute roc3, z30, active for a single-ticker series. z30 = z-score of last 30 ROC3 values. */
+function computeEnergySignal(
+  bars: EodBar[],
+  wldAsOf: string,
+  ticker: 'UNG' | 'KOL',
+  roc3ActiveThreshold: number,
+  z30ActiveThreshold: number
+): { ticker: 'UNG' | 'KOL'; asOf: string; roc3: number; z30: number; active: boolean } | null {
+  if (bars.length < 34) return null; // need 3 for roc3 + 30 for z30
+  const sorted = [...bars].sort((a, b) => a.date.localeCompare(b.date));
+  const lastDate = sorted[sorted.length - 1]!.date;
+  if (lastDate > wldAsOf) return null; // energy data ahead of WLD asOf
+  const idx = sorted.findIndex((b) => b.date === lastDate);
+  if (idx < 33) return null;
+  const close = sorted.map((b) => b.close);
+  const roc3Arr: number[] = [];
+  for (let i = 3; i < close.length; i++) {
+    if (close[i - 3]! > 0) {
+      roc3Arr.push(((close[i]! - close[i - 3]!) / close[i - 3]!) * 100);
+    } else {
+      roc3Arr.push(NaN);
+    }
+  }
+  const lastRoc3 = roc3Arr[roc3Arr.length - 1];
+  if (!Number.isFinite(lastRoc3)) return null;
+  const win30 = roc3Arr.slice(-30).filter(Number.isFinite);
+  if (win30.length < 20) return null;
+  const mean = win30.reduce((a, b) => a + b, 0) / win30.length;
+  const variance = win30.reduce((a, b) => a + (b - mean) ** 2, 0) / win30.length;
+  const std = Math.sqrt(variance) || 1e-10;
+  const z30 = (lastRoc3 - mean) / std;
+  const active =
+    (Number.isFinite(z30) && z30 >= z30ActiveThreshold) ||
+    (Number.isFinite(lastRoc3) && lastRoc3 >= roc3ActiveThreshold);
+  return {
+    ticker,
+    asOf: lastDate,
+    roc3: Math.round(lastRoc3 * 100) / 100,
+    z30: Math.round(z30 * 100) / 100,
+    active,
+  };
+}
+
+async function fetchEnergyComplex(asOf: string): Promise<PlumbingWarLieDetector['energyComplex']> {
+  const endDate = asOf;
+  const start = new Date(asOf);
+  start.setDate(start.getDate() - 180);
+  const startDate = start.toISOString().split('T')[0]!;
+  const result: NonNullable<PlumbingWarLieDetector['energyComplex']> = {};
+
+  for (const { symbol, roc3Threshold, z30Threshold } of [
+    { symbol: 'UNG' as const, roc3Threshold: 5.0, z30Threshold: 1.0 },
+    { symbol: 'KOL' as const, roc3Threshold: 3.0, z30Threshold: 1.0 },
+  ]) {
+    try {
+      const bars = await fetchStooqEodSeries(symbol, startDate, endDate);
+      const sig = computeEnergySignal(bars, asOf, symbol, roc3Threshold, z30Threshold);
+      if (sig) {
+        if (symbol === 'UNG') result.natGas = sig;
+        else result.coal = sig;
+      }
+    } catch (err) {
+      console.warn(`  WARN: Energy complex ${symbol} fetch failed:`, err instanceof Error ? err.message : err);
+    }
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
 }
 
 function main() {
@@ -367,6 +440,7 @@ function main() {
     asOf,
     inputsLast: Object.keys(inputsLast).length === 6 ? (inputsLast as PlumbingInputsLast) : undefined,
     dataFreshness,
+    energyComplex: undefined,
     inputs: {
       brentProxy: 'BNO',
       wtiProxy: 'USO',
@@ -413,6 +487,24 @@ function main() {
     labelHistory,
   };
 
+  return { artifact, asOf, label, score, goldConfirm };
+}
+
+async function run() {
+  const { artifact, asOf, label, score, goldConfirm } = main();
+  try {
+    console.log('  Fetching energy complex (UNG, KOL) from Stooq...');
+    artifact.energyComplex = await fetchEnergyComplex(asOf);
+    if (artifact.energyComplex?.natGas) {
+      console.log(`   UNG: roc3=${artifact.energyComplex.natGas.roc3}, z30=${artifact.energyComplex.natGas.z30}, active=${artifact.energyComplex.natGas.active}`);
+    }
+    if (artifact.energyComplex?.coal) {
+      console.log(`   KOL: roc3=${artifact.energyComplex.coal.roc3}, z30=${artifact.energyComplex.coal.z30}, active=${artifact.energyComplex.coal.active}`);
+    }
+  } catch (err) {
+    console.warn('  WARN: Energy complex fetch failed (continuing without):', err instanceof Error ? err.message : err);
+  }
+
   const outPath = join(process.cwd(), 'public', 'plumbing.war_lie_detector.json');
   writeFileSync(outPath, JSON.stringify(artifact, null, 2), 'utf-8');
 
@@ -422,9 +514,7 @@ function main() {
   console.log(`   goldConfirm: ${goldConfirm}`);
 }
 
-try {
-  main();
-} catch (err) {
+run().catch((err) => {
   console.error(err);
   process.exit(1);
-}
+});

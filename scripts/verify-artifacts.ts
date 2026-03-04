@@ -688,6 +688,42 @@ function printPlumbingWarLieDetectorStats(): boolean {
         }
       }
     }
+    if (obj.energyComplex != null) {
+      const ec = obj.energyComplex as Record<string, unknown>;
+      if (typeof ec !== 'object' || ec === null) {
+        console.error('  ❌ plumbing.war_lie_detector.json: energyComplex must be object if present');
+        return false;
+      }
+      for (const key of ['natGas', 'coal']) {
+        const item = ec[key] as Record<string, unknown> | undefined;
+        if (item == null) continue;
+        if (typeof item !== 'object') {
+          console.error(`  ❌ plumbing.war_lie_detector.json: energyComplex.${key} must be object if present`);
+          return false;
+        }
+        const expectedTicker = key === 'natGas' ? 'UNG' : 'KOL';
+        if (item.ticker !== expectedTicker) {
+          console.error(`  ❌ plumbing.war_lie_detector.json: energyComplex.${key}.ticker must be "${expectedTicker}"`);
+          return false;
+        }
+        if (typeof item.asOf !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(item.asOf)) {
+          console.error(`  ❌ plumbing.war_lie_detector.json: energyComplex.${key}.asOf must be YYYY-MM-DD`);
+          return false;
+        }
+        if (typeof item.roc3 !== 'number' || !Number.isFinite(item.roc3)) {
+          console.error(`  ❌ plumbing.war_lie_detector.json: energyComplex.${key}.roc3 must be finite number`);
+          return false;
+        }
+        if (typeof item.z30 !== 'number' || !Number.isFinite(item.z30)) {
+          console.error(`  ❌ plumbing.war_lie_detector.json: energyComplex.${key}.z30 must be finite number`);
+          return false;
+        }
+        if (typeof item.active !== 'boolean') {
+          console.error(`  ❌ plumbing.war_lie_detector.json: energyComplex.${key}.active must be boolean`);
+          return false;
+        }
+      }
+    }
 
     const labelHistory = obj.labelHistory;
     if (labelHistory != null) {
@@ -712,8 +748,12 @@ function printPlumbingWarLieDetectorStats(): boolean {
     }
 
     const lastH = history[history.length - 1] as { date?: string } | undefined;
+    const ec = obj.energyComplex as Record<string, unknown> | undefined;
     console.log(`  plumbing.war_lie_detector.json: asOf=${asOf}, label=${label}, score=${obj.score ?? '?'}`);
     console.log(`    Latest: spread=${spread}, spread_z30=${spreadZ30}, history=${history.length} points`);
+    if (ec?.natGas || ec?.coal) {
+      console.log(`    energyComplex: natGas=${ec?.natGas ? 'yes' : 'no'}, coal=${ec?.coal ? 'yes' : 'no'}`);
+    }
     if (lastH?.date) {
       console.log(`    Last history date: ${lastH.date}`);
     }

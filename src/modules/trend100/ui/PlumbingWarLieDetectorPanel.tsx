@@ -51,22 +51,31 @@ function buildRegimeBands(labelHistory: Array<{ date: string; label: string }>):
 function getWhatToWatchNext(
   label: PlumbingWarLieDetector['label'],
   z30: number,
-  goldConfirm: boolean
-): [string, string] {
+  goldConfirm: boolean,
+  gasActive?: boolean,
+  coalActive?: boolean
+): string[] {
+  const bullets: string[] = [];
   if (label === 'WATCH') {
     if (z30 >= 2 && !goldConfirm) {
-      return ['If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift'];
+      bullets.push('If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift');
+    } else if (goldConfirm && z30 < 2) {
+      bullets.push('If Oil Stress reaches Active (z30 ≥ 2) → likely REAL_RISK', 'If Gold Confirm turns OFF → likely THEATER/WATCH');
+    } else {
+      bullets.push('If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift');
     }
-    if (goldConfirm && z30 < 2) {
-      return ['If Oil Stress reaches Active (z30 ≥ 2) → likely REAL_RISK', 'If Gold Confirm turns OFF → likely THEATER/WATCH'];
+    if (gasActive === false) {
+      bullets.push('If Gas Stress turns ON → energy supply crunch broadening');
     }
-    return ['If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift'];
+  } else if (label === 'REAL_RISK') {
+    bullets.push('If Gold Confirm stays ON and Phase stays RISING → escalation', 'If Gold Confirm turns OFF → likely downshift to WATCH');
+    if (!goldConfirm && (gasActive === false || gasActive === undefined)) {
+      bullets.push('Both Gas + Gold confirm OFF → risk narrowing back to oil-only stress');
+    }
+  } else {
+    bullets.push('If Oil Stress reaches Watch (z30 ≥ 1) → WATCH', 'If Gold Confirm flips ON → WATCH (and watch for REAL_RISK)');
   }
-  if (label === 'REAL_RISK') {
-    return ['If Gold Confirm stays ON and Phase stays RISING → escalation', 'If Gold Confirm turns OFF → likely downshift to WATCH'];
-  }
-  // THEATER
-  return ['If Oil Stress reaches Watch (z30 ≥ 1) → WATCH', 'If Gold Confirm flips ON → WATCH (and watch for REAL_RISK)'];
+  return bullets.slice(0, 3);
 }
 
 /** Plain-English verdict one-liner. */
@@ -151,13 +160,19 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
       <div className="rounded border border-zinc-800 bg-zinc-900/30 px-3 py-2">
         <p className="text-xs font-medium text-slate-400 mb-1.5">What to watch next</p>
         <ul className="text-xs text-slate-300 space-y-0.5 list-disc list-inside">
-          {getWhatToWatchNext(label, latest.spread_z30, signals.goldConfirm).map((bullet, i) => (
+          {getWhatToWatchNext(
+            label,
+            latest.spread_z30,
+            signals.goldConfirm,
+            data.energyComplex?.natGas?.active,
+            data.energyComplex?.coal?.active
+          ).map((bullet, i) => (
             <li key={i}>{bullet}</li>
           ))}
         </ul>
       </div>
 
-      {/* Signal cards: Oil Stress + Gold Confirm */}
+      {/* Signal cards: Oil Stress + Gold Confirm + Gas + Coal */}
       <div className="flex flex-wrap gap-3">
         <div className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]">
           <p className="text-xs font-medium text-slate-400 mb-1">Oil Stress</p>
@@ -173,6 +188,32 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
           <p className="text-sm text-slate-200">{signals.goldConfirm ? '✓ Yes' : '✗ No'}</p>
           <p className="text-xs text-slate-500 mt-0.5" title="GLD/SPY and GLD/TIP 5-day ROC both positive.">
             {signals.goldConfirm ? 'Both ratio ROC5 > 0' : 'Not both positive'}
+          </p>
+        </div>
+        <div className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]">
+          <p className="text-xs font-medium text-slate-400 mb-1">Gas Stress (UNG)</p>
+          <p className="text-sm text-slate-200">
+            {data.energyComplex?.natGas == null
+              ? 'N/A'
+              : data.energyComplex.natGas.active
+                ? 'ON'
+                : 'OFF'}
+          </p>
+          <p className="text-xs text-slate-500 mt-0.5" title={data.energyComplex?.natGas ? `roc3: ${data.energyComplex.natGas.roc3}%, z30: ${data.energyComplex.natGas.z30}` : 'Data unavailable'}>
+            {data.energyComplex?.natGas ? `roc3: ${data.energyComplex.natGas.roc3}%, z30: ${data.energyComplex.natGas.z30}` : '—'}
+          </p>
+        </div>
+        <div className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]">
+          <p className="text-xs font-medium text-slate-400 mb-1">Coal Bid (KOL)</p>
+          <p className="text-sm text-slate-200">
+            {data.energyComplex?.coal == null
+              ? 'N/A'
+              : data.energyComplex.coal.active
+                ? 'ON'
+                : 'OFF'}
+          </p>
+          <p className="text-xs text-slate-500 mt-0.5" title={data.energyComplex?.coal ? `roc3: ${data.energyComplex.coal.roc3}%, z30: ${data.energyComplex.coal.z30}` : 'Data unavailable'}>
+            {data.energyComplex?.coal ? `roc3: ${data.energyComplex.coal.roc3}%, z30: ${data.energyComplex.coal.z30}` : '—'}
           </p>
         </div>
       </div>
@@ -250,7 +291,7 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
       {/* Chart 1: Spread + MA5 with regime bands */}
       <div className="rounded border border-zinc-800 bg-zinc-900/40 p-3">
         <p className="text-xs text-slate-400 mb-2">
-          ETF proxy spread (BNO − USO), direction &gt; level
+          Oil dislocation (Brent vs WTI proxies)
           {regimeBands.length > 0 && (
             <span className="ml-2 text-slate-500">· Bands: THEATER (slate) / WATCH (amber) / REAL_RISK (red)</span>
           )}

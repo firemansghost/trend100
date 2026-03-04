@@ -148,6 +148,9 @@ git clean -fd public data/marketstack/eod
   - `latest.spread`, `latest.spread_z30`, `latest.spread_roc3` are finite numbers
   - `history` is array, sorted ascending by date, length >= 60
   - `labelHistory` (if present): non-empty, sorted ascending by date
+  - `inputsLast` (if present): keys BNO, USO, GLD, SPY, TIP, UUP with YYYY-MM-DD values
+  - `dataFreshness` (if present): lagTradingDays finite >= 0, laggingTickers string[]
+  - **Data freshness:** UI shows per-ticker last dates, min/max, lagging tickers. If a ticker lags (e.g. BNO stuck at older date), run `pnpm -s update:snapshots` first; BNO may need Marketstack fallback (EOD_STOOQ_FORCE_FALLBACK).
   - Run locally: `pnpm -s update:plumbing-war-lie-detector`
   - Verify: `pnpm -s verify:artifacts`
   - Common failures: missing ticker (BNO not cached — run `pnpm -s update:snapshots` first), insufficient history (< 60 bars — extend EOD cache)

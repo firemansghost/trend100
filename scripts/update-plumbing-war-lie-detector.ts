@@ -36,8 +36,26 @@ interface PlumbingLabelHistoryPoint {
   score: number;
 }
 
+interface PlumbingInputsLast {
+  BNO: string;
+  USO: string;
+  GLD: string;
+  SPY: string;
+  TIP: string;
+  UUP: string;
+}
+
+interface PlumbingDataFreshness {
+  minLastDate: string;
+  maxLastDate: string;
+  lagTradingDays?: number;
+  laggingTickers: string[];
+}
+
 interface PlumbingWarLieDetector {
   asOf: string;
+  inputsLast?: PlumbingInputsLast;
+  dataFreshness?: PlumbingDataFreshness;
   inputs: {
     brentProxy: string;
     wtiProxy: string;
@@ -319,9 +337,36 @@ function main() {
   }).join(' ');
   console.log(`PLUMBING inputs last: ${inputLastDates}`);
 
+  const inputsLast: Record<string, string> = {};
+  for (const s of SYMBOLS) {
+    const bars = barsBySymbol.get(s);
+    if (bars && bars.length > 0) {
+      inputsLast[s] = bars[bars.length - 1]!.date;
+    }
+  }
+  const lastDates = Object.values(inputsLast);
+  const minLastDate = lastDates.length === 6 ? lastDates.reduce((a, b) => (a < b ? a : b)) : null;
+  const maxLastDate = lastDates.length === 6 ? lastDates.reduce((a, b) => (a > b ? a : b)) : null;
+  const lagTd =
+    minLastDate && maxLastDate && minLastDate !== maxLastDate
+      ? Math.ceil(
+          ((new Date(maxLastDate).getTime() - new Date(minLastDate).getTime()) / (1000 * 60 * 60 * 24)) * (5 / 7)
+        )
+      : 0;
+  const laggingTickers =
+    lagTd === 0
+      ? []
+      : [...Object.entries(inputsLast)].filter(([, d]) => d === minLastDate).map(([t]) => t);
+  const dataFreshness =
+    minLastDate != null && maxLastDate != null
+      ? { minLastDate, maxLastDate, lagTradingDays: lagTd, laggingTickers }
+      : undefined;
+
   const asOf = alignedDates[lastIdx]!;
   const artifact: PlumbingWarLieDetector = {
     asOf,
+    inputsLast: Object.keys(inputsLast).length === 6 ? (inputsLast as PlumbingInputsLast) : undefined,
+    dataFreshness,
     inputs: {
       brentProxy: 'BNO',
       wtiProxy: 'USO',

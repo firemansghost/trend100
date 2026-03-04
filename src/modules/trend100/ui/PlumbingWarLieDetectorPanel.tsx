@@ -47,6 +47,28 @@ function buildRegimeBands(labelHistory: Array<{ date: string; label: string }>):
   return bands;
 }
 
+/** "What to watch next" bullets based on label/signal state. */
+function getWhatToWatchNext(
+  label: PlumbingWarLieDetector['label'],
+  z30: number,
+  goldConfirm: boolean
+): [string, string] {
+  if (label === 'WATCH') {
+    if (z30 >= 2 && !goldConfirm) {
+      return ['If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift'];
+    }
+    if (goldConfirm && z30 < 2) {
+      return ['If Oil Stress reaches Active (z30 ≥ 2) → likely REAL_RISK', 'If Gold Confirm turns OFF → likely THEATER/WATCH'];
+    }
+    return ['If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift'];
+  }
+  if (label === 'REAL_RISK') {
+    return ['If Gold Confirm stays ON and Phase stays RISING → escalation', 'If Gold Confirm turns OFF → likely downshift to WATCH'];
+  }
+  // THEATER
+  return ['If Oil Stress reaches Watch (z30 ≥ 1) → WATCH', 'If Gold Confirm flips ON → WATCH (and watch for REAL_RISK)'];
+}
+
 /** Plain-English verdict one-liner. */
 function getVerdict(label: PlumbingWarLieDetector['label'], signals: PlumbingWarLieDetector['signals']): string {
   if (label === 'REAL_RISK') return 'Oil spread stress + gold confirmation → REAL_RISK.';
@@ -54,6 +76,13 @@ function getVerdict(label: PlumbingWarLieDetector['label'], signals: PlumbingWar
   if (signals.spreadActive && !signals.goldConfirm) return 'Oil spread is stressed, but gold isn\'t confirming → WATCH.';
   if (signals.goldConfirm && !signals.spreadActive) return 'Gold confirming, but oil spread not stressed → WATCH.';
   return 'Mixed signals → WATCH.';
+}
+
+/** Phase: RISING (ROC3 >= 0.5%), EASING (<= -0.5%), FLAT otherwise. */
+function getPhase(roc3: number): 'RISING' | 'EASING' | 'FLAT' {
+  if (roc3 >= 0.5) return 'RISING';
+  if (roc3 <= -0.5) return 'EASING';
+  return 'FLAT';
 }
 
 function labelBadgeClass(label: PlumbingWarLieDetector['label']): string {
@@ -89,7 +118,8 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
     gld_spy_ratio: h.gld_spy_ratio,
   }));
 
-  const hasLag = (dataFreshness?.lagTradingDays ?? 0) > 1;
+  const lagTradingDays = dataFreshness?.lagTradingDays ?? 0;
+  const isAligned = lagTradingDays === 0 || dataFreshness?.minLastDate === dataFreshness?.maxLastDate;
   const laggingList = dataFreshness?.laggingTickers ?? [];
 
   return (
@@ -103,6 +133,12 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
           >
             {label}
           </span>
+          <span
+            className={chipBase}
+            title="Based on 3-day change in oil stress proxy (BNO–USO)."
+          >
+            Phase: {getPhase(latest.spread_roc3)}
+          </span>
           <span className={chipBase}>Score: {score}/3</span>
         </div>
         <span className="text-xs text-slate-500">asOf: {data.asOf}</span>
@@ -110,6 +146,16 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
 
       {/* Verdict one-liner */}
       <p className="text-sm text-slate-300">{getVerdict(label, signals)}</p>
+
+      {/* What to watch next */}
+      <div className="rounded border border-zinc-800 bg-zinc-900/30 px-3 py-2">
+        <p className="text-xs font-medium text-slate-400 mb-1.5">What to watch next</p>
+        <ul className="text-xs text-slate-300 space-y-0.5 list-disc list-inside">
+          {getWhatToWatchNext(label, latest.spread_z30, signals.goldConfirm).map((bullet, i) => (
+            <li key={i}>{bullet}</li>
+          ))}
+        </ul>
+      </div>
 
       {/* Signal cards: Oil Stress + Gold Confirm */}
       <div className="flex flex-wrap gap-3">
@@ -137,22 +183,33 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
           <span className="text-slate-500">Data freshness:</span>
           {dataFreshness && (
             <>
-              <span className={chipBase}>
-                min: {dataFreshness.minLastDate} · max: {dataFreshness.maxLastDate}
-              </span>
-              {hasLag && (
-                <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs bg-amber-900/40 border border-amber-700/50 text-amber-200">
-                  ⚠ Lag {dataFreshness.lagTradingDays}d
+              {isAligned ? (
+                <span
+                  className={chipBase}
+                  title={inputsLast ? ['BNO', 'USO', 'GLD', 'SPY', 'TIP', 'UUP']
+                    .map((s) => `${s}=${inputsLast[s as keyof typeof inputsLast] ?? '?'}`)
+                    .join(' ') : undefined}
+                >
+                  Fresh: {dataFreshness.maxLastDate}
                 </span>
-              )}
-              {laggingList.length > 0 && (
-                <span className={chipBase} title="Tickers holding data back">
-                  Lagging: {laggingList.length <= 5 ? laggingList.join(', ') : laggingList.slice(0, 5).join(', ') + ` +${laggingList.length - 5}`}
-                </span>
+              ) : (
+                <>
+                  <span className={chipBase}>
+                    min: {dataFreshness.minLastDate} · max: {dataFreshness.maxLastDate}
+                  </span>
+                  <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs bg-amber-900/40 border border-amber-700/50 text-amber-200">
+                    ⚠ Lag {dataFreshness.lagTradingDays}d
+                  </span>
+                  {laggingList.length > 0 && (
+                    <span className={chipBase} title="Tickers holding data back">
+                      Lagging: {laggingList.length <= 5 ? laggingList.join(', ') : laggingList.slice(0, 5).join(', ') + ` +${laggingList.length - 5}`}
+                    </span>
+                  )}
+                </>
               )}
             </>
           )}
-          {inputsLast && (
+          {inputsLast && !isAligned && (
             <span className={chipBase} title="Per-ticker last EOD date">
               {['BNO', 'USO', 'GLD', 'SPY', 'TIP', 'UUP']
                 .map((s) => `${s}=${inputsLast[s as keyof typeof inputsLast] ?? '?'}`)

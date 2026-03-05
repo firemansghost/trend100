@@ -87,12 +87,62 @@ interface PlumbingWarLieDetector {
   };
   score: number;
   label: PlumbingLabel;
+  trajectory?: {
+    state: 'ESCALATING' | 'HOLDING' | 'EASING';
+    reason: string;
+    phase: 'RISING' | 'FLAT' | 'EASING';
+  };
   energyComplex?: {
     natGas?: { ticker: 'UNG'; asOf: string; roc3: number; z30: number; active: boolean };
     coal?: { ticker: 'KOL'; asOf: string; roc3: number; z30: number; active: boolean };
   };
   history: PlumbingHistoryPoint[];
   labelHistory: PlumbingLabelHistoryPoint[];
+}
+
+/** Phase from roc3: RISING >= 0.5%, EASING <= -0.5%, FLAT otherwise. */
+function getPhase(roc3: number): 'RISING' | 'FLAT' | 'EASING' {
+  if (roc3 >= 0.5) return 'RISING';
+  if (roc3 <= -0.5) return 'EASING';
+  return 'FLAT';
+}
+
+/** Compute trajectory state and reason from artifact signals. */
+function computeTrajectory(artifact: PlumbingWarLieDetector): PlumbingWarLieDetector['trajectory'] {
+  const { label, signals, latest, energyComplex } = artifact;
+  const phase = getPhase(latest.spread_roc3);
+  const natGasActive = energyComplex?.natGas?.active === true;
+
+  const escalating =
+    label === 'REAL_RISK' ||
+    signals.goldConfirm === true ||
+    natGasActive ||
+    (phase === 'RISING' && latest.spread_z30 >= 2);
+
+  const easing =
+    phase === 'EASING' &&
+    signals.goldConfirm === false &&
+    !natGasActive &&
+    latest.spread_z30 < 2;
+
+  const state: 'ESCALATING' | 'HOLDING' | 'EASING' = escalating ? 'ESCALATING' : easing ? 'EASING' : 'HOLDING';
+
+  let reason: string;
+  if (state === 'ESCALATING') {
+    if (label === 'REAL_RISK' || (signals.goldConfirm && latest.spread_z30 >= 2)) {
+      reason = 'Stress is broadening beyond oil.';
+    } else if (natGasActive || signals.goldConfirm) {
+      reason = 'Confirms are active; stress is broadening.';
+    } else {
+      reason = 'Oil stress is present, but confirms are limited.';
+    }
+  } else if (state === 'EASING') {
+    reason = 'Pressure is cooling and confirms are fading.';
+  } else {
+    reason = 'Stress is present, but not clearly broadening yet.';
+  }
+
+  return { state, reason, phase };
 }
 
 function loadEodCache(symbol: string): EodBar[] | null {
@@ -503,6 +553,11 @@ async function run() {
     }
   } catch (err) {
     console.warn('  WARN: Energy complex fetch failed (continuing without):', err instanceof Error ? err.message : err);
+  }
+
+  artifact.trajectory = computeTrajectory(artifact);
+  if (artifact.trajectory) {
+    console.log(`   trajectory: ${artifact.trajectory.state} — ${artifact.trajectory.reason}`);
   }
 
   const outPath = join(process.cwd(), 'public', 'plumbing.war_lie_detector.json');

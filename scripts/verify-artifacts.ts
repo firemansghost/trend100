@@ -724,6 +724,27 @@ function printPlumbingWarLieDetectorStats(): boolean {
         }
       }
     }
+    if (obj.trajectory != null) {
+      const tr = obj.trajectory as Record<string, unknown>;
+      if (typeof tr !== 'object' || tr === null) {
+        console.error('  ❌ plumbing.war_lie_detector.json: trajectory must be object if present');
+        return false;
+      }
+      const validStates = ['ESCALATING', 'HOLDING', 'EASING'];
+      if (!validStates.includes(String(tr.state))) {
+        console.error(`  ❌ plumbing.war_lie_detector.json: trajectory.state must be one of ${validStates.join(', ')}, got "${tr.state}"`);
+        return false;
+      }
+      if (typeof tr.reason !== 'string' || tr.reason.trim() === '') {
+        console.error('  ❌ plumbing.war_lie_detector.json: trajectory.reason must be non-empty string');
+        return false;
+      }
+      const validPhases = ['RISING', 'FLAT', 'EASING'];
+      if (!validPhases.includes(String(tr.phase))) {
+        console.error(`  ❌ plumbing.war_lie_detector.json: trajectory.phase must be one of ${validPhases.join(', ')}, got "${tr.phase}"`);
+        return false;
+      }
+    }
 
     const labelHistory = obj.labelHistory;
     if (labelHistory != null) {

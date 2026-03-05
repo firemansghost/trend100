@@ -53,9 +53,15 @@ function getWhatToWatchNext(
   z30: number,
   goldConfirm: boolean,
   gasActive?: boolean,
-  coalActive?: boolean
+  coalActive?: boolean,
+  trajectoryState?: 'ESCALATING' | 'HOLDING' | 'EASING'
 ): string[] {
   const bullets: string[] = [];
+  if (trajectoryState) {
+    if (trajectoryState === 'ESCALATING') bullets.push('Escalation is broadening; watch for confirmation to persist.');
+    else if (trajectoryState === 'HOLDING') bullets.push('Stress is present, but not clearly broadening yet.');
+    else bullets.push('Pressure is cooling unless confirms reappear.');
+  }
   if (label === 'WATCH') {
     if (z30 >= 2 && !goldConfirm) {
       bullets.push('If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift');
@@ -75,7 +81,7 @@ function getWhatToWatchNext(
   } else {
     bullets.push('If Oil Stress reaches Watch (z30 ≥ 1) → WATCH', 'If Gold Confirm flips ON → WATCH (and watch for REAL_RISK)');
   }
-  return bullets.slice(0, 3);
+  return bullets.slice(0, 4);
 }
 
 /** Plain-English verdict one-liner. */
@@ -94,6 +100,42 @@ function getPhase(roc3: number): 'RISING' | 'EASING' | 'FLAT' {
   return 'FLAT';
 }
 
+/** Compute trajectory when artifact lacks it (backwards compat). */
+function getTrajectory(data: PlumbingWarLieDetector): NonNullable<PlumbingWarLieDetector['trajectory']> {
+  if (data.trajectory) return data.trajectory;
+  const phase = getPhase(data.latest.spread_roc3);
+  const natGasActive = data.energyComplex?.natGas?.active === true;
+  const escalating =
+    data.label === 'REAL_RISK' ||
+    data.signals.goldConfirm ||
+    natGasActive ||
+    (phase === 'RISING' && data.latest.spread_z30 >= 2);
+  const easing =
+    phase === 'EASING' &&
+    !data.signals.goldConfirm &&
+    !natGasActive &&
+    data.latest.spread_z30 < 2;
+  const state = escalating ? 'ESCALATING' : easing ? 'EASING' : 'HOLDING';
+  const reason =
+    state === 'ESCALATING'
+      ? 'Stress is broadening beyond oil.'
+      : state === 'EASING'
+        ? 'Pressure is cooling and confirms are fading.'
+        : 'Stress is present, but not clearly broadening yet.';
+  return { state, reason, phase };
+}
+
+function trajectoryChipClass(state: 'ESCALATING' | 'HOLDING' | 'EASING'): string {
+  switch (state) {
+    case 'ESCALATING':
+      return 'bg-red-900/40 border-red-700/60 text-red-200';
+    case 'EASING':
+      return 'bg-emerald-900/40 border-emerald-700/60 text-emerald-200';
+    default:
+      return 'bg-amber-900/40 border-amber-700/60 text-amber-200';
+  }
+}
+
 function labelBadgeClass(label: PlumbingWarLieDetector['label']): string {
   switch (label) {
     case 'THEATER':
@@ -110,6 +152,7 @@ function labelBadgeClass(label: PlumbingWarLieDetector['label']): string {
 export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPanelProps) {
   const { latest, signals, label, score, history, labelHistory, inputsLast, dataFreshness } = data;
   const [explainOpen, setExplainOpen] = useState(false);
+  const trajectory = useMemo(() => getTrajectory(data), [data]);
 
   const regimeBands = useMemo(
     () => (labelHistory && labelHistory.length > 0 ? buildRegimeBands(labelHistory) : []),
@@ -143,10 +186,10 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             {label}
           </span>
           <span
-            className={chipBase}
-            title="Based on 3-day change in oil stress proxy (BNO–USO)."
+            className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium border ${trajectoryChipClass(trajectory.state)}`}
+            title={trajectory.reason}
           >
-            Phase: {getPhase(latest.spread_roc3)}
+            {trajectory.state}
           </span>
           <span className={chipBase}>Score: {score}/3</span>
         </div>
@@ -155,6 +198,9 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
 
       {/* Verdict one-liner */}
       <p className="text-sm text-slate-300">{getVerdict(label, signals)}</p>
+
+      {/* Trajectory reason (plain-English helper) */}
+      <p className="text-sm text-slate-400">{trajectory.reason}</p>
 
       {/* What to watch next */}
       <div className="rounded border border-zinc-800 bg-zinc-900/30 px-3 py-2">
@@ -165,7 +211,8 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             latest.spread_z30,
             signals.goldConfirm,
             data.energyComplex?.natGas?.active,
-            data.energyComplex?.coal?.active
+            data.energyComplex?.coal?.active,
+            trajectory.state
           ).map((bullet, i) => (
             <li key={i}>{bullet}</li>
           ))}
@@ -203,19 +250,17 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             {data.energyComplex?.natGas ? `roc3: ${data.energyComplex.natGas.roc3}%, z30: ${data.energyComplex.natGas.z30}` : '—'}
           </p>
         </div>
-        <div className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]">
-          <p className="text-xs font-medium text-slate-400 mb-1">Coal Bid (KOL)</p>
-          <p className="text-sm text-slate-200">
-            {data.energyComplex?.coal == null
-              ? 'N/A'
-              : data.energyComplex.coal.active
-                ? 'ON'
-                : 'OFF'}
-          </p>
-          <p className="text-xs text-slate-500 mt-0.5" title={data.energyComplex?.coal ? `roc3: ${data.energyComplex.coal.roc3}%, z30: ${data.energyComplex.coal.z30}` : 'Data unavailable'}>
-            {data.energyComplex?.coal ? `roc3: ${data.energyComplex.coal.roc3}%, z30: ${data.energyComplex.coal.z30}` : '—'}
-          </p>
-        </div>
+        {data.energyComplex?.coal != null && (
+          <div className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]">
+            <p className="text-xs font-medium text-slate-400 mb-1">Coal Bid (KOL)</p>
+            <p className="text-sm text-slate-200">
+              {data.energyComplex.coal.active ? 'ON' : 'OFF'}
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5" title={`roc3: ${data.energyComplex.coal.roc3}%, z30: ${data.energyComplex.coal.z30}`}>
+              roc3: {data.energyComplex.coal.roc3}%, z30: {data.energyComplex.coal.z30}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Data freshness */}
@@ -271,6 +316,9 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         </button>
         {explainOpen && (
           <ul className="text-xs text-slate-300 space-y-1 list-disc list-inside mt-2">
+            <li>
+              <strong>Phase</strong> (3d change): {getPhase(latest.spread_roc3)} — RISING ≥0.5%, EASING ≤−0.5%, FLAT otherwise
+            </li>
             <li>
               <strong>Oil stress (z-score)</strong>: {latest.spread_z30.toFixed(2)} — Watch ≥1, Active ≥2
               {latest.spread_z30 >= 2 ? ' ✓ Active (+2)' : latest.spread_z30 >= 1 ? ' ✓ Watch (+1)' : ' (0)'}

@@ -207,6 +207,12 @@ export interface PlumbingWarLieDetector {
   };
   score: number;
   label: 'THEATER' | 'WATCH' | 'REAL_RISK';
+  /** Trajectory: ESCALATING | HOLDING | EASING. Plain-English answer to "getting worse, holding, or easing?" */
+  trajectory?: {
+    state: 'ESCALATING' | 'HOLDING' | 'EASING';
+    reason: string;
+    phase: 'RISING' | 'FLAT' | 'EASING';
+  };
   /** Optional secondary energy-complex confirms (UNG, KOL). Not part of label logic. */
   energyComplex?: {
     natGas?: { ticker: 'UNG'; asOf: string; roc3: number; z30: number; active: boolean };

@@ -93,7 +93,7 @@ interface PlumbingWarLieDetector {
     phase: 'RISING' | 'FLAT' | 'EASING';
   };
   energyBreadth?: {
-    state: 'NARROW' | 'BROADENING' | 'FULL_STRESS' | 'EASING';
+    state: 'NARROW' | 'BROADENING' | 'FULL_STRESS';
     reason: string;
   };
   energyComplex?: {
@@ -149,7 +149,7 @@ function computeTrajectory(artifact: PlumbingWarLieDetector): PlumbingWarLieDete
   return { state, reason, phase };
 }
 
-/** Compute energy breadth: NARROW | BROADENING | FULL_STRESS | EASING. */
+/** Compute energy breadth: NARROW | BROADENING | FULL_STRESS. (Easing/cooling is Trajectory.) */
 function computeEnergyBreadth(artifact: PlumbingWarLieDetector): PlumbingWarLieDetector['energyBreadth'] {
   const { signals, latest, trajectory, energyComplex } = artifact;
   const oilStress = latest.spread_z30 >= 1;
@@ -159,12 +159,6 @@ function computeEnergyBreadth(artifact: PlumbingWarLieDetector): PlumbingWarLieD
   const phase = trajectory?.phase ?? getPhase(latest.spread_roc3);
   const oilEasing = phase === 'EASING' || phase === 'FLAT';
 
-  if (oilEasing && !gasOrCoalActive && !signals.goldConfirm) {
-    return {
-      state: 'EASING',
-      reason: 'Secondary confirms are fading and stress looks less broad.',
-    };
-  }
   if (oilStress && signals.goldConfirm && gasOrCoalActive) {
     return {
       state: 'FULL_STRESS',
@@ -182,6 +176,9 @@ function computeEnergyBreadth(artifact: PlumbingWarLieDetector): PlumbingWarLieD
       state: 'NARROW',
       reason: 'Stress is still mostly confined to oil.',
     };
+  }
+  if (oilEasing && !gasOrCoalActive && !signals.goldConfirm) {
+    return { state: 'NARROW', reason: 'Stress is mostly confined to oil.' };
   }
   return {
     state: oilStress ? 'BROADENING' : 'NARROW',

@@ -730,7 +730,7 @@ function printPlumbingWarLieDetectorStats(): boolean {
         console.error('  ❌ plumbing.war_lie_detector.json: energyBreadth must be object if present');
         return false;
       }
-      const validStates = ['NARROW', 'BROADENING', 'FULL_STRESS', 'EASING'];
+      const validStates = ['NARROW', 'BROADENING', 'FULL_STRESS'];
       if (!validStates.includes(String(eb.state))) {
         console.error(`  ❌ plumbing.war_lie_detector.json: energyBreadth.state must be one of ${validStates.join(', ')}, got "${eb.state}"`);
         return false;

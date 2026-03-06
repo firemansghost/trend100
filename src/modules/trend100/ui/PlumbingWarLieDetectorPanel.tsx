@@ -55,7 +55,7 @@ function getWhatToWatchNext(
   gasActive?: boolean,
   coalActive?: boolean,
   trajectoryState?: 'ESCALATING' | 'HOLDING' | 'EASING',
-  energyBreadthState?: 'NARROW' | 'BROADENING' | 'FULL_STRESS' | 'EASING'
+  energyBreadthState?: 'NARROW' | 'BROADENING' | 'FULL_STRESS'
 ): string[] {
   const bullets: string[] = [];
   if (trajectoryState) {
@@ -65,9 +65,8 @@ function getWhatToWatchNext(
   }
   if (energyBreadthState) {
     if (energyBreadthState === 'NARROW') bullets.push('If gas or coal turns ON → stress is broadening beyond oil.');
-    else if (energyBreadthState === 'BROADENING') bullets.push('If Gold Confirm flips ON → broadening may become full macro stress.');
-    else if (energyBreadthState === 'FULL_STRESS') bullets.push('If gas/coal and gold stay ON together → this remains a broad energy shock.');
-    else bullets.push('If oil re-accelerates and gas turns ON again → easing may fail.');
+    else if (energyBreadthState === 'BROADENING') bullets.push('If Gold Confirm flips ON → broadening may become full stress.');
+    else bullets.push('If gas/coal and gold stay ON together → broad stress remains in place.');
   }
   if (label === 'WATCH') {
     if (z30 >= 2 && !goldConfirm) {
@@ -152,9 +151,6 @@ function getEnergyBreadth(data: PlumbingWarLieDetector): NonNullable<PlumbingWar
   const gasOrCoalActive = gasActive || coalActive;
   const phase = data.trajectory?.phase ?? getPhase(data.latest.spread_roc3);
   const oilEasing = phase === 'EASING' || phase === 'FLAT';
-  if (oilEasing && !gasOrCoalActive && !data.signals.goldConfirm) {
-    return { state: 'EASING', reason: 'Secondary confirms are fading and stress looks less broad.' };
-  }
   if (oilStress && data.signals.goldConfirm && gasOrCoalActive) {
     return { state: 'FULL_STRESS', reason: 'Oil, macro fear, and wider energy stress are all confirming.' };
   }
@@ -164,10 +160,13 @@ function getEnergyBreadth(data: PlumbingWarLieDetector): NonNullable<PlumbingWar
   if (oilStress && !gasOrCoalActive && !data.signals.goldConfirm) {
     return { state: 'NARROW', reason: 'Stress is still mostly confined to oil.' };
   }
+  if (oilEasing && !gasOrCoalActive && !data.signals.goldConfirm) {
+    return { state: 'NARROW', reason: 'Stress is mostly confined to oil.' };
+  }
   return { state: oilStress ? 'BROADENING' : 'NARROW', reason: oilStress ? 'Stress is present, but confirms are mixed.' : 'Stress is still mostly confined to oil.' };
 }
 
-function energyBreadthChipClass(state: 'NARROW' | 'BROADENING' | 'FULL_STRESS' | 'EASING'): string {
+function energyBreadthChipClass(state: 'NARROW' | 'BROADENING' | 'FULL_STRESS'): string {
   switch (state) {
     case 'NARROW':
       return 'bg-slate-700/60 border-slate-600 text-slate-200';
@@ -175,8 +174,6 @@ function energyBreadthChipClass(state: 'NARROW' | 'BROADENING' | 'FULL_STRESS' |
       return 'bg-amber-900/40 border-amber-700/60 text-amber-200';
     case 'FULL_STRESS':
       return 'bg-red-900/40 border-red-700/60 text-red-200';
-    case 'EASING':
-      return 'bg-emerald-900/40 border-emerald-700/60 text-emerald-200';
     default:
       return 'bg-zinc-800 border-zinc-700 text-slate-300';
   }

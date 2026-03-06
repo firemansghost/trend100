@@ -213,9 +213,9 @@ export interface PlumbingWarLieDetector {
     reason: string;
     phase: 'RISING' | 'FLAT' | 'EASING';
   };
-  /** Energy Breadth: NARROW | BROADENING | FULL_STRESS | EASING. Is stress narrow, broadening, or fading? */
+  /** Energy Breadth: NARROW | BROADENING | FULL_STRESS. How widespread is stress across the energy complex? */
   energyBreadth?: {
-    state: 'NARROW' | 'BROADENING' | 'FULL_STRESS' | 'EASING';
+    state: 'NARROW' | 'BROADENING' | 'FULL_STRESS';
     reason: string;
   };
   /** Optional secondary energy-complex confirms (UNG, COAL). Not part of label logic. */

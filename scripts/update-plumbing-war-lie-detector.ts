@@ -92,9 +92,13 @@ interface PlumbingWarLieDetector {
     reason: string;
     phase: 'RISING' | 'FLAT' | 'EASING';
   };
+  energyBreadth?: {
+    state: 'NARROW' | 'BROADENING' | 'FULL_STRESS' | 'EASING';
+    reason: string;
+  };
   energyComplex?: {
     natGas?: { ticker: 'UNG'; asOf: string; roc3: number; z30: number; active: boolean };
-    coal?: { ticker: 'KOL'; asOf: string; roc3: number; z30: number; active: boolean };
+    coal?: { ticker: 'COAL'; asOf: string; roc3: number; z30: number; active: boolean };
   };
   history: PlumbingHistoryPoint[];
   labelHistory: PlumbingLabelHistoryPoint[];
@@ -145,6 +149,46 @@ function computeTrajectory(artifact: PlumbingWarLieDetector): PlumbingWarLieDete
   return { state, reason, phase };
 }
 
+/** Compute energy breadth: NARROW | BROADENING | FULL_STRESS | EASING. */
+function computeEnergyBreadth(artifact: PlumbingWarLieDetector): PlumbingWarLieDetector['energyBreadth'] {
+  const { signals, latest, trajectory, energyComplex } = artifact;
+  const oilStress = latest.spread_z30 >= 1;
+  const gasActive = energyComplex?.natGas?.active === true;
+  const coalActive = energyComplex?.coal?.active === true;
+  const gasOrCoalActive = gasActive || coalActive;
+  const phase = trajectory?.phase ?? getPhase(latest.spread_roc3);
+  const oilEasing = phase === 'EASING' || phase === 'FLAT';
+
+  if (oilEasing && !gasOrCoalActive && !signals.goldConfirm) {
+    return {
+      state: 'EASING',
+      reason: 'Secondary confirms are fading and stress looks less broad.',
+    };
+  }
+  if (oilStress && signals.goldConfirm && gasOrCoalActive) {
+    return {
+      state: 'FULL_STRESS',
+      reason: 'Oil, macro fear, and wider energy stress are all confirming.',
+    };
+  }
+  if (oilStress && gasOrCoalActive) {
+    return {
+      state: 'BROADENING',
+      reason: 'Stress is spreading beyond crude into the wider energy complex.',
+    };
+  }
+  if (oilStress && !gasOrCoalActive && !signals.goldConfirm) {
+    return {
+      state: 'NARROW',
+      reason: 'Stress is still mostly confined to oil.',
+    };
+  }
+  return {
+    state: oilStress ? 'BROADENING' : 'NARROW',
+    reason: oilStress ? 'Stress is present, but confirms are mixed.' : 'Stress is still mostly confined to oil.',
+  };
+}
+
 function loadEodCache(symbol: string): EodBar[] | null {
   const fileName = `${symbol.replace(/\./g, '_')}.json`;
   const filePath = join(EOD_CACHE_DIR, fileName);
@@ -163,10 +207,10 @@ function loadEodCache(symbol: string): EodBar[] | null {
 function computeEnergySignal(
   bars: EodBar[],
   wldAsOf: string,
-  ticker: 'UNG' | 'KOL',
+  ticker: 'UNG' | 'COAL',
   roc3ActiveThreshold: number,
   z30ActiveThreshold: number
-): { ticker: 'UNG' | 'KOL'; asOf: string; roc3: number; z30: number; active: boolean } | null {
+): { ticker: 'UNG' | 'COAL'; asOf: string; roc3: number; z30: number; active: boolean } | null {
   if (bars.length < 34) return null; // need 3 for roc3 + 30 for z30
   const sorted = [...bars].sort((a, b) => a.date.localeCompare(b.date));
   const lastDate = sorted[sorted.length - 1]!.date;
@@ -202,6 +246,20 @@ function computeEnergySignal(
   };
 }
 
+/** Try Stooq first, then Marketstack EOD cache. Returns bars or null. */
+async function fetchEnergyBars(symbol: string, startDate: string, endDate: string): Promise<EodBar[] | null> {
+  try {
+    return await fetchStooqEodSeries(symbol, startDate, endDate);
+  } catch {
+    const bars = loadEodCache(symbol);
+    if (bars && bars.length >= 34) {
+      const filtered = bars.filter((b) => b.date <= endDate);
+      return filtered.length >= 34 ? filtered : null;
+    }
+    return null;
+  }
+}
+
 async function fetchEnergyComplex(asOf: string): Promise<PlumbingWarLieDetector['energyComplex']> {
   const endDate = asOf;
   const start = new Date(asOf);
@@ -211,14 +269,16 @@ async function fetchEnergyComplex(asOf: string): Promise<PlumbingWarLieDetector[
 
   for (const { symbol, roc3Threshold, z30Threshold } of [
     { symbol: 'UNG' as const, roc3Threshold: 5.0, z30Threshold: 1.0 },
-    { symbol: 'KOL' as const, roc3Threshold: 3.0, z30Threshold: 1.0 },
+    { symbol: 'COAL' as const, roc3Threshold: 3.0, z30Threshold: 1.0 },
   ]) {
     try {
-      const bars = await fetchStooqEodSeries(symbol, startDate, endDate);
-      const sig = computeEnergySignal(bars, asOf, symbol, roc3Threshold, z30Threshold);
-      if (sig) {
-        if (symbol === 'UNG') result.natGas = sig;
-        else result.coal = sig;
+      const bars = await fetchEnergyBars(symbol, startDate, endDate);
+      if (bars) {
+        const sig = computeEnergySignal(bars, asOf, symbol, roc3Threshold, z30Threshold);
+        if (sig) {
+          if (symbol === 'UNG') result.natGas = sig;
+          else result.coal = sig;
+        }
       }
     } catch (err) {
       console.warn(`  WARN: Energy complex ${symbol} fetch failed:`, err instanceof Error ? err.message : err);
@@ -543,13 +603,13 @@ function main() {
 async function run() {
   const { artifact, asOf, label, score, goldConfirm } = main();
   try {
-    console.log('  Fetching energy complex (UNG, KOL) from Stooq...');
+    console.log('  Fetching energy complex (UNG, COAL) from Stooq...');
     artifact.energyComplex = await fetchEnergyComplex(asOf);
     if (artifact.energyComplex?.natGas) {
       console.log(`   UNG: roc3=${artifact.energyComplex.natGas.roc3}, z30=${artifact.energyComplex.natGas.z30}, active=${artifact.energyComplex.natGas.active}`);
     }
     if (artifact.energyComplex?.coal) {
-      console.log(`   KOL: roc3=${artifact.energyComplex.coal.roc3}, z30=${artifact.energyComplex.coal.z30}, active=${artifact.energyComplex.coal.active}`);
+      console.log(`   COAL: roc3=${artifact.energyComplex.coal.roc3}, z30=${artifact.energyComplex.coal.z30}, active=${artifact.energyComplex.coal.active}`);
     }
   } catch (err) {
     console.warn('  WARN: Energy complex fetch failed (continuing without):', err instanceof Error ? err.message : err);
@@ -558,6 +618,11 @@ async function run() {
   artifact.trajectory = computeTrajectory(artifact);
   if (artifact.trajectory) {
     console.log(`   trajectory: ${artifact.trajectory.state} — ${artifact.trajectory.reason}`);
+  }
+
+  artifact.energyBreadth = computeEnergyBreadth(artifact);
+  if (artifact.energyBreadth) {
+    console.log(`   energyBreadth: ${artifact.energyBreadth.state} — ${artifact.energyBreadth.reason}`);
   }
 
   const outPath = join(process.cwd(), 'public', 'plumbing.war_lie_detector.json');

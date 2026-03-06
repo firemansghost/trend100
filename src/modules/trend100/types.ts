@@ -213,10 +213,15 @@ export interface PlumbingWarLieDetector {
     reason: string;
     phase: 'RISING' | 'FLAT' | 'EASING';
   };
-  /** Optional secondary energy-complex confirms (UNG, KOL). Not part of label logic. */
+  /** Energy Breadth: NARROW | BROADENING | FULL_STRESS | EASING. Is stress narrow, broadening, or fading? */
+  energyBreadth?: {
+    state: 'NARROW' | 'BROADENING' | 'FULL_STRESS' | 'EASING';
+    reason: string;
+  };
+  /** Optional secondary energy-complex confirms (UNG, COAL). Not part of label logic. */
   energyComplex?: {
     natGas?: { ticker: 'UNG'; asOf: string; roc3: number; z30: number; active: boolean };
-    coal?: { ticker: 'KOL'; asOf: string; roc3: number; z30: number; active: boolean };
+    coal?: { ticker: 'COAL'; asOf: string; roc3: number; z30: number; active: boolean };
   };
   history: Array<{
     date: string;

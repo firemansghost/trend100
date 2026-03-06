@@ -701,7 +701,7 @@ function printPlumbingWarLieDetectorStats(): boolean {
           console.error(`  ❌ plumbing.war_lie_detector.json: energyComplex.${key} must be object if present`);
           return false;
         }
-        const expectedTicker = key === 'natGas' ? 'UNG' : 'KOL';
+        const expectedTicker = key === 'natGas' ? 'UNG' : 'COAL';
         if (item.ticker !== expectedTicker) {
           console.error(`  ❌ plumbing.war_lie_detector.json: energyComplex.${key}.ticker must be "${expectedTicker}"`);
           return false;
@@ -722,6 +722,22 @@ function printPlumbingWarLieDetectorStats(): boolean {
           console.error(`  ❌ plumbing.war_lie_detector.json: energyComplex.${key}.active must be boolean`);
           return false;
         }
+      }
+    }
+    if (obj.energyBreadth != null) {
+      const eb = obj.energyBreadth as Record<string, unknown>;
+      if (typeof eb !== 'object' || eb === null) {
+        console.error('  ❌ plumbing.war_lie_detector.json: energyBreadth must be object if present');
+        return false;
+      }
+      const validStates = ['NARROW', 'BROADENING', 'FULL_STRESS', 'EASING'];
+      if (!validStates.includes(String(eb.state))) {
+        console.error(`  ❌ plumbing.war_lie_detector.json: energyBreadth.state must be one of ${validStates.join(', ')}, got "${eb.state}"`);
+        return false;
+      }
+      if (typeof eb.reason !== 'string' || eb.reason.trim() === '') {
+        console.error('  ❌ plumbing.war_lie_detector.json: energyBreadth.reason must be non-empty string');
+        return false;
       }
     }
     if (obj.trajectory != null) {

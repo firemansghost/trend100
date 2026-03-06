@@ -166,10 +166,11 @@ function getEnergyBreadth(data: PlumbingWarLieDetector): NonNullable<PlumbingWar
   return { state: oilStress ? 'BROADENING' : 'NARROW', reason: oilStress ? 'Stress is present, but confirms are mixed.' : 'Stress is still mostly confined to oil.' };
 }
 
-/** Plain-English Explain bullets + "Not X because" lines. */
+/** Plain-English Explain bullets + "Not X because" lines + optional lag line. */
 function getExplainBullets(data: PlumbingWarLieDetector): {
   bullets: string[];
   notLines: string[];
+  lagLine: string | null;
 } {
   const { label, latest, signals } = data;
   const trajectory = getTrajectory(data);
@@ -182,6 +183,14 @@ function getExplainBullets(data: PlumbingWarLieDetector): {
 
   const bullets: string[] = [];
   const notLines: string[] = [];
+  const lagTradingDays = data.dataFreshness?.lagTradingDays ?? 0;
+  const laggingList = data.dataFreshness?.laggingTickers ?? [];
+  const lagLine: string | null =
+    lagTradingDays > 0 && laggingList.length > 0
+      ? `This panel is ${lagTradingDays} trading day${lagTradingDays === 1 ? '' : 's'} behind because ${laggingList[0]}${laggingList.length > 1 ? ` and ${laggingList.length - 1} other input${laggingList.length === 2 ? '' : 's'}` : ''} ${laggingList.length === 1 ? 'has' : 'have'} not printed the latest close yet.`
+      : lagTradingDays > 0
+        ? 'The model is waiting for the last common date across all required inputs.'
+        : null;
 
   if (label === 'THEATER') {
     bullets.push('Bottom line: Oil stress has cooled and is no longer spreading across the wider energy complex.');
@@ -218,7 +227,7 @@ function getExplainBullets(data: PlumbingWarLieDetector): {
     notLines.push('Not WATCH because: oil stress is Active and gold is confirming.');
   }
 
-  return { bullets, notLines };
+  return { bullets, notLines, lagLine };
 }
 
 function energyBreadthChipClass(state: 'NARROW' | 'BROADENING' | 'FULL_STRESS'): string {
@@ -232,6 +241,13 @@ function energyBreadthChipClass(state: 'NARROW' | 'BROADENING' | 'FULL_STRESS'):
     default:
       return 'bg-zinc-800 border-zinc-700 text-slate-300';
   }
+}
+
+/** Lag badge styling: fresh = positive, 1d = amber, 2+d = red. */
+function lagBadgeClass(lagTradingDays: number): string {
+  if (lagTradingDays === 0) return 'bg-emerald-900/40 border-emerald-700/60 text-emerald-200';
+  if (lagTradingDays === 1) return 'bg-amber-900/40 border-amber-700/60 text-amber-200';
+  return 'bg-red-900/40 border-red-700/60 text-red-200';
 }
 
 function labelBadgeClass(label: PlumbingWarLieDetector['label']): string {
@@ -298,9 +314,31 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             Energy: {energyBreadth.state}
           </span>
           <span className={chipBase}>Confirms: {score}/3</span>
+          {dataFreshness && (
+            <span
+              className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium border ${lagBadgeClass(lagTradingDays)}`}
+              title={lagTradingDays === 0 ? `All inputs aligned as of ${dataFreshness.maxLastDate}` : `Held back by: ${laggingList.join(', ')}`}
+            >
+              {lagTradingDays === 0
+                ? `Fresh as of ${dataFreshness.maxLastDate}`
+                : lagTradingDays === 1
+                  ? '1-day lag'
+                  : `Data lag: ${lagTradingDays}d`}
+            </span>
+          )}
         </div>
         <span className="text-xs text-slate-500">asOf: {data.asOf}</span>
       </div>
+
+      {/* Lag sentence when lag exists */}
+      {lagTradingDays > 0 && dataFreshness && (
+        <p className="text-sm text-amber-200/90">
+          {laggingList.length === 1
+            ? `${laggingList[0]} is still on ${dataFreshness.minLastDate} while the other inputs are on ${dataFreshness.maxLastDate}. This panel is lagging by ${lagTradingDays} trading day${lagTradingDays === 1 ? '' : 's'}.`
+            : `One or more inputs are still on ${dataFreshness.minLastDate} while others are on ${dataFreshness.maxLastDate}. Held back by: ${laggingList.length <= 3 ? laggingList.join(', ') : laggingList.slice(0, 3).join(', ') + ` +${laggingList.length - 3} more`}.`}
+          {' '}This call is held back by lagging input data, not by the model itself.
+        </p>
+      )}
 
       {/* Verdict one-liner */}
       <p className="text-sm text-slate-300">{getVerdict(label, signals)}</p>
@@ -377,7 +415,7 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
           <span className="text-slate-500">Data freshness:</span>
           {dataFreshness && (
             <>
-              {isAligned ? (
+              {lagTradingDays === 0 ? (
                 <span
                   className={chipBase}
                   title={inputsLast ? ['BNO', 'USO', 'GLD', 'SPY', 'TIP', 'UUP']
@@ -389,26 +427,19 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
               ) : (
                 <>
                   <span className={chipBase}>
-                    min: {dataFreshness.minLastDate} · max: {dataFreshness.maxLastDate}
+                    Stale: {dataFreshness.minLastDate} → {dataFreshness.maxLastDate} ({lagTradingDays}d gap)
                   </span>
-                  <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs bg-amber-900/40 border border-amber-700/50 text-amber-200">
-                    ⚠ Lag {dataFreshness.lagTradingDays}d
+                  <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium border border-amber-700/60 bg-amber-900/40 text-amber-200">
+                    ⚠ {lagTradingDays}d lag
                   </span>
                   {laggingList.length > 0 && (
-                    <span className={chipBase} title="Tickers holding data back">
-                      Lagging: {laggingList.length <= 5 ? laggingList.join(', ') : laggingList.slice(0, 5).join(', ') + ` +${laggingList.length - 5}`}
+                    <span className={chipBase} title="Tickers at minLastDate holding the artifact back">
+                      Held back by: {laggingList.length <= 3 ? laggingList.join(', ') : laggingList.slice(0, 3).join(', ') + ` +${laggingList.length - 3} more`}
                     </span>
                   )}
                 </>
               )}
             </>
-          )}
-          {inputsLast && !isAligned && (
-            <span className={chipBase} title="Per-ticker last EOD date">
-              {['BNO', 'USO', 'GLD', 'SPY', 'TIP', 'UUP']
-                .map((s) => `${s}=${inputsLast[s as keyof typeof inputsLast] ?? '?'}`)
-                .join(' ')}
-            </span>
           )}
         </div>
       )}
@@ -430,6 +461,9 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
               <p key={i}>{n}</p>
             ))}
           </div>
+        )}
+        {explainBullets.lagLine && (
+          <p className="text-xs text-amber-200/80 mb-3">{explainBullets.lagLine}</p>
         )}
         <button
           type="button"

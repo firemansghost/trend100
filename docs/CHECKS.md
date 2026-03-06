@@ -140,7 +140,8 @@ git clean -fd public data/marketstack/eod
   - nPairs = nAssets*(nAssets-1)/2 when shockRaw is non-null
   - At least one non-null shockRaw; at least one non-null shockZ (if enough history)
   - Warns on high nulls (minAssets/windows)
-- **Gas/Coal confirms (War Lie Detector):** Optional `energyComplex` in `plumbing.war_lie_detector.json` adds secondary signals: Gas Stress (UNG) and Coal Bid (KOL). These are **not** part of the label/score logic. Interpret as: Gas ON = nat gas proxy stressed (z30≥1 or roc3≥5%); Coal ON = coal proxy bid (z30≥1 or roc3≥3%). If both Gas + Gold confirm OFF in REAL_RISK, risk is narrowing back to oil-only stress. Stooq spot check: UNG https://stooq.com/q/d/l/?s=ung.us&i=d, KOL https://stooq.com/q/d/l/?s=kol.us&i=d.
+- **Gas/Coal confirms (War Lie Detector):** Optional `energyComplex` in `plumbing.war_lie_detector.json` adds secondary signals: Gas Stress (UNG) and Coal Bid (COAL). Coal uses COAL (Range Global Coal Index ETF), not KOL. These are **not** part of the label/score logic. Interpret as: Gas ON = nat gas proxy stressed (z30≥1 or roc3≥5%); Coal ON = coal proxy bid (z30≥1 or roc3≥3%). If both Gas + Gold confirm OFF in REAL_RISK, risk is narrowing back to oil-only stress. Stooq spot check: UNG https://stooq.com/q/d/l/?s=ung.us&i=d, COAL https://stooq.com/q/d/l/?s=coal.us&i=d.
+- **Energy Breadth (War Lie Detector):** Optional `energyBreadth` answers "Is stress narrow, broadening, or fading?" — **NARROW** = oil-only stress; **BROADENING** = oil + gas/coal active; **FULL_STRESS** = oil + gas/coal + gold confirm; **EASING** = secondary confirms fading.
 - **Plumbing War Lie Detector:** Validates `public/plumbing.war_lie_detector.json`:
   - File exists, valid JSON
   - `asOf` within 10 calendar days (weekends/holidays can delay updates)
@@ -151,7 +152,8 @@ git clean -fd public data/marketstack/eod
   - `labelHistory` (if present): non-empty, sorted ascending by date
   - `inputsLast` (if present): keys BNO, USO, GLD, SPY, TIP, UUP with YYYY-MM-DD values
   - `dataFreshness` (if present): lagTradingDays finite >= 0, laggingTickers string[]
-  - `energyComplex` (if present): natGas/coal objects with ticker (UNG/KOL), asOf YYYY-MM-DD, roc3/z30 finite numbers, active boolean
+  - `energyComplex` (if present): natGas/coal objects with ticker (UNG/COAL), asOf YYYY-MM-DD, roc3/z30 finite numbers, active boolean
+  - `energyBreadth` (if present): state in [NARROW,BROADENING,FULL_STRESS,EASING], reason non-empty string
   - **Data freshness:** UI shows per-ticker last dates, min/max, lagging tickers. If a ticker lags (e.g. BNO stuck at older date), run `pnpm -s update:snapshots` first; BNO may need Marketstack fallback (EOD_STOOQ_FORCE_FALLBACK).
   - Run locally: `pnpm -s update:plumbing-war-lie-detector`
   - Verify: `pnpm -s verify:artifacts`

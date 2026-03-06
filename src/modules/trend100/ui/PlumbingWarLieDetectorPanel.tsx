@@ -54,13 +54,20 @@ function getWhatToWatchNext(
   goldConfirm: boolean,
   gasActive?: boolean,
   coalActive?: boolean,
-  trajectoryState?: 'ESCALATING' | 'HOLDING' | 'EASING'
+  trajectoryState?: 'ESCALATING' | 'HOLDING' | 'EASING',
+  energyBreadthState?: 'NARROW' | 'BROADENING' | 'FULL_STRESS' | 'EASING'
 ): string[] {
   const bullets: string[] = [];
   if (trajectoryState) {
     if (trajectoryState === 'ESCALATING') bullets.push('Escalation is broadening; watch for confirmation to persist.');
     else if (trajectoryState === 'HOLDING') bullets.push('Stress is present, but not clearly broadening yet.');
     else bullets.push('Pressure is cooling unless confirms reappear.');
+  }
+  if (energyBreadthState) {
+    if (energyBreadthState === 'NARROW') bullets.push('If gas or coal turns ON → stress is broadening beyond oil.');
+    else if (energyBreadthState === 'BROADENING') bullets.push('If Gold Confirm flips ON → broadening may become full macro stress.');
+    else if (energyBreadthState === 'FULL_STRESS') bullets.push('If gas/coal and gold stay ON together → this remains a broad energy shock.');
+    else bullets.push('If oil re-accelerates and gas turns ON again → easing may fail.');
   }
   if (label === 'WATCH') {
     if (z30 >= 2 && !goldConfirm) {
@@ -81,7 +88,7 @@ function getWhatToWatchNext(
   } else {
     bullets.push('If Oil Stress reaches Watch (z30 ≥ 1) → WATCH', 'If Gold Confirm flips ON → WATCH (and watch for REAL_RISK)');
   }
-  return bullets.slice(0, 4);
+  return bullets.slice(0, 5);
 }
 
 /** Plain-English verdict one-liner. */
@@ -136,6 +143,45 @@ function trajectoryChipClass(state: 'ESCALATING' | 'HOLDING' | 'EASING'): string
   }
 }
 
+/** Compute energy breadth when artifact lacks it (backwards compat). */
+function getEnergyBreadth(data: PlumbingWarLieDetector): NonNullable<PlumbingWarLieDetector['energyBreadth']> {
+  if (data.energyBreadth) return data.energyBreadth;
+  const oilStress = data.latest.spread_z30 >= 1;
+  const gasActive = data.energyComplex?.natGas?.active === true;
+  const coalActive = data.energyComplex?.coal?.active === true;
+  const gasOrCoalActive = gasActive || coalActive;
+  const phase = data.trajectory?.phase ?? getPhase(data.latest.spread_roc3);
+  const oilEasing = phase === 'EASING' || phase === 'FLAT';
+  if (oilEasing && !gasOrCoalActive && !data.signals.goldConfirm) {
+    return { state: 'EASING', reason: 'Secondary confirms are fading and stress looks less broad.' };
+  }
+  if (oilStress && data.signals.goldConfirm && gasOrCoalActive) {
+    return { state: 'FULL_STRESS', reason: 'Oil, macro fear, and wider energy stress are all confirming.' };
+  }
+  if (oilStress && gasOrCoalActive) {
+    return { state: 'BROADENING', reason: 'Stress is spreading beyond crude into the wider energy complex.' };
+  }
+  if (oilStress && !gasOrCoalActive && !data.signals.goldConfirm) {
+    return { state: 'NARROW', reason: 'Stress is still mostly confined to oil.' };
+  }
+  return { state: oilStress ? 'BROADENING' : 'NARROW', reason: oilStress ? 'Stress is present, but confirms are mixed.' : 'Stress is still mostly confined to oil.' };
+}
+
+function energyBreadthChipClass(state: 'NARROW' | 'BROADENING' | 'FULL_STRESS' | 'EASING'): string {
+  switch (state) {
+    case 'NARROW':
+      return 'bg-slate-700/60 border-slate-600 text-slate-200';
+    case 'BROADENING':
+      return 'bg-amber-900/40 border-amber-700/60 text-amber-200';
+    case 'FULL_STRESS':
+      return 'bg-red-900/40 border-red-700/60 text-red-200';
+    case 'EASING':
+      return 'bg-emerald-900/40 border-emerald-700/60 text-emerald-200';
+    default:
+      return 'bg-zinc-800 border-zinc-700 text-slate-300';
+  }
+}
+
 function labelBadgeClass(label: PlumbingWarLieDetector['label']): string {
   switch (label) {
     case 'THEATER':
@@ -153,6 +199,7 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
   const { latest, signals, label, score, history, labelHistory, inputsLast, dataFreshness } = data;
   const [explainOpen, setExplainOpen] = useState(false);
   const trajectory = useMemo(() => getTrajectory(data), [data]);
+  const energyBreadth = useMemo(() => getEnergyBreadth(data), [data]);
 
   const regimeBands = useMemo(
     () => (labelHistory && labelHistory.length > 0 ? buildRegimeBands(labelHistory) : []),
@@ -191,6 +238,12 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
           >
             {trajectory.state}
           </span>
+          <span
+            className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium border ${energyBreadthChipClass(energyBreadth.state)}`}
+            title={energyBreadth.reason}
+          >
+            Energy: {energyBreadth.state}
+          </span>
           <span className={chipBase}>Score: {score}/3</span>
         </div>
         <span className="text-xs text-slate-500">asOf: {data.asOf}</span>
@@ -199,8 +252,9 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
       {/* Verdict one-liner */}
       <p className="text-sm text-slate-300">{getVerdict(label, signals)}</p>
 
-      {/* Trajectory reason (plain-English helper) */}
+      {/* Trajectory + Energy Breadth reasons (plain-English helpers) */}
       <p className="text-sm text-slate-400">{trajectory.reason}</p>
+      <p className="text-sm text-slate-500">{energyBreadth.reason}</p>
 
       {/* What to watch next */}
       <div className="rounded border border-zinc-800 bg-zinc-900/30 px-3 py-2">
@@ -212,7 +266,8 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             signals.goldConfirm,
             data.energyComplex?.natGas?.active,
             data.energyComplex?.coal?.active,
-            trajectory.state
+            trajectory.state,
+            energyBreadth.state
           ).map((bullet, i) => (
             <li key={i}>{bullet}</li>
           ))}
@@ -252,11 +307,11 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         </div>
         {data.energyComplex?.coal != null && (
           <div className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]">
-            <p className="text-xs font-medium text-slate-400 mb-1">Coal Bid (KOL)</p>
+            <p className="text-xs font-medium text-slate-400 mb-1">Coal Bid (COAL)</p>
             <p className="text-sm text-slate-200">
               {data.energyComplex.coal.active ? 'ON' : 'OFF'}
             </p>
-            <p className="text-xs text-slate-500 mt-0.5" title={`roc3: ${data.energyComplex.coal.roc3}%, z30: ${data.energyComplex.coal.z30}`}>
+            <p className="text-xs text-slate-500 mt-0.5" title={`COAL: roc3 ${data.energyComplex.coal.roc3}%, z30 ${data.energyComplex.coal.z30}, ${data.energyComplex.coal.active ? 'active' : 'off'}`}>
               roc3: {data.energyComplex.coal.roc3}%, z30: {data.energyComplex.coal.z30}
             </p>
           </div>

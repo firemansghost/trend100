@@ -4,6 +4,8 @@ on:
   schedule:
     # Mon–Fri 22:15 UTC (after US market close)
     - cron: "15 22 * * 1-5"
+    # Mon–Fri 01:15 UTC (top-off to catch lagging EOD inputs)
+    - cron: "15 1 * * 1-5"
   workflow_dispatch:
 
 jobs:
@@ -13,6 +15,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Artifacts scheduled run start
+        run: echo "Artifacts scheduled run starting (UTC: $(date -u '+%Y-%m-%d %H:%M:%S'))"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

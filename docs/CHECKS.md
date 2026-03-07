@@ -86,7 +86,7 @@ git status
 - **Stooq routing in CI:** Workflows read `EOD_STOOQ_DECKS`, `EOD_STOOQ_FORCE_FALLBACK`, `EOD_STOOQ_SYMBOL_OVERRIDES` from GitHub Actions Variables. Recommended: `EOD_STOOQ_DECKS=METALS_MINING,PLUMBING,US_SECTORS,US_FACTORS,GLOBAL_EQUITIES` and `EOD_STOOQ_FORCE_FALLBACK=BNO,FBTC,FETH,SRUUF`. Expected log: `Provider routing: Stooq-first for N symbols (decks: ...), Marketstack direct: K` and `Stooq OK: X | Forced fallback: Y | Stooq failed → Marketstack fallback: Z`
 - **Strict asOfDate in CI:** Workflows pass `SNAPSHOT_STRICT_ASOF_DECKS` from GitHub Actions Variables. When set (e.g. `US_SECTORS,US_FACTORS,GLOBAL_EQUITIES,METALS_MINING,PLUMBING`), those decks use min(lastDate) as asOfDate so snapshots don't appear fresher than the stalest ticker.
 - **Turbulence gates:** Fetched from Stooq (SPX + VIX EOD); no API key required
-- **Daily deploy:** `daily-artifacts-deploy.yml` runs Mon–Fri 22:15 UTC; must pass update:snapshots + verify:artifacts before deploying
+- **Daily deploy:** `daily-artifacts-deploy.yml` runs twice on weekdays: 22:15 UTC (primary) and 01:15 UTC (top-off). The top-off pass catches lagging EOD inputs (e.g. BNO in War Lie Detector) that may not have printed the latest close by the first run. Both runs must pass update:snapshots + verify:artifacts before deploying.
 - **Production smoke checks:** After deploy, key artifact endpoints should return 200:
   - https://trend100.vercel.app/snapshot.MACRO.json
   - https://trend100.vercel.app/health-history.MACRO.json

@@ -17,7 +17,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Artifacts scheduled run start
-        run: echo "Artifacts scheduled run starting (UTC: $(date -u '+%Y-%m-%d %H:%M:%S'))"
+        run: |
+          echo "Artifacts scheduled run starting (UTC: $(date -u '+%Y-%m-%d %H:%M:%S'))"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

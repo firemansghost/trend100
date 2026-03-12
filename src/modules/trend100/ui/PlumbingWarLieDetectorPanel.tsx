@@ -17,6 +17,31 @@ interface PlumbingWarLieDetectorPanelProps {
 
 const chipBase = 'inline-flex items-center rounded-md px-2 py-0.5 text-xs bg-zinc-900/60 border border-zinc-800 text-slate-300';
 
+/** Map artifact label to public-facing display. THEATER → CONTAINED per v2 spec. */
+function displayRegime(label: PlumbingWarLieDetector['label']): string {
+  return label === 'THEATER' ? 'CONTAINED' : label;
+}
+
+/** Bucket state for display. Use artifact.bucketState when present, else derive from artifact. */
+function getBucketStateForDisplay(data: PlumbingWarLieDetector): {
+  physicalPlumbing: 'low' | 'watch' | 'strong';
+  substitutionActive: boolean;
+  macroConfirm: boolean;
+} {
+  if (data.bucketState) return data.bucketState;
+  const z30 = data.latest.spread_z30;
+  const physicalPlumbing: 'low' | 'watch' | 'strong' =
+    !Number.isFinite(z30) || z30 < 1 ? 'low' : z30 >= 2 ? 'strong' : 'watch';
+  const substitutionActive =
+    data.energyComplex?.natGas?.active === true || data.energyComplex?.coal?.active === true;
+  return { physicalPlumbing, substitutionActive, macroConfirm: data.signals.goldConfirm };
+}
+
+/** Human-readable bucket labels for UI. */
+function bucketPlumbingLabel(p: 'low' | 'watch' | 'strong'): string {
+  return p === 'low' ? 'contained' : p === 'watch' ? 'watch' : 'stressed';
+}
+
 /** Canonical panel state — single source of truth for all plain-English text. */
 interface PanelState {
   label: PlumbingWarLieDetector['label'];
@@ -89,12 +114,10 @@ function buildRegimeBands(labelHistory: Array<{ date: string; label: string }>):
 
 const ONBOARDING_LINE = 'This dashboard checks whether war-related energy stress is real, broadening, or fading.';
 
-const CONFIRMS_EXPLANATION = 'Confirms (X/3) = oil stress + gold. Coal is a secondary signal, not part of the headline.';
-
 /** Plain-English current read — must match chips and signal cards. */
 function getCurrentRead(s: PanelState): string {
   if (s.label === 'THEATER') {
-    return 'No broad war-energy stress right now. Oil stress has cooled and confirms are quiet.';
+    return 'Conditions are contained. Stress is still mostly localized; plumbing and substitution are quiet.';
   }
   if (s.label === 'REAL_RISK') {
     if (s.gasOrCoalActive && s.goldConfirm) {
@@ -125,33 +148,33 @@ function getWhatToWatchNext(s: PanelState): string[] {
   if (s.trajectoryState === 'ESCALATING') bullets.push('Escalation is broadening; watch for confirmation to persist.');
   else if (s.trajectoryState === 'HOLDING') bullets.push('Stress is present, but not clearly broadening yet.');
   else if (s.trajectoryState === 'EASING') bullets.push('Pressure is cooling unless confirms reappear.');
-  if (s.energyBreadthState === 'NARROW') bullets.push('If gas or coal turns ON → stress is broadening beyond oil.');
+  if (s.energyBreadthState === 'NARROW') bullets.push('If substitution (gas or coal) turns on → stress broadening.');
   else if (s.energyBreadthState === 'BROADENING') bullets.push('If Gold Confirm flips ON → broadening may become full stress.');
   else if (s.energyBreadthState === 'FULL_STRESS') bullets.push('If gas/coal and gold stay ON together → broad stress remains in place.');
   if (s.label === 'WATCH') {
     if (s.oilActive && !s.goldConfirm) {
-      bullets.push('If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift');
+      bullets.push('If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift to CONTAINED');
     } else if (s.goldConfirm && !s.oilActive) {
-      bullets.push('If Oil Stress reaches Active (z30 ≥ 2) → likely REAL_RISK', 'If Gold Confirm turns OFF → likely THEATER/WATCH');
+      bullets.push('If plumbing stress rises above Watch → likely REAL_RISK', 'If Gold Confirm turns OFF → likely CONTAINED/WATCH');
     } else {
-      bullets.push('If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift');
+      bullets.push('If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift to CONTAINED');
     }
     if (!s.gasActive) bullets.push('If Gas Stress turns ON → energy supply crunch broadening');
   } else if (s.label === 'REAL_RISK') {
     bullets.push('If Gold Confirm stays ON and Phase stays RISING → escalation', 'If Gold Confirm turns OFF → likely downshift to WATCH');
     if (!s.goldConfirm && !s.gasActive) bullets.push('Both Gas + Gold confirm OFF → risk narrowing back to oil-only stress');
   } else {
-    bullets.push('If Oil Stress reaches Watch (z30 ≥ 1) → WATCH', 'If Gold Confirm flips ON → WATCH (and watch for REAL_RISK)');
+    bullets.push('If plumbing stress rises above Watch → WATCH', 'If Gold Confirm flips ON → WATCH (and watch for REAL_RISK)');
   }
   return bullets.slice(0, 5);
 }
 
 /** Plain-English verdict one-liner. */
 function getVerdict(s: PanelState): string {
-  if (s.label === 'REAL_RISK') return 'Oil spread stress + gold confirmation → REAL_RISK.';
-  if (s.label === 'THEATER') return 'No spread stress + no gold confirmation → THEATER.';
-  if (s.oilActive && !s.goldConfirm) return 'Oil spread is stressed, but gold isn\'t confirming → WATCH.';
-  if (s.goldConfirm && !s.oilActive) return 'Gold confirming, but oil spread not stressed → WATCH.';
+  if (s.label === 'REAL_RISK') return 'Plumbing strong + (substitution or macro) confirming → REAL_RISK.';
+  if (s.label === 'THEATER') return 'Plumbing stress is low; substitution and macro are quiet → CONTAINED.';
+  if (s.oilActive && !s.goldConfirm) return 'Plumbing stress rising, but substitution and macro quiet → WATCH.';
+  if (s.goldConfirm && !s.oilActive) return 'Macro confirming, but plumbing not yet stressed → WATCH.';
   return 'Mixed signals → WATCH.';
 }
 
@@ -251,11 +274,11 @@ function getExplainBullets(data: PlumbingWarLieDetector, s: PanelState): {
 
   if (s.label === 'THEATER') {
     bullets.push('Bottom line: Oil stress has cooled and is no longer spreading across the wider energy complex.');
-    bullets.push(`Why this is THEATER: Gold is not confirming, and ${gasCoalPhrase(s)}.`);
+    bullets.push(`Why this is CONTAINED: Plumbing stress is low; substitution and macro are quiet.`);
     bullets.push(`Why this is ${trajectory.state}: The recent oil move is ${s.phase === 'EASING' ? 'negative' : s.phase === 'FLAT' ? 'flat' : 'positive'} and oil stress is back below Watch.`);
-    bullets.push('What would flip this back up: Oil stress rising above Watch again, especially if gas or gold turns on.');
-    notLines.push('Not WATCH because: oil stress is below the Watch threshold.');
-    notLines.push('Not REAL_RISK because: gold is off and the broader energy confirms are quiet.');
+    bullets.push('What would flip this back up: Plumbing stress rising above Watch again, especially if substitution or macro turns on.');
+    notLines.push('Not WATCH because: plumbing stress is below the Watch threshold.');
+    notLines.push('Not REAL_RISK because: plumbing not strong enough, or substitution and macro are quiet.');
   } else if (s.label === 'WATCH') {
     if (s.oilActive && !s.goldConfirm) {
       bullets.push('Bottom line: Oil stress is still present, but the move is not clearly broadening.');
@@ -266,9 +289,9 @@ function getExplainBullets(data: PlumbingWarLieDetector, s: PanelState): {
     } else if (s.goldConfirm && !s.oilActive) {
       bullets.push('Bottom line: Gold is confirming, but oil stress is not yet at Active.');
       bullets.push('Why this is not worse: The move is still mostly confined to oil.');
-      bullets.push('What would make it worse: If oil stress reaches Active (z30 ≥ 2), this likely moves toward REAL_RISK.');
-      bullets.push('What confirms fading: If Gold Confirm turns off, this likely downshifts to THEATER.');
-      notLines.push('Not REAL_RISK because: oil stress is below Active.');
+      bullets.push('What would make it worse: If plumbing stress reaches Active (z30 ≥ 2), this likely moves toward REAL_RISK.');
+      bullets.push('What confirms fading: If Gold Confirm turns off, this likely downshifts to CONTAINED.');
+      notLines.push('Not REAL_RISK because: plumbing stress is below Active.');
     } else {
       bullets.push('Bottom line: Oil stress is present, but confirms are mixed.');
       bullets.push('Why this is not worse: Secondary confirms are limited.');
@@ -277,11 +300,11 @@ function getExplainBullets(data: PlumbingWarLieDetector, s: PanelState): {
       notLines.push('Not REAL_RISK because: gold is off or oil stress is not at Active.');
     }
   } else {
-    bullets.push('Bottom line: Oil, gold, and the energy complex are confirming together.');
-    bullets.push(s.gasOrCoalActive ? 'Why this is FULL_STRESS: Stress is broad across oil, macro, and the energy complex (gas/coal active).' : 'Why this is FULL_STRESS: Stress is broad across oil and macro fear.');
-    bullets.push(s.gasOrCoalActive ? 'What would make it worse: If gas/coal and gold stay on together, broad stress remains in place.' : 'What would make it worse: If gas or coal turns on, stress is broadening beyond oil.');
+    bullets.push('Bottom line: Plumbing strong; substitution or macro confirming.');
+    bullets.push(s.gasOrCoalActive ? 'Why this is REAL_RISK: Plumbing strong + substitution active and/or macro confirming.' : 'Why this is REAL_RISK: Plumbing strong + macro confirming.');
+    bullets.push(s.gasOrCoalActive ? 'What would make it worse: If gas/coal and gold stay on together, broad stress remains in place.' : 'What would make it worse: If substitution turns on, stress is broadening beyond oil.');
     bullets.push('What confirms fading: If Gold Confirm turns off, this likely downshifts to WATCH.');
-    notLines.push('Not WATCH because: oil stress is Active and gold is confirming.');
+    notLines.push('Not WATCH because: plumbing is Active and gold is confirming.');
   }
 
   return { bullets, notLines, lagLine };
@@ -307,8 +330,9 @@ function lagBadgeClass(lagTradingDays: number): string {
   return 'bg-red-900/40 border-red-700/60 text-red-200';
 }
 
-function labelBadgeClass(label: PlumbingWarLieDetector['label']): string {
-  switch (label) {
+function labelBadgeClass(displayLabel: string): string {
+  switch (displayLabel) {
+    case 'CONTAINED':
     case 'THEATER':
       return 'bg-slate-700/60 border-slate-600 text-slate-200';
     case 'WATCH':
@@ -360,9 +384,9 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         <div className="flex items-center gap-2">
           <span className="font-medium text-slate-300 text-xs">Plumbing:</span>
           <span
-            className={`inline-flex items-center rounded-md px-3 py-1 text-sm font-medium border ${labelBadgeClass(label)}`}
+            className={`inline-flex items-center rounded-md px-3 py-1 text-sm font-medium border ${labelBadgeClass(displayRegime(label))}`}
           >
-            {label}
+            {displayRegime(label)}
           </span>
           <span
             className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium border ${trajectoryChipClass(trajectory.state)}`}
@@ -376,7 +400,6 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
           >
             Energy: {energyBreadth.state}
           </span>
-          <span className={chipBase} title={CONFIRMS_EXPLANATION}>Confirms: {score}/3</span>
           {dataFreshness && (
             <span
               className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium border ${lagBadgeClass(lagTradingDays)}`}
@@ -393,11 +416,23 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         <span className="text-xs text-slate-500">asOf: {data.asOf}</span>
       </div>
 
+      {/* Bucket chips row */}
+      {(() => {
+        const bucket = getBucketStateForDisplay(data);
+        const macroLabel = bucket.macroConfirm ? 'confirming' : 'quiet';
+        return (
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className={chipBase}>Plumbing: {bucketPlumbingLabel(bucket.physicalPlumbing)}</span>
+            <span className={chipBase}>Substitution: {bucket.substitutionActive ? 'active' : 'inactive'}</span>
+            <span className={chipBase}>Macro: {macroLabel}</span>
+          </div>
+        );
+      })()}
+
       {/* Short explanation: verdict + trajectory + energy */}
       <p className="text-sm text-slate-300">{getVerdict(panelState)}</p>
       <p className="text-sm text-slate-400">{trajectory.reason}</p>
       <p className="text-sm text-slate-500">{energyBreadth.reason}</p>
-      <p className="text-xs text-slate-500 italic">{CONFIRMS_EXPLANATION}</p>
 
       {/* Lag sentence when lag exists */}
       {lagTradingDays > 0 && dataFreshness && (
@@ -548,8 +583,16 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
               <strong>Coal stress</strong>: {data.energyComplex?.coal == null ? 'N/A' : data.energyComplex.coal.active ? 'ON' : 'OFF'}
             </li>
             <li>
-              <strong>Confirms</strong>: {score}/3 (max: +2 z30≥2, +1 z30≥1, +1 goldConfirm)
+              <strong>Legacy score</strong>: {score}/3 (oil + gold; regime is bucket-based)
             </li>
+            {(() => {
+              const bucket = getBucketStateForDisplay(data);
+              return (
+                <li>
+                  <strong>Bucket state</strong>: plumbing={bucket.physicalPlumbing}, substitution={bucket.substitutionActive ? 'active' : 'inactive'}, macro={bucket.macroConfirm ? 'confirming' : 'quiet'}
+                </li>
+              );
+            })()}
           </ul>
         )}
       </div>
@@ -559,7 +602,7 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         <p className="text-xs text-slate-400 mb-2">
           Oil dislocation (Brent vs WTI proxies)
           {regimeBands.length > 0 && (
-            <span className="ml-2 text-slate-500">· Bands: THEATER (slate) / WATCH (amber) / REAL_RISK (red)</span>
+            <span className="ml-2 text-slate-500">· Bands: CONTAINED (slate) / WATCH (amber) / REAL_RISK (red)</span>
           )}
         </p>
         <PlumbingSimpleChart

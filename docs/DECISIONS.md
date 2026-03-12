@@ -19,6 +19,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-03 — (UI) War Lie Detector v2 bucket alignment (PR26)
+**Choice:** UI now displays CONTAINED instead of THEATER (artifact label unchanged). Bucket chips (Plumbing / Substitution / Macro) shown from `artifact.bucketState` when present, else derived from z30/energyComplex/goldConfirm. Confirms X/3 moved to technical details as "Legacy score: X/3 (oil + gold; regime is bucket-based)". Chart legend and all copy use bucket framing (plumbing-first, substitution, macro).
+
+**Why:** Align UI with v2 bucket model; avoid confusing users with THEATER vs CONTAINED; surface bucket state for transparency.
+
+---
+
 ### 2026-02 — (Data/Ops) Plumbing War Lie Detector artifact (geopolitical plumbing)
 **Choice:** Added `public/plumbing.war_lie_detector.json` artifact that answers whether physical markets support the political narrative (real shipping/war risk) or are mostly "theater." Uses proxy tickers: BNO (Brent), USO (WTI), GLD (gold), SPY (risk), TIP (TIPS), UUP (dollar). Core metric for z-score and ROC: BNO/USO ratio (more stable than level spread); spread (BNO−USO) kept for display. Label logic: THEATER (z30 < 1 and !goldConfirm), WATCH (z30 ≥ 1 or goldConfirm), REAL_RISK (z30 ≥ 2 and goldConfirm). Score: +2 if z30 ≥ 2, +1 if z30 ≥ 1, +1 if goldConfirm (max 3). Artifacts are generated in CI (workflows/build); never committed. Run `pnpm -s update:plumbing-war-lie-detector` locally; verify with `pnpm -s verify:artifacts`.
 

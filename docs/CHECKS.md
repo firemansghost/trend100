@@ -96,7 +96,7 @@ git status
 
 ### PLUMBING smoke checks (PowerShell)
 
-PLUMBING deck (deck ID PLUMBING; UI label "War Lie Detector"). After deploy, run these to verify PLUMBING endpoints:
+PLUMBING deck (deck ID PLUMBING; UI label "War Lie Detector"). Conceptual model (v2 3-bucket framework, THEATER→CONTAINED) is documented in [WAR_LIE_DETECTOR_V2.md](WAR_LIE_DETECTOR_V2.md). After deploy, run these to verify PLUMBING endpoints:
 
 ```powershell
 # plumbing.war_lie_detector.json (asOf, label, score)

@@ -2,6 +2,7 @@
  * PlumbingWarLieDetectorPanel — War Lie Detector (Truth in the Pipes) panel
  *
  * Shows status badge, checklist (spread z30, ROC3, GoldConfirm), and charts.
+ * All user-facing text is derived from a single shared panel state to avoid contradictions.
  */
 
 'use client';
@@ -15,6 +16,45 @@ interface PlumbingWarLieDetectorPanelProps {
 }
 
 const chipBase = 'inline-flex items-center rounded-md px-2 py-0.5 text-xs bg-zinc-900/60 border border-zinc-800 text-slate-300';
+
+/** Canonical panel state — single source of truth for all plain-English text. */
+interface PanelState {
+  label: PlumbingWarLieDetector['label'];
+  oilStress: boolean;
+  oilActive: boolean;
+  gasActive: boolean;
+  coalActive: boolean;
+  coalAvailable: boolean;
+  gasOrCoalActive: boolean;
+  goldConfirm: boolean;
+  trajectoryState: 'ESCALATING' | 'HOLDING' | 'EASING';
+  energyBreadthState: 'NARROW' | 'BROADENING' | 'FULL_STRESS';
+  phase: 'RISING' | 'EASING' | 'FLAT';
+}
+
+function getPanelState(data: PlumbingWarLieDetector): PanelState {
+  const oilStress = data.latest.spread_z30 >= 1;
+  const oilActive = data.latest.spread_z30 >= 2;
+  const gasActive = data.energyComplex?.natGas?.active === true;
+  const coalActive = data.energyComplex?.coal?.active === true;
+  const coalAvailable = data.energyComplex?.coal != null;
+  const gasOrCoalActive = gasActive || coalActive;
+  const trajectory = getTrajectory(data);
+  const energyBreadth = getEnergyBreadth(data);
+  return {
+    label: data.label,
+    oilStress,
+    oilActive,
+    gasActive,
+    coalActive,
+    coalAvailable,
+    gasOrCoalActive,
+    goldConfirm: data.signals.goldConfirm,
+    trajectoryState: trajectory.state,
+    energyBreadthState: energyBreadth.state,
+    phase: trajectory.phase,
+  };
+}
 
 const LABEL_FILL: Record<string, string> = {
   THEATER: '#64748b',
@@ -47,43 +87,59 @@ function buildRegimeBands(labelHistory: Array<{ date: string; label: string }>):
   return bands;
 }
 
-/** "What to watch next" bullets based on label/signal state. */
-function getWhatToWatchNext(
-  label: PlumbingWarLieDetector['label'],
-  z30: number,
-  goldConfirm: boolean,
-  gasActive?: boolean,
-  coalActive?: boolean,
-  trajectoryState?: 'ESCALATING' | 'HOLDING' | 'EASING',
-  energyBreadthState?: 'NARROW' | 'BROADENING' | 'FULL_STRESS'
-): string[] {
+const ONBOARDING_LINE = 'This dashboard checks whether war-related energy stress is real, broadening, or fading.';
+
+const CONFIRMS_EXPLANATION = 'Confirms (X/3) = oil stress + gold. Coal is a secondary signal, not part of the headline.';
+
+/** Plain-English current read — must match chips and signal cards. */
+function getCurrentRead(s: PanelState): string {
+  if (s.label === 'THEATER') {
+    return 'No broad war-energy stress right now. Oil stress has cooled and confirms are quiet.';
+  }
+  if (s.label === 'REAL_RISK') {
+    if (s.gasOrCoalActive && s.goldConfirm) {
+      return 'Stress is broadening beyond oil. Oil, gold, and the wider energy complex are confirming together.';
+    }
+    return 'Stress is broadening beyond oil. Oil and gold are confirming; watch for gas or coal to join.';
+  }
+  if (s.label === 'WATCH') {
+    if (s.oilActive && !s.goldConfirm) {
+      const quiet = s.gasOrCoalActive ? 'secondary signals are active' : 'gold and gas/coal are quiet';
+      return `Stress is building, but not yet broadly confirmed. Oil is active; ${quiet}.`;
+    }
+    if (s.goldConfirm && !s.oilActive) {
+      return 'Gold is confirming, but oil stress is not yet at Active. Stress is still mostly confined to oil.';
+    }
+    if (s.gasOrCoalActive) {
+      const which = s.gasActive && s.coalActive ? 'gas and coal' : s.gasActive ? 'gas' : 'coal';
+      return `Stress is broadening beyond oil. Secondary signal (${which}) is active.`;
+    }
+    return 'Stress is building, but not yet broadly confirmed. Mixed signals across oil and confirms.';
+  }
+  return 'Mixed signals → WATCH.';
+}
+
+/** "What to watch next" bullets based on panel state. */
+function getWhatToWatchNext(s: PanelState): string[] {
   const bullets: string[] = [];
-  if (trajectoryState) {
-    if (trajectoryState === 'ESCALATING') bullets.push('Escalation is broadening; watch for confirmation to persist.');
-    else if (trajectoryState === 'HOLDING') bullets.push('Stress is present, but not clearly broadening yet.');
-    else bullets.push('Pressure is cooling unless confirms reappear.');
-  }
-  if (energyBreadthState) {
-    if (energyBreadthState === 'NARROW') bullets.push('If gas or coal turns ON → stress is broadening beyond oil.');
-    else if (energyBreadthState === 'BROADENING') bullets.push('If Gold Confirm flips ON → broadening may become full stress.');
-    else bullets.push('If gas/coal and gold stay ON together → broad stress remains in place.');
-  }
-  if (label === 'WATCH') {
-    if (z30 >= 2 && !goldConfirm) {
+  if (s.trajectoryState === 'ESCALATING') bullets.push('Escalation is broadening; watch for confirmation to persist.');
+  else if (s.trajectoryState === 'HOLDING') bullets.push('Stress is present, but not clearly broadening yet.');
+  else if (s.trajectoryState === 'EASING') bullets.push('Pressure is cooling unless confirms reappear.');
+  if (s.energyBreadthState === 'NARROW') bullets.push('If gas or coal turns ON → stress is broadening beyond oil.');
+  else if (s.energyBreadthState === 'BROADENING') bullets.push('If Gold Confirm flips ON → broadening may become full stress.');
+  else if (s.energyBreadthState === 'FULL_STRESS') bullets.push('If gas/coal and gold stay ON together → broad stress remains in place.');
+  if (s.label === 'WATCH') {
+    if (s.oilActive && !s.goldConfirm) {
       bullets.push('If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift');
-    } else if (goldConfirm && z30 < 2) {
+    } else if (s.goldConfirm && !s.oilActive) {
       bullets.push('If Oil Stress reaches Active (z30 ≥ 2) → likely REAL_RISK', 'If Gold Confirm turns OFF → likely THEATER/WATCH');
     } else {
       bullets.push('If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift');
     }
-    if (gasActive === false) {
-      bullets.push('If Gas Stress turns ON → energy supply crunch broadening');
-    }
-  } else if (label === 'REAL_RISK') {
+    if (!s.gasActive) bullets.push('If Gas Stress turns ON → energy supply crunch broadening');
+  } else if (s.label === 'REAL_RISK') {
     bullets.push('If Gold Confirm stays ON and Phase stays RISING → escalation', 'If Gold Confirm turns OFF → likely downshift to WATCH');
-    if (!goldConfirm && (gasActive === false || gasActive === undefined)) {
-      bullets.push('Both Gas + Gold confirm OFF → risk narrowing back to oil-only stress');
-    }
+    if (!s.goldConfirm && !s.gasActive) bullets.push('Both Gas + Gold confirm OFF → risk narrowing back to oil-only stress');
   } else {
     bullets.push('If Oil Stress reaches Watch (z30 ≥ 1) → WATCH', 'If Gold Confirm flips ON → WATCH (and watch for REAL_RISK)');
   }
@@ -91,11 +147,11 @@ function getWhatToWatchNext(
 }
 
 /** Plain-English verdict one-liner. */
-function getVerdict(label: PlumbingWarLieDetector['label'], signals: PlumbingWarLieDetector['signals']): string {
-  if (label === 'REAL_RISK') return 'Oil spread stress + gold confirmation → REAL_RISK.';
-  if (label === 'THEATER') return 'No spread stress + no gold confirmation → THEATER.';
-  if (signals.spreadActive && !signals.goldConfirm) return 'Oil spread is stressed, but gold isn\'t confirming → WATCH.';
-  if (signals.goldConfirm && !signals.spreadActive) return 'Gold confirming, but oil spread not stressed → WATCH.';
+function getVerdict(s: PanelState): string {
+  if (s.label === 'REAL_RISK') return 'Oil spread stress + gold confirmation → REAL_RISK.';
+  if (s.label === 'THEATER') return 'No spread stress + no gold confirmation → THEATER.';
+  if (s.oilActive && !s.goldConfirm) return 'Oil spread is stressed, but gold isn\'t confirming → WATCH.';
+  if (s.goldConfirm && !s.oilActive) return 'Gold confirming, but oil spread not stressed → WATCH.';
   return 'Mixed signals → WATCH.';
 }
 
@@ -106,7 +162,7 @@ function getPhase(roc3: number): 'RISING' | 'EASING' | 'FLAT' {
   return 'FLAT';
 }
 
-/** Compute trajectory when artifact lacks it (backwards compat). */
+/** Compute trajectory when artifact lacks it (backwards compat). Used by getPanelState. */
 function getTrajectory(data: PlumbingWarLieDetector): NonNullable<PlumbingWarLieDetector['trajectory']> {
   if (data.trajectory) return data.trajectory;
   const phase = getPhase(data.latest.spread_roc3);
@@ -166,21 +222,22 @@ function getEnergyBreadth(data: PlumbingWarLieDetector): NonNullable<PlumbingWar
   return { state: oilStress ? 'BROADENING' : 'NARROW', reason: oilStress ? 'Stress is present, but confirms are mixed.' : 'Stress is still mostly confined to oil.' };
 }
 
+/** "Gas and coal" phrase for plain-English — matches actual signal state. */
+function gasCoalPhrase(s: PanelState): string {
+  if (s.gasActive && s.coalActive) return 'gas and coal are on';
+  if (s.gasActive) return 'gas is on';
+  if (s.coalActive) return 'coal is on';
+  if (s.coalAvailable) return 'gas and coal are off';
+  return 'gas is off';
+}
+
 /** Plain-English Explain bullets + "Not X because" lines + optional lag line. */
-function getExplainBullets(data: PlumbingWarLieDetector): {
+function getExplainBullets(data: PlumbingWarLieDetector, s: PanelState): {
   bullets: string[];
   notLines: string[];
   lagLine: string | null;
 } {
-  const { label, latest, signals } = data;
   const trajectory = getTrajectory(data);
-  const phase = getPhase(latest.spread_roc3);
-  const oilStress = latest.spread_z30 >= 1;
-  const oilActive = latest.spread_z30 >= 2;
-  const gasActive = data.energyComplex?.natGas?.active === true;
-  const coalActive = data.energyComplex?.coal?.active === true;
-  const gasOrCoalActive = gasActive || coalActive;
-
   const bullets: string[] = [];
   const notLines: string[] = [];
   const lagTradingDays = data.dataFreshness?.lagTradingDays ?? 0;
@@ -192,21 +249,21 @@ function getExplainBullets(data: PlumbingWarLieDetector): {
         ? 'The model is waiting for the last common date across all required inputs.'
         : null;
 
-  if (label === 'THEATER') {
+  if (s.label === 'THEATER') {
     bullets.push('Bottom line: Oil stress has cooled and is no longer spreading across the wider energy complex.');
-    bullets.push('Why this is THEATER: Gold is not confirming, and both gas and coal are off.');
-    bullets.push(`Why this is ${trajectory.state}: The recent oil move is ${phase === 'EASING' ? 'negative' : phase === 'FLAT' ? 'flat' : 'positive'} and oil stress is back below Watch.`);
+    bullets.push(`Why this is THEATER: Gold is not confirming, and ${gasCoalPhrase(s)}.`);
+    bullets.push(`Why this is ${trajectory.state}: The recent oil move is ${s.phase === 'EASING' ? 'negative' : s.phase === 'FLAT' ? 'flat' : 'positive'} and oil stress is back below Watch.`);
     bullets.push('What would flip this back up: Oil stress rising above Watch again, especially if gas or gold turns on.');
     notLines.push('Not WATCH because: oil stress is below the Watch threshold.');
     notLines.push('Not REAL_RISK because: gold is off and the broader energy confirms are quiet.');
-  } else if (label === 'WATCH') {
-    if (oilActive && !signals.goldConfirm) {
+  } else if (s.label === 'WATCH') {
+    if (s.oilActive && !s.goldConfirm) {
       bullets.push('Bottom line: Oil stress is still present, but the move is not clearly broadening.');
-      bullets.push('Why this is not worse: Gold is not confirming, and gas/coal are still quiet.');
+      bullets.push(`Why this is not worse: Gold is not confirming, and ${gasCoalPhrase(s)}.`);
       bullets.push('What would make it worse: If Gold Confirm flips on while oil stress stays high, this likely moves toward REAL_RISK.');
-      bullets.push('What confirms fading: If gas and coal stay off while oil decelerates, pressure is likely cooling.');
+      bullets.push(s.gasOrCoalActive ? 'What confirms fading: If gas/coal turn off while oil decelerates, pressure is likely cooling.' : 'What confirms fading: If gas and coal stay off while oil decelerates, pressure is likely cooling.');
       notLines.push('Not REAL_RISK because: gold is off.');
-    } else if (signals.goldConfirm && !oilActive) {
+    } else if (s.goldConfirm && !s.oilActive) {
       bullets.push('Bottom line: Gold is confirming, but oil stress is not yet at Active.');
       bullets.push('Why this is not worse: The move is still mostly confined to oil.');
       bullets.push('What would make it worse: If oil stress reaches Active (z30 ≥ 2), this likely moves toward REAL_RISK.');
@@ -216,13 +273,13 @@ function getExplainBullets(data: PlumbingWarLieDetector): {
       bullets.push('Bottom line: Oil stress is present, but confirms are mixed.');
       bullets.push('Why this is not worse: Secondary confirms are limited.');
       bullets.push('What would make it worse: If gas or coal turns on, stress is broadening beyond oil.');
-      bullets.push('What confirms fading: If the broader confirms stay quiet, this remains narrow.');
+      bullets.push(s.gasOrCoalActive ? 'What confirms fading: If gas/coal turn off, this remains narrow.' : 'What confirms fading: If the broader confirms stay quiet, this remains narrow.');
       notLines.push('Not REAL_RISK because: gold is off or oil stress is not at Active.');
     }
   } else {
-    bullets.push('Bottom line: Oil, gas, and macro fear are confirming together.');
-    bullets.push('Why this is FULL_STRESS: Stress is broad across oil, macro, and the energy complex.');
-    bullets.push('What would make it worse: If gas/coal and gold stay on together, broad stress remains in place.');
+    bullets.push('Bottom line: Oil, gold, and the energy complex are confirming together.');
+    bullets.push(s.gasOrCoalActive ? 'Why this is FULL_STRESS: Stress is broad across oil, macro, and the energy complex (gas/coal active).' : 'Why this is FULL_STRESS: Stress is broad across oil and macro fear.');
+    bullets.push(s.gasOrCoalActive ? 'What would make it worse: If gas/coal and gold stay on together, broad stress remains in place.' : 'What would make it worse: If gas or coal turns on, stress is broadening beyond oil.');
     bullets.push('What confirms fading: If Gold Confirm turns off, this likely downshifts to WATCH.');
     notLines.push('Not WATCH because: oil stress is Active and gold is confirming.');
   }
@@ -266,9 +323,10 @@ function labelBadgeClass(label: PlumbingWarLieDetector['label']): string {
 export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPanelProps) {
   const { latest, signals, label, score, history, labelHistory, inputsLast, dataFreshness } = data;
   const [techDetailsOpen, setTechDetailsOpen] = useState(false);
+  const panelState = useMemo(() => getPanelState(data), [data]);
   const trajectory = useMemo(() => getTrajectory(data), [data]);
   const energyBreadth = useMemo(() => getEnergyBreadth(data), [data]);
-  const explainBullets = useMemo(() => getExplainBullets(data), [data]);
+  const explainBullets = useMemo(() => getExplainBullets(data, panelState), [data, panelState]);
 
   const regimeBands = useMemo(
     () => (labelHistory && labelHistory.length > 0 ? buildRegimeBands(labelHistory) : []),
@@ -287,12 +345,17 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
   }));
 
   const lagTradingDays = dataFreshness?.lagTradingDays ?? 0;
-  const isAligned = lagTradingDays === 0 || dataFreshness?.minLastDate === dataFreshness?.maxLastDate;
   const laggingList = dataFreshness?.laggingTickers ?? [];
 
   return (
     <div className="container mx-auto px-4 py-4 border-b border-zinc-800 space-y-4">
-      {/* Status badge */}
+      {/* Onboarding */}
+      <p className="text-sm text-slate-400">{ONBOARDING_LINE}</p>
+
+      {/* Current read */}
+      <p className="text-base font-medium text-slate-200">{getCurrentRead(panelState)}</p>
+
+      {/* Chip row */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="font-medium text-slate-300 text-xs">Plumbing:</span>
@@ -313,7 +376,7 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
           >
             Energy: {energyBreadth.state}
           </span>
-          <span className={chipBase}>Confirms: {score}/3</span>
+          <span className={chipBase} title={CONFIRMS_EXPLANATION}>Confirms: {score}/3</span>
           {dataFreshness && (
             <span
               className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium border ${lagBadgeClass(lagTradingDays)}`}
@@ -330,6 +393,12 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         <span className="text-xs text-slate-500">asOf: {data.asOf}</span>
       </div>
 
+      {/* Short explanation: verdict + trajectory + energy */}
+      <p className="text-sm text-slate-300">{getVerdict(panelState)}</p>
+      <p className="text-sm text-slate-400">{trajectory.reason}</p>
+      <p className="text-sm text-slate-500">{energyBreadth.reason}</p>
+      <p className="text-xs text-slate-500 italic">{CONFIRMS_EXPLANATION}</p>
+
       {/* Lag sentence when lag exists */}
       {lagTradingDays > 0 && dataFreshness && (
         <p className="text-sm text-amber-200/90">
@@ -340,26 +409,11 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         </p>
       )}
 
-      {/* Verdict one-liner */}
-      <p className="text-sm text-slate-300">{getVerdict(label, signals)}</p>
-
-      {/* Trajectory + Energy Breadth reasons (plain-English helpers) */}
-      <p className="text-sm text-slate-400">{trajectory.reason}</p>
-      <p className="text-sm text-slate-500">{energyBreadth.reason}</p>
-
       {/* What to watch next */}
       <div className="rounded border border-zinc-800 bg-zinc-900/30 px-3 py-2">
         <p className="text-xs font-medium text-slate-400 mb-1.5">What to watch next</p>
         <ul className="text-xs text-slate-300 space-y-0.5 list-disc list-inside">
-          {getWhatToWatchNext(
-            label,
-            latest.spread_z30,
-            signals.goldConfirm,
-            data.energyComplex?.natGas?.active,
-            data.energyComplex?.coal?.active,
-            trajectory.state,
-            energyBreadth.state
-          ).map((bullet, i) => (
+          {getWhatToWatchNext(panelState).map((bullet, i) => (
             <li key={i}>{bullet}</li>
           ))}
         </ul>

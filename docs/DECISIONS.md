@@ -12,6 +12,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-03 — (Product/Data) War Lie Detector bucket-based regime logic (PR25)
+**Choice:** Regime now derives from bucket state (Physical Plumbing → Substitution → Macro Confirmation) instead of a flat confirm count. Plumbing low (z30 < 1) → THEATER; plumbing strong (z30 ≥ 2) AND (substitution OR gold) → REAL_RISK; otherwise → WATCH. Gold is no longer a primary gate for REAL_RISK without strong plumbing. Substitution (nat gas, coal) can now push to REAL_RISK when plumbing is strong. Artifact exposes optional `bucketState` for future PR26 bucket chips. Score remains legacy (oil + gold); labelHistory uses plumbing+macro-only for historical days (no energyComplex per day).
+
+**Why:** PR24 v2 spec requires plumbing-first, substitution for spread, macro supportive. Engine now matches the conceptual model.
+
+---
+
 ### 2026-02 — (Data/Ops) Plumbing War Lie Detector artifact (geopolitical plumbing)
 **Choice:** Added `public/plumbing.war_lie_detector.json` artifact that answers whether physical markets support the political narrative (real shipping/war risk) or are mostly "theater." Uses proxy tickers: BNO (Brent), USO (WTI), GLD (gold), SPY (risk), TIP (TIPS), UUP (dollar). Core metric for z-score and ROC: BNO/USO ratio (more stable than level spread); spread (BNO−USO) kept for display. Label logic: THEATER (z30 < 1 and !goldConfirm), WATCH (z30 ≥ 1 or goldConfirm), REAL_RISK (z30 ≥ 2 and goldConfirm). Score: +2 if z30 ≥ 2, +1 if z30 ≥ 1, +1 if goldConfirm (max 3). Artifacts are generated in CI (workflows/build); never committed. Run `pnpm -s update:plumbing-war-lie-detector` locally; verify with `pnpm -s verify:artifacts`.
 

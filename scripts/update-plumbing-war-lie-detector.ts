@@ -100,8 +100,60 @@ interface PlumbingWarLieDetector {
     natGas?: { ticker: 'UNG'; asOf: string; roc3: number; z30: number; active: boolean };
     coal?: { ticker: 'COAL'; asOf: string; roc3: number; z30: number; active: boolean };
   };
+  /** Optional bucket state for v2 regime logic. Exposed for future PR26 bucket chips. */
+  bucketState?: {
+    physicalPlumbing: 'low' | 'watch' | 'strong';
+    substitutionActive: boolean;
+    macroConfirm: boolean;
+  };
   history: PlumbingHistoryPoint[];
   labelHistory: PlumbingLabelHistoryPoint[];
+}
+
+/** Bucket state for v2 regime logic. Physical Plumbing = anchor; Substitution = spread; Macro = supportive. */
+interface BucketState {
+  physicalPlumbing: 'low' | 'watch' | 'strong';
+  substitutionActive: boolean;
+  macroConfirm: boolean;
+}
+
+/** Compute bucket state from artifact. Requires energyComplex for substitution. */
+function computeBucketState(
+  spreadZ30: number,
+  goldConfirm: boolean,
+  energyComplex: PlumbingWarLieDetector['energyComplex']
+): BucketState {
+  const physicalPlumbing: BucketState['physicalPlumbing'] =
+    !Number.isFinite(spreadZ30) || spreadZ30 < 1 ? 'low' : spreadZ30 >= 2 ? 'strong' : 'watch';
+  const gasActive = energyComplex?.natGas?.active === true;
+  const coalActive = energyComplex?.coal?.active === true;
+  const substitutionActive = gasActive || coalActive;
+  return {
+    physicalPlumbing,
+    substitutionActive,
+    macroConfirm: goldConfirm,
+  };
+}
+
+/** Regime from bucket state (v2 plumbing-first). CONTAINED maps to THEATER for now. */
+function computeRegimeFromBuckets(bucketState: BucketState): PlumbingLabel {
+  if (bucketState.physicalPlumbing === 'low') return 'THEATER';
+  if (
+    bucketState.physicalPlumbing === 'strong' &&
+    (bucketState.substitutionActive || bucketState.macroConfirm)
+  ) {
+    return 'REAL_RISK';
+  }
+  return 'WATCH';
+}
+
+/** Historical regime: plumbing+macro only (no energyComplex per day). Plumbing-first. */
+function computeRegimeFromBucketsHistorical(z30: number, goldConfirm: boolean): PlumbingLabel {
+  const physicalPlumbing: BucketState['physicalPlumbing'] =
+    !Number.isFinite(z30) || z30 < 1 ? 'low' : z30 >= 2 ? 'strong' : 'watch';
+  if (physicalPlumbing === 'low') return 'THEATER';
+  if (physicalPlumbing === 'strong' && goldConfirm) return 'REAL_RISK';
+  return 'WATCH';
 }
 
 /** Phase from roc3: RISING >= 0.5%, EASING <= -0.5%, FLAT otherwise. */
@@ -115,18 +167,19 @@ function getPhase(roc3: number): 'RISING' | 'FLAT' | 'EASING' {
 function computeTrajectory(artifact: PlumbingWarLieDetector): PlumbingWarLieDetector['trajectory'] {
   const { label, signals, latest, energyComplex } = artifact;
   const phase = getPhase(latest.spread_roc3);
-  const natGasActive = energyComplex?.natGas?.active === true;
+  const substitutionActive =
+    energyComplex?.natGas?.active === true || energyComplex?.coal?.active === true;
 
   const escalating =
     label === 'REAL_RISK' ||
     signals.goldConfirm === true ||
-    natGasActive ||
+    substitutionActive ||
     (phase === 'RISING' && latest.spread_z30 >= 2);
 
   const easing =
     phase === 'EASING' &&
     signals.goldConfirm === false &&
-    !natGasActive &&
+    !substitutionActive &&
     latest.spread_z30 < 2;
 
   const state: 'ESCALATING' | 'HOLDING' | 'EASING' = escalating ? 'ESCALATING' : easing ? 'EASING' : 'HOLDING';
@@ -135,7 +188,7 @@ function computeTrajectory(artifact: PlumbingWarLieDetector): PlumbingWarLieDete
   if (state === 'ESCALATING') {
     if (label === 'REAL_RISK' || (signals.goldConfirm && latest.spread_z30 >= 2)) {
       reason = 'Stress is broadening beyond oil.';
-    } else if (natGasActive || signals.goldConfirm) {
+    } else if (substitutionActive || signals.goldConfirm) {
       reason = 'Confirms are active; stress is broadening.';
     } else {
       reason = 'Oil stress is present, but confirms are limited.';
@@ -440,6 +493,7 @@ function main() {
   const spreadWatch = Number.isFinite(spreadZ30) && spreadZ30 >= 1;
   const spreadActive = Number.isFinite(spreadZ30) && spreadZ30 >= 2;
 
+  // Score: legacy confirm count (oil 0-2 + gold 0-1). Regime is source of truth.
   let score = 0;
   if (Number.isFinite(spreadZ30)) {
     if (spreadZ30 >= 2) score += 2;
@@ -448,12 +502,8 @@ function main() {
   if (goldConfirm) score += 1;
   score = Math.min(3, score);
 
-  let label: PlumbingLabel = 'THEATER';
-  if (spreadActive && goldConfirm) {
-    label = 'REAL_RISK';
-  } else if (spreadWatch || goldConfirm) {
-    label = 'WATCH';
-  }
+  // Label computed in run() after energyComplex (bucket-based). Placeholder for artifact shape.
+  const label: PlumbingLabel = 'THEATER';
 
   // History: last 90 trading days
   const historyStart = Math.max(0, lastIdx - HISTORY_DAYS + 1);
@@ -493,8 +543,6 @@ function main() {
     }
     const dayGoldConfirm =
       Number.isFinite(dayGldSpyRoc5) && Number.isFinite(dayGldTipRoc5) && dayGldSpyRoc5 > 0 && dayGldTipRoc5 > 0;
-    const daySpreadWatch = Number.isFinite(dayZ30) && dayZ30 >= 1;
-    const daySpreadActive = Number.isFinite(dayZ30) && dayZ30 >= 2;
 
     let dayScore = 0;
     if (Number.isFinite(dayZ30)) {
@@ -504,9 +552,8 @@ function main() {
     if (dayGoldConfirm) dayScore += 1;
     dayScore = Math.min(3, dayScore);
 
-    let dayLabel: PlumbingLabel = 'THEATER';
-    if (daySpreadActive && dayGoldConfirm) dayLabel = 'REAL_RISK';
-    else if (daySpreadWatch || dayGoldConfirm) dayLabel = 'WATCH';
+    // Historical: plumbing+macro only (no energyComplex per day). Plumbing-first.
+    const dayLabel = computeRegimeFromBucketsHistorical(dayZ30, dayGoldConfirm);
 
     labelHistory.push({ date: d, label: dayLabel, score: dayScore });
   }
@@ -594,11 +641,11 @@ function main() {
     labelHistory,
   };
 
-  return { artifact, asOf, label, score, goldConfirm };
+  return { artifact, asOf, score, goldConfirm };
 }
 
 async function run() {
-  const { artifact, asOf, label, score, goldConfirm } = main();
+  const { artifact, asOf, score, goldConfirm } = main();
   try {
     console.log('  Fetching energy complex (UNG, COAL) from Stooq...');
     artifact.energyComplex = await fetchEnergyComplex(asOf);
@@ -611,6 +658,19 @@ async function run() {
   } catch (err) {
     console.warn('  WARN: Energy complex fetch failed (continuing without):', err instanceof Error ? err.message : err);
   }
+
+  // Bucket-based regime (v2 plumbing-first)
+  const bucketState = computeBucketState(
+    artifact.latest.spread_z30,
+    artifact.signals.goldConfirm,
+    artifact.energyComplex
+  );
+  artifact.label = computeRegimeFromBuckets(bucketState);
+  artifact.bucketState = {
+    physicalPlumbing: bucketState.physicalPlumbing,
+    substitutionActive: bucketState.substitutionActive,
+    macroConfirm: bucketState.macroConfirm,
+  };
 
   artifact.trajectory = computeTrajectory(artifact);
   if (artifact.trajectory) {
@@ -626,7 +686,7 @@ async function run() {
   writeFileSync(outPath, JSON.stringify(artifact, null, 2), 'utf-8');
 
   console.log(`\n✅ Wrote public/plumbing.war_lie_detector.json`);
-  console.log(`   asOf: ${asOf}, label: ${label}, score: ${score}`);
+  console.log(`   asOf: ${asOf}, label: ${artifact.label}, score: ${score}`);
   console.log(`   spread_z30: ${artifact.latest.spread_z30}, spread_roc3: ${artifact.latest.spread_roc3}`);
   console.log(`   goldConfirm: ${goldConfirm}`);
 }

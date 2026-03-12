@@ -223,6 +223,12 @@ export interface PlumbingWarLieDetector {
     natGas?: { ticker: 'UNG'; asOf: string; roc3: number; z30: number; active: boolean };
     coal?: { ticker: 'COAL'; asOf: string; roc3: number; z30: number; active: boolean };
   };
+  /** Optional bucket state for v2 regime logic (PR25). Exposed for future bucket chips. */
+  bucketState?: {
+    physicalPlumbing: 'low' | 'watch' | 'strong';
+    substitutionActive: boolean;
+    macroConfirm: boolean;
+  };
   history: Array<{
     date: string;
     spread: number;

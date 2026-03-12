@@ -140,9 +140,9 @@ git clean -fd public data/marketstack/eod
   - nPairs = nAssets*(nAssets-1)/2 when shockRaw is non-null
   - At least one non-null shockRaw; at least one non-null shockZ (if enough history)
   - Warns on high nulls (minAssets/windows)
-- **Gas/Coal confirms (War Lie Detector):** Optional `energyComplex` in `plumbing.war_lie_detector.json` adds secondary signals: Gas Stress (UNG) and Coal Bid (COAL). Coal uses COAL (Range Global Coal Index ETF), not KOL. These are **not** part of the label/score logic. Interpret as: Gas ON = nat gas proxy stressed (z30≥1 or roc3≥5%); Coal ON = coal proxy bid (z30≥1 or roc3≥3%). If both Gas + Gold confirm OFF in REAL_RISK, risk is narrowing back to oil-only stress. Stooq spot check: UNG https://stooq.com/q/d/l/?s=ung.us&i=d, COAL https://stooq.com/q/d/l/?s=coal.us&i=d.
+- **Gas/Coal confirms (War Lie Detector):** Optional `energyComplex` in `plumbing.war_lie_detector.json` adds Substitution bucket signals: Gas Stress (UNG) and Coal Bid (COAL). Coal uses COAL (Range Global Coal Index ETF), not KOL. As of PR25, substitution (gas OR coal active) can push regime to REAL_RISK when plumbing is strong (z30≥2). Gas ON = nat gas proxy stressed (z30≥1 or roc3≥5%); Coal ON = coal proxy bid (z30≥1 or roc3≥3%). Stooq spot check: UNG https://stooq.com/q/d/l/?s=ung.us&i=d, COAL https://stooq.com/q/d/l/?s=coal.us&i=d.
 - **Energy Breadth (War Lie Detector):** Optional `energyBreadth` answers "How widespread is stress across the energy complex?" — **NARROW** = oil-only; **BROADENING** = oil + gas/coal active; **FULL_STRESS** = oil + gas/coal + gold confirm. Trajectory (ESCALATING/HOLDING/EASING) owns direction; Energy Breadth owns breadth.
-- **Plumbing War Lie Detector:** Validates `public/plumbing.war_lie_detector.json`:
+- **Plumbing War Lie Detector:** Validates `public/plumbing.war_lie_detector.json`. Regime is bucket-based (PR25): plumbing low → THEATER; plumbing strong + (substitution OR gold) → REAL_RISK; else WATCH.
   - File exists, valid JSON
   - `asOf` within 10 calendar days (weekends/holidays can delay updates)
   - `label` in ["THEATER","WATCH","REAL_RISK"]

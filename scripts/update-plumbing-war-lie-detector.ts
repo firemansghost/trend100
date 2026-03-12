@@ -167,18 +167,19 @@ function getPhase(roc3: number): 'RISING' | 'FLAT' | 'EASING' {
 function computeTrajectory(artifact: PlumbingWarLieDetector): PlumbingWarLieDetector['trajectory'] {
   const { label, signals, latest, energyComplex } = artifact;
   const phase = getPhase(latest.spread_roc3);
-  const natGasActive = energyComplex?.natGas?.active === true;
+  const substitutionActive =
+    energyComplex?.natGas?.active === true || energyComplex?.coal?.active === true;
 
   const escalating =
     label === 'REAL_RISK' ||
     signals.goldConfirm === true ||
-    natGasActive ||
+    substitutionActive ||
     (phase === 'RISING' && latest.spread_z30 >= 2);
 
   const easing =
     phase === 'EASING' &&
     signals.goldConfirm === false &&
-    !natGasActive &&
+    !substitutionActive &&
     latest.spread_z30 < 2;
 
   const state: 'ESCALATING' | 'HOLDING' | 'EASING' = escalating ? 'ESCALATING' : easing ? 'EASING' : 'HOLDING';
@@ -187,7 +188,7 @@ function computeTrajectory(artifact: PlumbingWarLieDetector): PlumbingWarLieDete
   if (state === 'ESCALATING') {
     if (label === 'REAL_RISK' || (signals.goldConfirm && latest.spread_z30 >= 2)) {
       reason = 'Stress is broadening beyond oil.';
-    } else if (natGasActive || signals.goldConfirm) {
+    } else if (substitutionActive || signals.goldConfirm) {
       reason = 'Confirms are active; stress is broadening.';
     } else {
       reason = 'Oil stress is present, but confirms are limited.';

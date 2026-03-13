@@ -127,17 +127,16 @@ function getCurrentRead(s: PanelState): string {
   }
   if (s.label === 'WATCH') {
     if (s.oilActive && !s.goldConfirm) {
-      const quiet = s.gasOrCoalActive ? 'secondary signals are active' : 'gold and gas/coal are quiet';
-      return `Stress is building, but not yet broadly confirmed. Oil is active; ${quiet}.`;
+      const quiet = s.gasOrCoalActive ? 'substitution is active' : 'substitution and macro are quiet';
+      return `Stress is building, but not yet broadly confirmed. Plumbing is active; ${quiet}.`;
     }
     if (s.goldConfirm && !s.oilActive) {
-      return 'Gold is confirming, but oil stress is not yet at Active. Stress is still mostly confined to oil.';
+      return 'Macro is confirming, but plumbing is not yet at strong stress. Stress is still mostly confined to oil.';
     }
     if (s.gasOrCoalActive) {
-      const which = s.gasActive && s.coalActive ? 'gas and coal' : s.gasActive ? 'gas' : 'coal';
-      return `Stress is broadening beyond oil. Secondary signal (${which}) is active.`;
+      return 'Stress is broadening beyond oil. Substitution is active.';
     }
-    return 'Stress is building, but not yet broadly confirmed. Mixed signals across oil and confirms.';
+    return 'Stress is building, but not yet broadly confirmed. Signals are split across buckets.';
   }
   return 'Mixed signals → WATCH.';
 }
@@ -147,24 +146,24 @@ function getWhatToWatchNext(s: PanelState): string[] {
   const bullets: string[] = [];
   if (s.trajectoryState === 'ESCALATING') bullets.push('Escalation is broadening; watch for confirmation to persist.');
   else if (s.trajectoryState === 'HOLDING') bullets.push('Stress is present, but not clearly broadening yet.');
-  else if (s.trajectoryState === 'EASING') bullets.push('Pressure is cooling unless confirms reappear.');
+  else if (s.trajectoryState === 'EASING') bullets.push('Pressure is cooling unless macro or substitution turns on.');
   if (s.energyBreadthState === 'NARROW') bullets.push('If substitution (gas or coal) turns on → stress broadening.');
-  else if (s.energyBreadthState === 'BROADENING') bullets.push('If Gold Confirm flips ON → broadening may become full stress.');
-  else if (s.energyBreadthState === 'FULL_STRESS') bullets.push('If gas/coal and gold stay ON together → broad stress remains in place.');
+  else if (s.energyBreadthState === 'BROADENING') bullets.push('If macro confirmation flips on → broadening may become full stress.');
+  else if (s.energyBreadthState === 'FULL_STRESS') bullets.push('If substitution and macro stay on together → broad stress remains in place.');
   if (s.label === 'WATCH') {
     if (s.oilActive && !s.goldConfirm) {
-      bullets.push('If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift to CONTAINED');
+      bullets.push('If macro confirmation flips on → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift to CONTAINED');
     } else if (s.goldConfirm && !s.oilActive) {
-      bullets.push('If plumbing stress rises above Watch → likely REAL_RISK', 'If Gold Confirm turns OFF → likely CONTAINED/WATCH');
+      bullets.push('If plumbing stress rises above Watch → likely REAL_RISK', 'If macro turns off → likely CONTAINED/WATCH');
     } else {
-      bullets.push('If Gold Confirm flips ON → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift to CONTAINED');
+      bullets.push('If macro confirmation flips on → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift to CONTAINED');
     }
     if (!s.gasActive) bullets.push('If Gas Stress turns ON → energy supply crunch broadening');
   } else if (s.label === 'REAL_RISK') {
-    bullets.push('If Gold Confirm stays ON and Phase stays RISING → escalation', 'If Gold Confirm turns OFF → likely downshift to WATCH');
-    if (!s.goldConfirm && !s.gasActive) bullets.push('Both Gas + Gold confirm OFF → risk narrowing back to oil-only stress');
+    bullets.push('If macro stays on and Phase stays RISING → escalation', 'If macro turns off → likely downshift to WATCH');
+    if (!s.goldConfirm && !s.gasActive) bullets.push('Substitution and macro turn off → risk narrowing back to oil-only stress');
   } else {
-    bullets.push('If plumbing stress rises above Watch → WATCH', 'If Gold Confirm flips ON → WATCH (and watch for REAL_RISK)');
+    bullets.push('If plumbing stress rises above Watch → WATCH', 'If macro confirmation flips on → WATCH (and watch for REAL_RISK)');
   }
   return bullets.slice(0, 5);
 }
@@ -205,7 +204,7 @@ function getTrajectory(data: PlumbingWarLieDetector): NonNullable<PlumbingWarLie
     state === 'ESCALATING'
       ? 'Stress is broadening beyond oil.'
       : state === 'EASING'
-        ? 'Pressure is cooling and confirms are fading.'
+        ? 'Pressure is cooling; macro and substitution are quiet.'
         : 'Stress is present, but not clearly broadening yet.';
   return { state, reason, phase };
 }
@@ -242,7 +241,7 @@ function getEnergyBreadth(data: PlumbingWarLieDetector): NonNullable<PlumbingWar
   if (oilEasing && !gasOrCoalActive && !data.signals.goldConfirm) {
     return { state: 'NARROW', reason: 'Stress is mostly confined to oil.' };
   }
-  return { state: oilStress ? 'BROADENING' : 'NARROW', reason: oilStress ? 'Stress is present, but confirms are mixed.' : 'Stress is still mostly confined to oil.' };
+  return { state: oilStress ? 'BROADENING' : 'NARROW', reason: oilStress ? 'Signals are split across buckets.' : 'Stress is still mostly confined to oil.' };
 }
 
 /** "Gas and coal" phrase for plain-English — matches actual signal state. */
@@ -273,38 +272,38 @@ function getExplainBullets(data: PlumbingWarLieDetector, s: PanelState): {
         : null;
 
   if (s.label === 'THEATER') {
-    bullets.push('Bottom line: Oil stress has cooled and is no longer spreading across the wider energy complex.');
+    bullets.push('Bottom line: Plumbing stress has cooled and is no longer spreading across the wider energy complex.');
     bullets.push(`Why this is CONTAINED: Plumbing stress is low; substitution and macro are quiet.`);
-    bullets.push(`Why this is ${trajectory.state}: The recent oil move is ${s.phase === 'EASING' ? 'negative' : s.phase === 'FLAT' ? 'flat' : 'positive'} and oil stress is back below Watch.`);
+    bullets.push(`Why this is ${trajectory.state}: The recent oil move is ${s.phase === 'EASING' ? 'negative' : s.phase === 'FLAT' ? 'flat' : 'positive'} and plumbing stress is back below Watch.`);
     bullets.push('What would flip this back up: Plumbing stress rising above Watch again, especially if substitution or macro turns on.');
     notLines.push('Not WATCH because: plumbing stress is below the Watch threshold.');
     notLines.push('Not REAL_RISK because: plumbing not strong enough, or substitution and macro are quiet.');
   } else if (s.label === 'WATCH') {
     if (s.oilActive && !s.goldConfirm) {
-      bullets.push('Bottom line: Oil stress is still present, but the move is not clearly broadening.');
-      bullets.push(`Why this is not worse: Gold is not confirming, and ${gasCoalPhrase(s)}.`);
-      bullets.push('What would make it worse: If Gold Confirm flips on while oil stress stays high, this likely moves toward REAL_RISK.');
-      bullets.push(s.gasOrCoalActive ? 'What confirms fading: If gas/coal turn off while oil decelerates, pressure is likely cooling.' : 'What confirms fading: If gas and coal stay off while oil decelerates, pressure is likely cooling.');
-      notLines.push('Not REAL_RISK because: gold is off.');
+      bullets.push('Bottom line: Plumbing stress is still present, but the move is not clearly broadening.');
+      bullets.push(`Why this is not worse: Macro is quiet; ${s.gasOrCoalActive ? 'substitution is active' : 'substitution is quiet'}.`);
+      bullets.push('What would make it worse: If macro confirmation flips on while plumbing stays high, this likely moves toward REAL_RISK.');
+      bullets.push(s.gasOrCoalActive ? 'What would ease it: If substitution turns off while plumbing decelerates, pressure is likely cooling.' : 'What would ease it: If substitution and macro stay quiet while plumbing decelerates, pressure is likely cooling.');
+      notLines.push('Not REAL_RISK because: macro is quiet.');
     } else if (s.goldConfirm && !s.oilActive) {
-      bullets.push('Bottom line: Gold is confirming, but oil stress is not yet at Active.');
+      bullets.push('Bottom line: Macro is confirming, but plumbing is not yet at strong stress.');
       bullets.push('Why this is not worse: The move is still mostly confined to oil.');
-      bullets.push('What would make it worse: If plumbing stress reaches Active (z30 ≥ 2), this likely moves toward REAL_RISK.');
-      bullets.push('What confirms fading: If Gold Confirm turns off, this likely downshifts to CONTAINED.');
-      notLines.push('Not REAL_RISK because: plumbing stress is below Active.');
+      bullets.push('What would make it worse: If plumbing stress reaches strong (z30 ≥ 2), this likely moves toward REAL_RISK.');
+      bullets.push('What would ease it: If macro turns off, this likely downshifts to CONTAINED.');
+      notLines.push('Not REAL_RISK because: plumbing is not at strong stress.');
     } else {
-      bullets.push('Bottom line: Oil stress is present, but confirms are mixed.');
-      bullets.push('Why this is not worse: Secondary confirms are limited.');
-      bullets.push('What would make it worse: If gas or coal turns on, stress is broadening beyond oil.');
-      bullets.push(s.gasOrCoalActive ? 'What confirms fading: If gas/coal turn off, this remains narrow.' : 'What confirms fading: If the broader confirms stay quiet, this remains narrow.');
-      notLines.push('Not REAL_RISK because: gold is off or oil stress is not at Active.');
+      bullets.push('Bottom line: Plumbing is present, but signals are split across buckets.');
+      bullets.push('Why this is not worse: Substitution and macro are limited.');
+      bullets.push('What would make it worse: If substitution turns on, stress is broadening beyond oil.');
+      bullets.push(s.gasOrCoalActive ? 'What would ease it: If substitution turns off, this remains narrow.' : 'What would ease it: If substitution and macro stay quiet, this remains narrow.');
+      notLines.push('Not REAL_RISK because: macro is quiet or plumbing is not at strong stress.');
     }
   } else {
     bullets.push('Bottom line: Plumbing strong; substitution or macro confirming.');
     bullets.push(s.gasOrCoalActive ? 'Why this is REAL_RISK: Plumbing strong + substitution active and/or macro confirming.' : 'Why this is REAL_RISK: Plumbing strong + macro confirming.');
-    bullets.push(s.gasOrCoalActive ? 'What would make it worse: If gas/coal and gold stay on together, broad stress remains in place.' : 'What would make it worse: If substitution turns on, stress is broadening beyond oil.');
-    bullets.push('What confirms fading: If Gold Confirm turns off, this likely downshifts to WATCH.');
-    notLines.push('Not WATCH because: plumbing is Active and gold is confirming.');
+    bullets.push(s.gasOrCoalActive ? 'What would make it worse: If substitution and macro stay on together, broad stress remains in place.' : 'What would make it worse: If substitution turns on, stress is broadening beyond oil.');
+    bullets.push('What would ease it: If macro turns off, this likely downshifts to WATCH.');
+    notLines.push('Not WATCH because: plumbing is Active and macro is confirming.');
   }
 
   return { bullets, notLines, lagLine };

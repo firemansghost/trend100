@@ -117,7 +117,11 @@ const ONBOARDING_LINE = 'This dashboard checks whether war-related energy stress
 /** Plain-English current read — must match chips and signal cards. */
 function getCurrentRead(s: PanelState): string {
   if (s.label === 'THEATER') {
-    return 'Conditions are contained. Stress is still mostly localized; plumbing and substitution are quiet.';
+    const bucketsActive = s.gasOrCoalActive || s.goldConfirm;
+    if (!bucketsActive) {
+      return 'Conditions are contained. Stress is still mostly localized; plumbing and substitution are quiet.';
+    }
+    return 'Conditions are contained. Plumbing stress is still low; substitution and macro may be active, but without stronger plumbing the regime does not escalate.';
   }
   if (s.label === 'REAL_RISK') {
     if (s.gasOrCoalActive && s.goldConfirm) {
@@ -171,7 +175,11 @@ function getWhatToWatchNext(s: PanelState): string[] {
 /** Plain-English verdict one-liner. */
 function getVerdict(s: PanelState): string {
   if (s.label === 'REAL_RISK') return 'Plumbing strong + (substitution or macro) confirming → REAL_RISK.';
-  if (s.label === 'THEATER') return 'Plumbing stress is low; substitution and macro are quiet → CONTAINED.';
+  if (s.label === 'THEATER') {
+    const bucketsActive = s.gasOrCoalActive || s.goldConfirm;
+    if (!bucketsActive) return 'Plumbing stress is low; substitution and macro are quiet → CONTAINED.';
+    return 'Plumbing stress is low; substitution and macro may be active, but without stronger plumbing → CONTAINED.';
+  }
   if (s.oilActive && !s.goldConfirm) return 'Plumbing stress rising, but substitution and macro quiet → WATCH.';
   if (s.goldConfirm && !s.oilActive) return 'Macro confirming, but plumbing not yet stressed → WATCH.';
   return 'Mixed signals → WATCH.';
@@ -272,12 +280,19 @@ function getExplainBullets(data: PlumbingWarLieDetector, s: PanelState): {
         : null;
 
   if (s.label === 'THEATER') {
-    bullets.push('Bottom line: Plumbing stress has cooled and is no longer spreading across the wider energy complex.');
-    bullets.push(`Why this is CONTAINED: Plumbing stress is low; substitution and macro are quiet.`);
+    const bucketsActive = s.gasOrCoalActive || s.goldConfirm;
+    bullets.push('Bottom line: Plumbing stress has cooled; without stronger plumbing, the regime stays contained.');
+    bullets.push(bucketsActive
+      ? 'Why this is CONTAINED: Plumbing stress is low; substitution and macro may be active, but without stronger plumbing the regime does not escalate.'
+      : 'Why this is CONTAINED: Plumbing stress is low; substitution and macro are quiet.');
     bullets.push(`Why this is ${trajectory.state}: The recent oil move is ${s.phase === 'EASING' ? 'negative' : s.phase === 'FLAT' ? 'flat' : 'positive'} and plumbing stress is back below Watch.`);
-    bullets.push('What would flip this back up: Plumbing stress rising above Watch again, especially if substitution or macro turns on.');
+    bullets.push(bucketsActive
+      ? 'What would flip this back up: Plumbing stress rising above Watch would move toward WATCH; substitution and macro are already active, so plumbing is the gate.'
+      : 'What would flip this back up: Plumbing stress rising above Watch again, especially if substitution or macro turns on.');
     notLines.push('Not WATCH because: plumbing stress is below the Watch threshold.');
-    notLines.push('Not REAL_RISK because: plumbing not strong enough, or substitution and macro are quiet.');
+    notLines.push(bucketsActive
+      ? 'Not REAL_RISK because: plumbing not strong enough, even though substitution and macro may be active.'
+      : 'Not REAL_RISK because: plumbing not strong enough, or substitution and macro are quiet.');
   } else if (s.label === 'WATCH') {
     if (s.oilActive && !s.goldConfirm) {
       bullets.push('Bottom line: Plumbing stress is still present, but the move is not clearly broadening.');

@@ -630,7 +630,7 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
               }
               return lastRealRiskStart ? (
                 <li>
-                  <strong>Latest REAL_RISK began</strong>: {lastRealRiskStart}
+                  <strong>Latest chart-band REAL_RISK began</strong>: {lastRealRiskStart}
                 </li>
               ) : null;
             })()}

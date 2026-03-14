@@ -321,6 +321,10 @@ function getExplainBullets(data: PlumbingWarLieDetector, s: PanelState): {
     notLines.push('Not WATCH because: plumbing is Active and macro is confirming.');
   }
 
+  if (data.productStress?.active) {
+    bullets.push('Refined product stress (UGA/USO) is active, supporting the plumbing read.');
+  }
+
   return { bullets, notLines, lagLine };
 }
 
@@ -596,6 +600,11 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             <li>
               <strong>Coal stress</strong>: {data.energyComplex?.coal == null ? 'N/A' : data.energyComplex.coal.active ? 'ON' : 'OFF'}
             </li>
+            {data.productStress != null ? (
+              <li>
+                <strong>Product stress (UGA/USO)</strong>: z30={data.productStress.z30}, roc3={data.productStress.roc3}%, active={data.productStress.active ? 'yes' : 'no'}
+              </li>
+            ) : null}
             <li>
               <strong>Legacy score</strong>: {score}/3 (oil + gold; regime is bucket-based)
             </li>
@@ -606,6 +615,24 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
                   <strong>Bucket state</strong>: plumbing={bucket.physicalPlumbing}, substitution={bucket.substitutionActive ? 'active' : 'inactive'}, macro={bucket.macroConfirm ? 'confirming' : 'quiet'}
                 </li>
               );
+            })()}
+            {(() => {
+              const lh = data.labelHistory;
+              if (!lh || lh.length === 0) return null;
+              let lastRealRiskStart: string | null = null;
+              for (let i = lh.length - 1; i >= 0; i--) {
+                if (lh[i]!.label === 'REAL_RISK') {
+                  let j = i;
+                  while (j > 0 && lh[j - 1]!.label === 'REAL_RISK') j--;
+                  lastRealRiskStart = lh[j]!.date;
+                  break;
+                }
+              }
+              return lastRealRiskStart ? (
+                <li>
+                  <strong>Latest chart-band REAL_RISK began</strong>: {lastRealRiskStart}
+                </li>
+              ) : null;
             })()}
           </ul>
         )}

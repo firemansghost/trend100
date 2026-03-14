@@ -106,6 +106,15 @@ interface PlumbingWarLieDetector {
     substitutionActive: boolean;
     macroConfirm: boolean;
   };
+  /** Optional product stress proxy (UGA/USO). Secondary physical plumbing signal. */
+  productStress?: {
+    ticker: 'UGA';
+    ratio: 'UGA/USO';
+    asOf: string;
+    z30: number;
+    roc3: number;
+    active: boolean;
+  };
   history: PlumbingHistoryPoint[];
   labelHistory: PlumbingLabelHistoryPoint[];
 }
@@ -117,14 +126,21 @@ interface BucketState {
   macroConfirm: boolean;
 }
 
-/** Compute bucket state from artifact. Requires energyComplex for substitution. */
+/** Compute bucket state from artifact. Requires energyComplex for substitution. Product stress can upgrade watch→strong. */
 function computeBucketState(
   spreadZ30: number,
   goldConfirm: boolean,
-  energyComplex: PlumbingWarLieDetector['energyComplex']
+  energyComplex: PlumbingWarLieDetector['energyComplex'],
+  productStress: { active: boolean } | null
 ): BucketState {
-  const physicalPlumbing: BucketState['physicalPlumbing'] =
+  const baseFromZ30: BucketState['physicalPlumbing'] =
     !Number.isFinite(spreadZ30) || spreadZ30 < 1 ? 'low' : spreadZ30 >= 2 ? 'strong' : 'watch';
+  const physicalPlumbing: BucketState['physicalPlumbing'] =
+    baseFromZ30 === 'strong'
+      ? 'strong'
+      : baseFromZ30 === 'watch' && productStress?.active
+        ? 'strong'
+        : baseFromZ30;
   const gasActive = energyComplex?.natGas?.active === true;
   const coalActive = energyComplex?.coal?.active === true;
   const substitutionActive = gasActive || coalActive;
@@ -306,6 +322,84 @@ async function fetchEnergyBars(symbol: string, startDate: string, endDate: strin
       const filtered = bars.filter((b) => b.date <= endDate);
       return filtered.length >= 34 ? filtered : null;
     }
+    return null;
+  }
+}
+
+/** Product stress proxy: UGA/USO (gasoline vs crude). Active when ratio z30 >= 1 or roc3 >= 4%. */
+const PRODUCT_STRESS_Z30_THRESHOLD = 1.0;
+const PRODUCT_STRESS_ROC3_THRESHOLD = 4.0;
+
+interface ProductStressResult {
+  ticker: 'UGA';
+  ratio: 'UGA/USO';
+  asOf: string;
+  z30: number;
+  roc3: number;
+  active: boolean;
+}
+
+async function fetchProductStressProxy(
+  asOf: string,
+  closeByDate: Map<string, Record<string, number>>,
+  alignedDates: string[]
+): Promise<ProductStressResult | null> {
+  const endDate = asOf;
+  const start = new Date(asOf);
+  start.setDate(start.getDate() - 180);
+  const startDate = start.toISOString().split('T')[0]!;
+
+  try {
+    const ugaBars = await fetchEnergyBars('UGA', startDate, endDate);
+    if (!ugaBars || ugaBars.length < 34) return null;
+
+    const ugaByDate = new Map(ugaBars.map((b) => [b.date, b.close]));
+    const ratioArr: number[] = [];
+    const ratioDates: string[] = [];
+
+    for (const d of alignedDates) {
+      const uso = closeByDate.get(d)?.USO;
+      const uga = ugaByDate.get(d);
+      if (uso != null && uso > 0 && uga != null && uga > 0) {
+        ratioArr.push(uga / uso);
+        ratioDates.push(d);
+      }
+    }
+
+    if (ratioArr.length < 34) return null;
+    const lastIdx = ratioArr.length - 1;
+    const lastDate = ratioDates[lastIdx]!;
+    if (lastDate > asOf) return null;
+
+    const ratioVal = ratioArr[lastIdx]!;
+    let roc3 = NaN;
+    if (lastIdx >= 3 && ratioArr[lastIdx - 3]! > 0) {
+      roc3 = ((ratioVal - ratioArr[lastIdx - 3]!) / ratioArr[lastIdx - 3]!) * 100;
+    }
+
+    let z30 = NaN;
+    if (lastIdx >= 29) {
+      const win30 = ratioArr.slice(lastIdx - 29, lastIdx + 1);
+      const mean30 = win30.reduce((a, b) => a + b, 0) / 30;
+      const var30 = win30.reduce((a, b) => a + (b - mean30) ** 2, 0) / 30;
+      const std30 = Math.sqrt(var30) || 1e-10;
+      z30 = (ratioVal - mean30) / std30;
+    }
+
+    const active =
+      (Number.isFinite(z30) && z30 >= PRODUCT_STRESS_Z30_THRESHOLD) ||
+      (Number.isFinite(roc3) && roc3 >= PRODUCT_STRESS_ROC3_THRESHOLD);
+
+    return {
+      ticker: 'UGA',
+      ratio: 'UGA/USO',
+      asOf: lastDate,
+      z30: Number.isFinite(z30) ? Math.round(z30 * 100) / 100 : 0,
+      roc3: Number.isFinite(roc3) ? Math.round(roc3 * 100) / 100 : 0,
+      active,
+    };
+  } catch (err) {
+    console.warn('  WARN: Product stress (UGA) fetch failed:', err instanceof Error ? err.message : err);
     return null;
   }
 }
@@ -641,11 +735,11 @@ function main() {
     labelHistory,
   };
 
-  return { artifact, asOf, score, goldConfirm };
+  return { artifact, asOf, score, goldConfirm, closeByDate, alignedDates };
 }
 
 async function run() {
-  const { artifact, asOf, score, goldConfirm } = main();
+  const { artifact, asOf, score, goldConfirm, closeByDate, alignedDates } = main();
   try {
     console.log('  Fetching energy complex (UNG, COAL) from Stooq...');
     artifact.energyComplex = await fetchEnergyComplex(asOf);
@@ -659,11 +753,24 @@ async function run() {
     console.warn('  WARN: Energy complex fetch failed (continuing without):', err instanceof Error ? err.message : err);
   }
 
-  // Bucket-based regime (v2 plumbing-first)
+  let productStress: ProductStressResult | null = null;
+  try {
+    console.log('  Fetching product stress (UGA/USO) from Stooq...');
+    productStress = await fetchProductStressProxy(asOf, closeByDate, alignedDates);
+    if (productStress) {
+      console.log(`   UGA/USO: z30=${productStress.z30}, roc3=${productStress.roc3}%, active=${productStress.active}`);
+      artifact.productStress = productStress;
+    }
+  } catch (err) {
+    console.warn('  WARN: Product stress fetch failed (continuing without):', err instanceof Error ? err.message : err);
+  }
+
+  // Bucket-based regime (v2 plumbing-first). Product stress can upgrade watch→strong.
   const bucketState = computeBucketState(
     artifact.latest.spread_z30,
     artifact.signals.goldConfirm,
-    artifact.energyComplex
+    artifact.energyComplex,
+    productStress
   );
   artifact.label = computeRegimeFromBuckets(bucketState);
   artifact.bucketState = {

@@ -82,6 +82,7 @@ This is the central change in v2. The headline should no longer behave like a mo
 
 **Current inputs:**
 - Brent vs WTI dislocation / oil stress proxy (BNO/USO ratio)
+- Product stress (UGA/USO ratio) — optional secondary; gasoline vs crude
 
 **Interpretation:**
 - This is the anchor signal.

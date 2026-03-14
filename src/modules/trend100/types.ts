@@ -229,6 +229,15 @@ export interface PlumbingWarLieDetector {
     substitutionActive: boolean;
     macroConfirm: boolean;
   };
+  /** Optional product stress proxy (UGA/USO). Secondary physical plumbing signal (PR27). */
+  productStress?: {
+    ticker: 'UGA';
+    ratio: 'UGA/USO';
+    asOf: string;
+    z30: number;
+    roc3: number;
+    active: boolean;
+  };
   history: Array<{
     date: string;
     spread: number;

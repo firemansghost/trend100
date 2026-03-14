@@ -26,6 +26,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-03 — (Product/Data) War Lie Detector product stress proxy (PR27)
+**Choice:** Added UGA/USO (gasoline vs crude) as secondary physical plumbing proxy. Physical Plumbing = strong when BNO/USO z30 ≥ 2, or when z30 1–2 AND product stress active. Product stress active when UGA/USO ratio z30 ≥ 1 or roc3 ≥ 4%. UGA fetched via Stooq then Marketstack cache (same pattern as UNG/COAL). Product stress optional in artifact; if fetch fails, continue without. labelHistory unchanged (plumbing+macro only).
+
+**Why:** Reduces dependence on single Brent-vs-WTI anchor; refined product stress can confirm physical tightness. UGA tracks RBOB gasoline; ratio captures crack-spread widening.
+
+---
+
 ### 2026-02 — (Data/Ops) Plumbing War Lie Detector artifact (geopolitical plumbing)
 **Choice:** Added `public/plumbing.war_lie_detector.json` artifact that answers whether physical markets support the political narrative (real shipping/war risk) or are mostly "theater." Uses proxy tickers: BNO (Brent), USO (WTI), GLD (gold), SPY (risk), TIP (TIPS), UUP (dollar). Core metric for z-score and ROC: BNO/USO ratio (more stable than level spread); spread (BNO−USO) kept for display. Label logic: THEATER (z30 < 1 and !goldConfirm), WATCH (z30 ≥ 1 or goldConfirm), REAL_RISK (z30 ≥ 2 and goldConfirm). Score: +2 if z30 ≥ 2, +1 if z30 ≥ 1, +1 if goldConfirm (max 3). Artifacts are generated in CI (workflows/build); never committed. Run `pnpm -s update:plumbing-war-lie-detector` locally; verify with `pnpm -s verify:artifacts`.
 

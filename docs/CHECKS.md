@@ -142,14 +142,14 @@ git clean -fd public data/marketstack/eod
   - Warns on high nulls (minAssets/windows)
 - **Gas/Coal confirms (War Lie Detector):** Optional `energyComplex` in `plumbing.war_lie_detector.json` adds Substitution bucket signals: Gas Stress (UNG) and Coal Bid (COAL). Coal uses COAL (Range Global Coal Index ETF), not KOL. As of PR25, substitution (gas OR coal active) can push regime to REAL_RISK when plumbing is strong (z30≥2). Gas ON = nat gas proxy stressed (z30≥1 or roc3≥5%); Coal ON = coal proxy bid (z30≥1 or roc3≥3%). Stooq spot check: UNG https://stooq.com/q/d/l/?s=ung.us&i=d, COAL https://stooq.com/q/d/l/?s=coal.us&i=d.
 - **Energy Breadth (War Lie Detector):** Optional `energyBreadth` answers "How widespread is stress across the energy complex?" — **NARROW** = oil-only; **BROADENING** = oil + gas/coal active; **FULL_STRESS** = oil + gas/coal + gold confirm. Trajectory (ESCALATING/HOLDING/EASING) owns direction; Energy Breadth owns breadth.
-- **Plumbing War Lie Detector:** Validates `public/plumbing.war_lie_detector.json`. Regime is bucket-based (PR25): plumbing low → THEATER; plumbing strong + (substitution OR gold) → REAL_RISK; else WATCH. PR27: product stress (UGA/USO) can upgrade watch→strong when active; optional `productStress` in artifact. UGA fetched via Stooq then Marketstack cache; add to EOD_STOOQ_FORCE_FALLBACK if Stooq fails. UI (PR26) displays CONTAINED; bucket chips shown when `bucketState` present or derived.
+- **Plumbing War Lie Detector:** Validates `public/plumbing.war_lie_detector.json`. Regime is bucket-based (PR25): plumbing low → THEATER; plumbing strong + (substitution OR gold) → REAL_RISK; else WATCH. PR27: product stress (UGA/USO) can upgrade watch→strong when active; optional `productStress` in artifact. PR28: labelHistory includes per-day product stress when UGA available; chart bands align with current model. UGA fetched via Stooq then Marketstack cache; add to EOD_STOOQ_FORCE_FALLBACK if Stooq fails. UI (PR26) displays CONTAINED; bucket chips shown when `bucketState` present or derived.
   - File exists, valid JSON
   - `asOf` within 10 calendar days (weekends/holidays can delay updates)
   - `label` in ["THEATER","WATCH","REAL_RISK"]
   - `score` finite number in [0, 3]
   - `latest.spread`, `latest.spread_z30`, `latest.spread_roc3` are finite numbers
   - `history` is array, sorted ascending by date, length >= 60
-  - `labelHistory` (if present): non-empty, sorted ascending by date
+  - `labelHistory` (if present): non-empty, sorted ascending by date. PR28: reflects per-day product stress when UGA data available; otherwise plumbing+macro only.
   - `inputsLast` (if present): keys BNO, USO, GLD, SPY, TIP, UUP with YYYY-MM-DD values
   - `dataFreshness` (if present): lagTradingDays finite >= 0, laggingTickers string[]
   - `energyComplex` (if present): natGas/coal objects with ticker (UNG/COAL), asOf YYYY-MM-DD, roc3/z30 finite numbers, active boolean

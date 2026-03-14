@@ -33,6 +33,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-03 — (Product/Data) War Lie Detector history alignment (PR28)
+**Choice:** Historical labelHistory now includes per-day UGA/USO product stress when UGA data is available. Chart bands align with current plumbing model. Same thresholds as PR27 (z30 ≥ 1 or roc3 ≥ 4% for product stress; watch + product stress → strong). If UGA fetch fails, history falls back to plumbing+macro only. No per-day substitution (UNG/COAL) in history.
+
+**Why:** Chart bands and "Latest REAL_RISK began" previously reflected plumbing+macro-only logic; history now matches current-state regime model.
+
+---
+
 ### 2026-02 — (Data/Ops) Plumbing War Lie Detector artifact (geopolitical plumbing)
 **Choice:** Added `public/plumbing.war_lie_detector.json` artifact that answers whether physical markets support the political narrative (real shipping/war risk) or are mostly "theater." Uses proxy tickers: BNO (Brent), USO (WTI), GLD (gold), SPY (risk), TIP (TIPS), UUP (dollar). Core metric for z-score and ROC: BNO/USO ratio (more stable than level spread); spread (BNO−USO) kept for display. Label logic: THEATER (z30 < 1 and !goldConfirm), WATCH (z30 ≥ 1 or goldConfirm), REAL_RISK (z30 ≥ 2 and goldConfirm). Score: +2 if z30 ≥ 2, +1 if z30 ≥ 1, +1 if goldConfirm (max 3). Artifacts are generated in CI (workflows/build); never committed. Run `pnpm -s update:plumbing-war-lie-detector` locally; verify with `pnpm -s verify:artifacts`.
 

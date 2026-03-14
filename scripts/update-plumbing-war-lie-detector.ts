@@ -172,6 +172,28 @@ function computeRegimeFromBucketsHistorical(z30: number, goldConfirm: boolean): 
   return 'WATCH';
 }
 
+/** Historical regime with product stress. Mirrors current computeBucketState for physical plumbing. */
+function computeRegimeFromBucketsHistoricalWithProductStress(
+  z30: number,
+  goldConfirm: boolean,
+  productStressActive: boolean | null
+): PlumbingLabel {
+  const baseFromZ30: BucketState['physicalPlumbing'] =
+    !Number.isFinite(z30) || z30 < 1 ? 'low' : z30 >= 2 ? 'strong' : 'watch';
+  const physicalPlumbing: BucketState['physicalPlumbing'] =
+    baseFromZ30 === 'strong'
+      ? 'strong'
+      : baseFromZ30 === 'watch' && productStressActive === true
+        ? 'strong'
+        : baseFromZ30;
+  const bucketState: BucketState = {
+    physicalPlumbing,
+    substitutionActive: false,
+    macroConfirm: goldConfirm,
+  };
+  return computeRegimeFromBuckets(bucketState);
+}
+
 /** Phase from roc3: RISING >= 0.5%, EASING <= -0.5%, FLAT otherwise. */
 function getPhase(roc3: number): 'RISING' | 'FLAT' | 'EASING' {
   if (roc3 >= 0.5) return 'RISING';
@@ -400,6 +422,65 @@ async function fetchProductStressProxy(
     };
   } catch (err) {
     console.warn('  WARN: Product stress (UGA) fetch failed:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+/** Per-day historical product stress. Returns Map<index, active | null>. Null when UGA data missing. */
+async function fetchHistoricalProductStress(
+  closeByDate: Map<string, Record<string, number>>,
+  alignedDates: string[],
+  historyStart: number,
+  lastIdx: number
+): Promise<Map<number, boolean | null> | null> {
+  const endDate = alignedDates[lastIdx]!;
+  const start = new Date(alignedDates[historyStart]!);
+  start.setDate(start.getDate() - 90);
+  const startDate = start.toISOString().split('T')[0]!;
+
+  try {
+    const ugaBars = await fetchEnergyBars('UGA', startDate, endDate);
+    if (!ugaBars || ugaBars.length < 34) return null;
+
+    const ugaByDate = new Map(ugaBars.map((b) => [b.date, b.close]));
+    const result = new Map<number, boolean | null>();
+
+    for (let i = historyStart; i <= lastIdx; i++) {
+      const winStart = Math.max(0, i - 29);
+      const ratioArr: number[] = [];
+      for (let j = winStart; j <= i; j++) {
+        const d = alignedDates[j]!;
+        const uso = closeByDate.get(d)?.USO;
+        const uga = ugaByDate.get(d);
+        if (uso == null || uso <= 0 || uga == null || uga <= 0) {
+          ratioArr.length = 0;
+          break;
+        }
+        ratioArr.push(uga / uso);
+      }
+      if (ratioArr.length < 30) {
+        result.set(i, null);
+        continue;
+      }
+      const ratioVal = ratioArr[ratioArr.length - 1]!;
+      let roc3 = NaN;
+      if (ratioArr.length >= 4 && ratioArr[ratioArr.length - 4]! > 0) {
+        roc3 = ((ratioVal - ratioArr[ratioArr.length - 4]!) / ratioArr[ratioArr.length - 4]!) * 100;
+      }
+      let z30 = NaN;
+      const win30 = ratioArr.slice(-30);
+      const mean30 = win30.reduce((a, b) => a + b, 0) / 30;
+      const var30 = win30.reduce((a, b) => a + (b - mean30) ** 2, 0) / 30;
+      const std30 = Math.sqrt(var30) || 1e-10;
+      z30 = (ratioVal - mean30) / std30;
+      const active =
+        (Number.isFinite(z30) && z30 >= PRODUCT_STRESS_Z30_THRESHOLD) ||
+        (Number.isFinite(roc3) && roc3 >= PRODUCT_STRESS_ROC3_THRESHOLD);
+      result.set(i, active);
+    }
+    return result;
+  } catch (err) {
+    console.warn('  WARN: Historical product stress (UGA) fetch failed:', err instanceof Error ? err.message : err);
     return null;
   }
 }
@@ -735,11 +816,35 @@ function main() {
     labelHistory,
   };
 
-  return { artifact, asOf, score, goldConfirm, closeByDate, alignedDates };
+  return {
+    artifact,
+    asOf,
+    score,
+    goldConfirm,
+    closeByDate,
+    alignedDates,
+    ratio,
+    gldSpyRatio,
+    gldTipRatio,
+    historyStart,
+    lastIdx,
+  };
 }
 
 async function run() {
-  const { artifact, asOf, score, goldConfirm, closeByDate, alignedDates } = main();
+  const {
+    artifact,
+    asOf,
+    score,
+    goldConfirm,
+    closeByDate,
+    alignedDates,
+    ratio,
+    gldSpyRatio,
+    gldTipRatio,
+    historyStart,
+    lastIdx,
+  } = main();
   try {
     console.log('  Fetching energy complex (UNG, COAL) from Stooq...');
     artifact.energyComplex = await fetchEnergyComplex(asOf);
@@ -763,6 +868,55 @@ async function run() {
     }
   } catch (err) {
     console.warn('  WARN: Product stress fetch failed (continuing without):', err instanceof Error ? err.message : err);
+  }
+
+  // Rebuild labelHistory with per-day product stress when UGA data available.
+  const productStressByIndex = await fetchHistoricalProductStress(
+    closeByDate,
+    alignedDates,
+    historyStart,
+    lastIdx
+  );
+  if (productStressByIndex != null) {
+    const newLabelHistory: PlumbingLabelHistoryPoint[] = [];
+    for (let i = historyStart; i <= lastIdx; i++) {
+      const d = alignedDates[i]!;
+      const r = ratio[i]!;
+      let dayZ30 = NaN;
+      if (i >= 29) {
+        const win30 = ratio.slice(i - 29, i + 1);
+        const mean30 = win30.reduce((a, b) => a + b, 0) / 30;
+        const var30 = win30.reduce((a, b) => a + (b - mean30) ** 2, 0) / 30;
+        const std30 = Math.sqrt(var30) || 1e-10;
+        dayZ30 = (r - mean30) / std30;
+      }
+      const gs = gldSpyRatio[i]!;
+      let dayGldSpyRoc5 = NaN;
+      let dayGldTipRoc5 = NaN;
+      if (i >= 5 && gldSpyRatio[i - 5]! > 0) {
+        dayGldSpyRoc5 = ((gs - gldSpyRatio[i - 5]!) / gldSpyRatio[i - 5]!) * 100;
+      }
+      if (i >= 5 && gldTipRatio[i - 5]! > 0) {
+        dayGldTipRoc5 = ((gldTipRatio[i]! - gldTipRatio[i - 5]!) / gldTipRatio[i - 5]!) * 100;
+      }
+      const dayGoldConfirm =
+        Number.isFinite(dayGldSpyRoc5) && Number.isFinite(dayGldTipRoc5) && dayGldSpyRoc5 > 0 && dayGldTipRoc5 > 0;
+      const dayProductStressActive = productStressByIndex.get(i) ?? null;
+      const dayLabel = computeRegimeFromBucketsHistoricalWithProductStress(
+        dayZ30,
+        dayGoldConfirm,
+        dayProductStressActive
+      );
+      let dayScore = 0;
+      if (Number.isFinite(dayZ30)) {
+        if (dayZ30 >= 2) dayScore += 2;
+        else if (dayZ30 >= 1) dayScore += 1;
+      }
+      if (dayGoldConfirm) dayScore += 1;
+      dayScore = Math.min(3, dayScore);
+      newLabelHistory.push({ date: d, label: dayLabel, score: dayScore });
+    }
+    artifact.labelHistory = newLabelHistory;
   }
 
   // Bucket-based regime (v2 plumbing-first). Product stress can upgrade watch→strong.

@@ -47,6 +47,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-03 — (UI) War Lie Detector stress chart (PR30)
+**Choice:** Main plumbing chart now displays inverted spread (BNO−USO) so higher = more stress. Title changed to "Plumbing stress"; helper text "Derived from Brent−WTI spread; higher = more stress." Raw spread remains in technical details. Regime bands unchanged. No model or artifact changes.
+
+**Why:** Raw spread often moves down during stress; inverting for display makes the chart read as a stress-up gauge without mental algebra.
+
+---
+
 ### 2026-02 — (Data/Ops) Plumbing War Lie Detector artifact (geopolitical plumbing)
 **Choice:** Added `public/plumbing.war_lie_detector.json` artifact that answers whether physical markets support the political narrative (real shipping/war risk) or are mostly "theater." Uses proxy tickers: BNO (Brent), USO (WTI), GLD (gold), SPY (risk), TIP (TIPS), UUP (dollar). Core metric for z-score and ROC: BNO/USO ratio (more stable than level spread); spread (BNO−USO) kept for display. Label logic: THEATER (z30 < 1 and !goldConfirm), WATCH (z30 ≥ 1 or goldConfirm), REAL_RISK (z30 ≥ 2 and goldConfirm). Score: +2 if z30 ≥ 2, +1 if z30 ≥ 1, +1 if goldConfirm (max 3). Artifacts are generated in CI (workflows/build); never committed. Run `pnpm -s update:plumbing-war-lie-detector` locally; verify with `pnpm -s verify:artifacts`.
 

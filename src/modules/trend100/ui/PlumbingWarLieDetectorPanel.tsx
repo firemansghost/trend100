@@ -410,8 +410,8 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
 
   const spreadChartData = history.map((h) => ({
     date: h.date,
-    spread: h.spread,
-    spread_ma5: h.spread_ma5,
+    stress: -(h.spread),
+    stress_ma5: Number.isFinite(h.spread_ma5) ? -(h.spread_ma5) : NaN,
   }));
 
   const ratioChartData = history.map((h) => ({
@@ -566,6 +566,9 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         {techDetailsOpen && (
           <ul className="text-xs text-slate-400 space-y-1 list-disc list-inside mt-2">
             <li>
+              <strong>Raw spread (BNO−USO)</strong>: {latest.spread.toFixed(4)} — chart displays inverted for stress-up readability
+            </li>
+            <li>
               <strong>Phase</strong> (3d change): {getPhase(latest.spread_roc3)} — RISING ≥0.5%, EASING ≤−0.5%, FLAT otherwise
             </li>
             <li>
@@ -622,10 +625,11 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         )}
       </div>
 
-      {/* Chart 1: Spread + MA5 with regime bands */}
+      {/* Chart 1: Plumbing stress (inverted spread for stress-up display) */}
       <div className="rounded border border-zinc-800 bg-zinc-900/40 p-3">
         <p className="text-xs text-slate-400 mb-2">
-          Oil dislocation (Brent vs WTI proxies)
+          Plumbing stress
+          <span className="ml-2 text-slate-500">· Derived from Brent−WTI spread; higher = more stress</span>
           {regimeBands.length > 0 && (
             <span className="ml-2 text-slate-500">· Bands: CONTAINED (slate) / WATCH (amber) / REAL_RISK (red)</span>
           )}
@@ -633,15 +637,15 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         <PlumbingSimpleChart
           data={spreadChartData}
           lines={[
-            { dataKey: 'spread', stroke: '#a1a1aa', name: 'Spread' },
-            { dataKey: 'spread_ma5', stroke: '#fbbf24', name: 'MA5' },
+            { dataKey: 'stress', stroke: '#a1a1aa', name: 'Stress' },
+            { dataKey: 'stress_ma5', stroke: '#fbbf24', name: 'MA5' },
           ]}
           height={180}
           regimeBands={regimeBands}
           tickInterval="monthly"
           lastValueLabel={
             <span className="text-xs text-slate-400">
-              Last: {latest.spread.toFixed(4)} · MA5: {latest.spread_ma5.toFixed(4)}
+              Stress: {(-latest.spread).toFixed(2)} · MA5: {Number.isFinite(latest.spread_ma5) ? (-latest.spread_ma5).toFixed(2) : '—'}
             </span>
           }
         />

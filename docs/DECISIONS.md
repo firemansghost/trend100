@@ -61,6 +61,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-03 — (UI) War Lie Detector transitions (PR32)
+**Choice:** Added context-aware transition note derived from labelHistory, displayed near the plumbing chart. When regime is REAL_RISK: "Latest REAL_RISK began: YYYY-MM-DD". When WATCH: "Latest upgrade to WATCH: YYYY-MM-DD". When CONTAINED: "Latest downgrade to CONTAINED: YYYY-MM-DD". No artifact or model changes.
+
+**Why:** Help users see when the latest meaningful regime change occurred without adding hardcoded event markers.
+
+---
+
 ### 2026-02 — (Data/Ops) Plumbing War Lie Detector artifact (geopolitical plumbing)
 **Choice:** Added `public/plumbing.war_lie_detector.json` artifact that answers whether physical markets support the political narrative (real shipping/war risk) or are mostly "theater." Uses proxy tickers: BNO (Brent), USO (WTI), GLD (gold), SPY (risk), TIP (TIPS), UUP (dollar). Core metric for z-score and ROC: BNO/USO ratio (more stable than level spread); spread (BNO−USO) kept for display. Label logic: THEATER (z30 < 1 and !goldConfirm), WATCH (z30 ≥ 1 or goldConfirm), REAL_RISK (z30 ≥ 2 and goldConfirm). Score: +2 if z30 ≥ 2, +1 if z30 ≥ 1, +1 if goldConfirm (max 3). Artifacts are generated in CI (workflows/build); never committed. Run `pnpm -s update:plumbing-war-lie-detector` locally; verify with `pnpm -s verify:artifacts`.
 

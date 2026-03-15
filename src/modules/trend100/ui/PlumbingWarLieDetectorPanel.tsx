@@ -112,6 +112,49 @@ function buildRegimeBands(labelHistory: Array<{ date: string; label: string }>):
   return bands;
 }
 
+/** Context-aware transition note from labelHistory. Returns null when no transition exists. */
+function getLatestTransitionNote(
+  labelHistory: Array<{ date: string; label: string }> | undefined,
+  currentLabel: PlumbingWarLieDetector['label']
+): string | null {
+  if (!labelHistory || labelHistory.length < 2) return null;
+
+  if (currentLabel === 'REAL_RISK') {
+    for (let i = labelHistory.length - 1; i >= 0; i--) {
+      if (labelHistory[i]!.label === 'REAL_RISK') {
+        let j = i;
+        while (j > 0 && labelHistory[j - 1]!.label === 'REAL_RISK') j--;
+        return `Latest REAL_RISK began: ${labelHistory[j]!.date}`;
+      }
+    }
+    return null;
+  }
+
+  if (currentLabel === 'WATCH') {
+    for (let i = labelHistory.length - 1; i >= 1; i--) {
+      const prev = labelHistory[i - 1]!;
+      const curr = labelHistory[i]!;
+      if (prev.label !== 'WATCH' && curr.label === 'WATCH') {
+        return `Latest upgrade to WATCH: ${curr.date}`;
+      }
+    }
+    return null;
+  }
+
+  if (currentLabel === 'THEATER') {
+    for (let i = labelHistory.length - 1; i >= 1; i--) {
+      const prev = labelHistory[i - 1]!;
+      const curr = labelHistory[i]!;
+      if (prev.label !== 'THEATER' && curr.label === 'THEATER') {
+        return `Latest downgrade to CONTAINED: ${curr.date}`;
+      }
+    }
+    return null;
+  }
+
+  return null;
+}
+
 const ONBOARDING_LINE = 'This dashboard checks whether war-related energy stress is real, broadening, or fading.';
 
 /** Plain-English headline — acute market stress framing, not war-grade. */
@@ -317,6 +360,10 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
   const regimeBands = useMemo(
     () => (labelHistory && labelHistory.length > 0 ? buildRegimeBands(labelHistory) : []),
     [labelHistory]
+  );
+  const transitionNote = useMemo(
+    () => getLatestTransitionNote(labelHistory, label),
+    [labelHistory, label]
   );
 
   const spreadChartData = history.map((h) => ({
@@ -545,6 +592,9 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             <span className="ml-2 text-slate-500">· Bands: CONTAINED (slate) / WATCH (amber) / REAL_RISK (red)</span>
           )}
         </p>
+        {transitionNote && (
+          <p className="text-xs text-slate-500 mb-2">{transitionNote}</p>
+        )}
         <PlumbingSimpleChart
           data={spreadChartData}
           lines={[

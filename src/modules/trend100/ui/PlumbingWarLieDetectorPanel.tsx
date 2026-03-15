@@ -114,20 +114,25 @@ function buildRegimeBands(labelHistory: Array<{ date: string; label: string }>):
 
 const ONBOARDING_LINE = 'This dashboard checks whether war-related energy stress is real, broadening, or fading.';
 
-/** Plain-English current read — must match chips and signal cards. */
+/** Plain-English headline — acute market stress framing, not war-grade. */
 function getCurrentRead(s: PanelState): string {
   if (s.label === 'THEATER') {
     const bucketsActive = s.gasOrCoalActive || s.goldConfirm;
-    if (!bucketsActive) {
-      return 'Conditions are contained. Stress is still mostly localized; plumbing and substitution are quiet.';
+    const easing = s.trajectoryState === 'EASING';
+    const base = 'Acute market stress is contained for now.';
+    if (!bucketsActive && easing) {
+      return `${base} Plumbing stress has cooled from peak and is not broadly spreading.`;
     }
-    return 'Conditions are contained. Plumbing stress is still low; substitution and macro may be active, but without stronger plumbing the regime does not escalate.';
+    if (!bucketsActive) {
+      return `${base} Stress is localized rather than broadly spreading; plumbing and substitution are quiet.`;
+    }
+    return `${base} Plumbing stress is low; without stronger plumbing the regime does not escalate.`;
   }
   if (s.label === 'REAL_RISK') {
     if (s.gasOrCoalActive && s.goldConfirm) {
-      return 'Stress is broadening beyond oil. Oil, gold, and the wider energy complex are confirming together.';
+      return 'Acute stress is broadening beyond oil. Oil, gold, and the wider energy complex are confirming together.';
     }
-    return 'Stress is broadening beyond oil. Oil and gold are confirming; watch for gas or coal to join.';
+    return 'Acute stress is broadening beyond oil. Oil and gold are confirming; watch for gas or coal to join.';
   }
   if (s.label === 'WATCH') {
     if (s.oilActive && !s.goldConfirm) {
@@ -135,7 +140,7 @@ function getCurrentRead(s: PanelState): string {
       return `Stress is building, but not yet broadly confirmed. Plumbing is active; ${quiet}.`;
     }
     if (s.goldConfirm && !s.oilActive) {
-      return 'Macro is confirming, but plumbing is not yet at strong stress. Stress is still mostly confined to oil.';
+      return 'Macro is confirming, but plumbing is not yet at strong stress. Stress is localized rather than broadly spreading.';
     }
     if (s.gasOrCoalActive) {
       return 'Stress is broadening beyond oil. Substitution is active.';
@@ -169,7 +174,37 @@ function getWhatToWatchNext(s: PanelState): string[] {
   } else {
     bullets.push('If plumbing stress rises above Watch → WATCH', 'If macro confirmation flips on → WATCH (and watch for REAL_RISK)');
   }
-  return bullets.slice(0, 5);
+  return bullets.slice(0, 3);
+}
+
+/** Why this read — max 3 bullets for regime/trajectory/breadth. */
+function getWhyThisReadBullets(data: PlumbingWarLieDetector, s: PanelState): string[] {
+  const trajectory = getTrajectory(data);
+  const energyBreadth = getEnergyBreadth(data);
+  const out: string[] = [];
+  if (s.label === 'THEATER') {
+    const bucketsActive = s.gasOrCoalActive || s.goldConfirm;
+    out.push(bucketsActive
+      ? 'Plumbing stress is low; substitution and macro may be active, but without stronger plumbing the regime does not escalate.'
+      : 'Plumbing stress is low; substitution and macro are quiet.');
+    out.push(`Trajectory is ${trajectory.state}: recent oil move is ${s.phase === 'EASING' ? 'negative' : s.phase === 'FLAT' ? 'flat' : 'positive'} and plumbing is below Watch.`);
+  } else if (s.label === 'WATCH') {
+    if (s.oilActive && !s.goldConfirm) {
+      out.push(`Plumbing stress is present; macro is quiet and ${s.gasOrCoalActive ? 'substitution is active' : 'substitution is quiet'}.`);
+    } else if (s.goldConfirm && !s.oilActive) {
+      out.push('Macro is confirming but plumbing is not yet at strong stress; stress is localized.');
+    } else {
+      out.push('Signals are split across buckets; substitution and macro are limited.');
+    }
+    out.push(`Breadth: ${energyBreadth.state} — ${energyBreadth.reason}`);
+  } else {
+    out.push(s.gasOrCoalActive ? 'Plumbing strong + substitution and/or macro confirming.' : 'Plumbing strong + macro confirming.');
+    out.push(`Breadth: ${energyBreadth.state} — ${energyBreadth.reason}`);
+  }
+  if (data.productStress?.active && out.length < 3) {
+    out.push('Refined product stress (UGA/USO) is active, supporting the plumbing read.');
+  }
+  return out.slice(0, 3);
 }
 
 /** Plain-English verdict one-liner. */
@@ -368,8 +403,6 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
   const panelState = useMemo(() => getPanelState(data), [data]);
   const trajectory = useMemo(() => getTrajectory(data), [data]);
   const energyBreadth = useMemo(() => getEnergyBreadth(data), [data]);
-  const explainBullets = useMemo(() => getExplainBullets(data, panelState), [data, panelState]);
-
   const regimeBands = useMemo(
     () => (labelHistory && labelHistory.length > 0 ? buildRegimeBands(labelHistory) : []),
     [labelHistory]
@@ -447,10 +480,25 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         );
       })()}
 
-      {/* Short explanation: verdict + trajectory + energy */}
-      <p className="text-sm text-slate-300">{getVerdict(panelState)}</p>
-      <p className="text-sm text-slate-400">{trajectory.reason}</p>
-      <p className="text-sm text-slate-500">{energyBreadth.reason}</p>
+      {/* Why this read */}
+      <div className="rounded border border-zinc-800 bg-zinc-900/30 px-3 py-2">
+        <p className="text-xs font-medium text-slate-400 mb-1.5">Why this read</p>
+        <ul className="text-xs text-slate-300 space-y-0.5 list-disc list-inside">
+          {getWhyThisReadBullets(data, panelState).map((bullet, i) => (
+            <li key={i}>{bullet}</li>
+          ))}
+        </ul>
+      </div>
+
+      {/* What would change this read */}
+      <div className="rounded border border-zinc-800 bg-zinc-900/30 px-3 py-2">
+        <p className="text-xs font-medium text-slate-400 mb-1.5">What would change this read</p>
+        <ul className="text-xs text-slate-300 space-y-0.5 list-disc list-inside">
+          {getWhatToWatchNext(panelState).map((bullet, i) => (
+            <li key={i}>{bullet}</li>
+          ))}
+        </ul>
+      </div>
 
       {/* Lag sentence when lag exists */}
       {lagTradingDays > 0 && dataFreshness && (
@@ -461,16 +509,6 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
           {' '}This call is held back by lagging input data, not by the model itself.
         </p>
       )}
-
-      {/* What to watch next */}
-      <div className="rounded border border-zinc-800 bg-zinc-900/30 px-3 py-2">
-        <p className="text-xs font-medium text-slate-400 mb-1.5">What to watch next</p>
-        <ul className="text-xs text-slate-300 space-y-0.5 list-disc list-inside">
-          {getWhatToWatchNext(panelState).map((bullet, i) => (
-            <li key={i}>{bullet}</li>
-          ))}
-        </ul>
-      </div>
 
       {/* Signal cards: Oil Stress + Gold Confirm + Gas + Coal */}
       <div className="flex flex-wrap gap-3">
@@ -516,62 +554,8 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         )}
       </div>
 
-      {/* Data freshness */}
-      {(inputsLast || dataFreshness) && (
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-slate-500">Data freshness:</span>
-          {dataFreshness && (
-            <>
-              {lagTradingDays === 0 ? (
-                <span
-                  className={chipBase}
-                  title={inputsLast ? ['BNO', 'USO', 'GLD', 'SPY', 'TIP', 'UUP']
-                    .map((s) => `${s}=${inputsLast[s as keyof typeof inputsLast] ?? '?'}`)
-                    .join(' ') : undefined}
-                >
-                  Fresh: {dataFreshness.maxLastDate}
-                </span>
-              ) : (
-                <>
-                  <span className={chipBase}>
-                    Stale: {dataFreshness.minLastDate} → {dataFreshness.maxLastDate} ({lagTradingDays}d gap)
-                  </span>
-                  <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium border border-amber-700/60 bg-amber-900/40 text-amber-200">
-                    ⚠ {lagTradingDays}d lag
-                  </span>
-                  {laggingList.length > 0 && (
-                    <span className={chipBase} title="Tickers at minLastDate holding the artifact back">
-                      Held back by: {laggingList.length <= 3 ? laggingList.join(', ') : laggingList.slice(0, 3).join(', ') + ` +${laggingList.length - 3} more`}
-                    </span>
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Explain: plain-English first, technical appendix second */}
+      {/* Technical details (collapsed) */}
       <div className="rounded border border-zinc-800 bg-zinc-900/30 p-3">
-        <p className="text-xs font-medium text-slate-400 mb-2">Explain</p>
-        <ul className="text-sm text-slate-300 space-y-1.5 list-none mb-3">
-          {explainBullets.bullets.map((b, i) => (
-            <li key={i} className="flex gap-2">
-              <span className="text-slate-500 shrink-0">•</span>
-              <span>{b}</span>
-            </li>
-          ))}
-        </ul>
-        {explainBullets.notLines.length > 0 && (
-          <div className="text-xs text-slate-500 space-y-0.5 mb-3 border-t border-zinc-800 pt-2">
-            {explainBullets.notLines.map((n, i) => (
-              <p key={i}>{n}</p>
-            ))}
-          </div>
-        )}
-        {explainBullets.lagLine && (
-          <p className="text-xs text-amber-200/80 mb-3">{explainBullets.lagLine}</p>
-        )}
         <button
           type="button"
           onClick={() => setTechDetailsOpen(!techDetailsOpen)}

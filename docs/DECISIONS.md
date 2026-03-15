@@ -40,6 +40,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-03 — (UI) War Lie Detector panel simplify (PR29)
+**Choice:** Panel simplified to one headline (acute market stress framing), one "Why this read" box (max 3 bullets), and one "What would change this read" box (max 3 bullets). Redundant verdict/trajectory/energy lines and duplicate Explain/notLines removed. Duplicate Data freshness block removed (freshness remains in chip row). Copy reframed toward acute market stress (e.g. "Acute market stress is contained for now" instead of "Conditions are contained"). No model or data changes.
+
+**Why:** Reduce repetition and semantic overclaim; page should read as one clean briefing, not a stack of overlapping explanations.
+
+---
+
 ### 2026-02 — (Data/Ops) Plumbing War Lie Detector artifact (geopolitical plumbing)
 **Choice:** Added `public/plumbing.war_lie_detector.json` artifact that answers whether physical markets support the political narrative (real shipping/war risk) or are mostly "theater." Uses proxy tickers: BNO (Brent), USO (WTI), GLD (gold), SPY (risk), TIP (TIPS), UUP (dollar). Core metric for z-score and ROC: BNO/USO ratio (more stable than level spread); spread (BNO−USO) kept for display. Label logic: THEATER (z30 < 1 and !goldConfirm), WATCH (z30 ≥ 1 or goldConfirm), REAL_RISK (z30 ≥ 2 and goldConfirm). Score: +2 if z30 ≥ 2, +1 if z30 ≥ 1, +1 if goldConfirm (max 3). Artifacts are generated in CI (workflows/build); never committed. Run `pnpm -s update:plumbing-war-lie-detector` locally; verify with `pnpm -s verify:artifacts`.
 

@@ -1,7 +1,7 @@
 /**
  * PlumbingWarLieDetectorPanel — War Lie Detector (Truth in the Pipes) panel
  *
- * Shows status badge, checklist (spread z30, ROC3, GoldConfirm), and charts.
+ * Shows regime, trajectory, breadth chips, signal cards, and charts.
  * All user-facing text is derived from a single shared panel state to avoid contradictions.
  */
 
@@ -153,26 +153,26 @@ function getCurrentRead(s: PanelState): string {
 /** "What to watch next" bullets based on panel state. */
 function getWhatToWatchNext(s: PanelState): string[] {
   const bullets: string[] = [];
-  if (s.trajectoryState === 'ESCALATING') bullets.push('Escalation is broadening; watch for confirmation to persist.');
+  if (s.trajectoryState === 'ESCALATING') bullets.push('Stress is broadening; watch for confirmation to persist.');
   else if (s.trajectoryState === 'HOLDING') bullets.push('Stress is present, but not clearly broadening yet.');
   else if (s.trajectoryState === 'EASING') bullets.push('Pressure is cooling unless macro or substitution turns on.');
   if (s.energyBreadthState === 'NARROW') bullets.push('If substitution (gas or coal) turns on → stress broadening.');
-  else if (s.energyBreadthState === 'BROADENING') bullets.push('If macro confirmation flips on → broadening may become full stress.');
+  else if (s.energyBreadthState === 'BROADENING') bullets.push('If macro confirmation turns on → broadening may become full stress.');
   else if (s.energyBreadthState === 'FULL_STRESS') bullets.push('If substitution and macro stay on together → broad stress remains in place.');
   if (s.label === 'WATCH') {
     if (s.oilActive && !s.goldConfirm) {
-      bullets.push('If macro confirmation flips on → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift to CONTAINED');
+      bullets.push('If macro confirmation turns on → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift to CONTAINED');
     } else if (s.goldConfirm && !s.oilActive) {
-      bullets.push('If plumbing stress rises above Watch → likely REAL_RISK', 'If macro turns off → likely CONTAINED/WATCH');
+      bullets.push('If plumbing stress rises to Watch → likely REAL_RISK', 'If macro turns off → likely CONTAINED/WATCH');
     } else {
-      bullets.push('If macro confirmation flips on → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift to CONTAINED');
+      bullets.push('If macro confirmation turns on → likely REAL_RISK', 'If Phase turns EASING for a few days → likely downshift to CONTAINED');
     }
     if (!s.gasActive) bullets.push('If Gas Stress turns ON → energy supply crunch broadening');
   } else if (s.label === 'REAL_RISK') {
     bullets.push('If macro stays on and Phase stays RISING → escalation', 'If macro turns off → likely downshift to WATCH');
     if (!s.goldConfirm && !s.gasActive) bullets.push('Substitution and macro turn off → risk narrowing back to oil-only stress');
   } else {
-    bullets.push('If plumbing stress rises above Watch → WATCH', 'If macro confirmation flips on → WATCH (and watch for REAL_RISK)');
+    bullets.push('If plumbing stress rises to Watch → WATCH', 'If macro confirmation turns on → WATCH (and watch for REAL_RISK)');
   }
   return bullets.slice(0, 3);
 }
@@ -205,19 +205,6 @@ function getWhyThisReadBullets(data: PlumbingWarLieDetector, s: PanelState): str
     out.push('Refined product stress (UGA/USO) is active, supporting the plumbing read.');
   }
   return out.slice(0, 3);
-}
-
-/** Plain-English verdict one-liner. */
-function getVerdict(s: PanelState): string {
-  if (s.label === 'REAL_RISK') return 'Plumbing strong + (substitution or macro) confirming → REAL_RISK.';
-  if (s.label === 'THEATER') {
-    const bucketsActive = s.gasOrCoalActive || s.goldConfirm;
-    if (!bucketsActive) return 'Plumbing stress is low; substitution and macro are quiet → CONTAINED.';
-    return 'Plumbing stress is low; substitution and macro may be active, but without stronger plumbing → CONTAINED.';
-  }
-  if (s.oilActive && !s.goldConfirm) return 'Plumbing stress rising, but substitution and macro quiet → WATCH.';
-  if (s.goldConfirm && !s.oilActive) return 'Macro confirming, but plumbing not yet stressed → WATCH.';
-  return 'Mixed signals → WATCH.';
 }
 
 /** Phase: RISING (ROC3 >= 0.5%), EASING (<= -0.5%), FLAT otherwise. */
@@ -287,82 +274,6 @@ function getEnergyBreadth(data: PlumbingWarLieDetector): NonNullable<PlumbingWar
   return { state: oilStress ? 'BROADENING' : 'NARROW', reason: oilStress ? 'Signals are split across buckets.' : 'Stress is still mostly confined to oil.' };
 }
 
-/** "Gas and coal" phrase for plain-English — matches actual signal state. */
-function gasCoalPhrase(s: PanelState): string {
-  if (s.gasActive && s.coalActive) return 'gas and coal are on';
-  if (s.gasActive) return 'gas is on';
-  if (s.coalActive) return 'coal is on';
-  if (s.coalAvailable) return 'gas and coal are off';
-  return 'gas is off';
-}
-
-/** Plain-English Explain bullets + "Not X because" lines + optional lag line. */
-function getExplainBullets(data: PlumbingWarLieDetector, s: PanelState): {
-  bullets: string[];
-  notLines: string[];
-  lagLine: string | null;
-} {
-  const trajectory = getTrajectory(data);
-  const bullets: string[] = [];
-  const notLines: string[] = [];
-  const lagTradingDays = data.dataFreshness?.lagTradingDays ?? 0;
-  const laggingList = data.dataFreshness?.laggingTickers ?? [];
-  const lagLine: string | null =
-    lagTradingDays > 0 && laggingList.length > 0
-      ? `This panel is ${lagTradingDays} trading day${lagTradingDays === 1 ? '' : 's'} behind because ${laggingList[0]}${laggingList.length > 1 ? ` and ${laggingList.length - 1} other input${laggingList.length === 2 ? '' : 's'}` : ''} ${laggingList.length === 1 ? 'has' : 'have'} not printed the latest close yet.`
-      : lagTradingDays > 0
-        ? 'The model is waiting for the last common date across all required inputs.'
-        : null;
-
-  if (s.label === 'THEATER') {
-    const bucketsActive = s.gasOrCoalActive || s.goldConfirm;
-    bullets.push('Bottom line: Plumbing stress has cooled; without stronger plumbing, the regime stays contained.');
-    bullets.push(bucketsActive
-      ? 'Why this is CONTAINED: Plumbing stress is low; substitution and macro may be active, but without stronger plumbing the regime does not escalate.'
-      : 'Why this is CONTAINED: Plumbing stress is low; substitution and macro are quiet.');
-    bullets.push(`Why this is ${trajectory.state}: The recent oil move is ${s.phase === 'EASING' ? 'negative' : s.phase === 'FLAT' ? 'flat' : 'positive'} and plumbing stress is back below Watch.`);
-    bullets.push(bucketsActive
-      ? 'What would flip this back up: Plumbing stress rising above Watch would move toward WATCH; substitution and macro are already active, so plumbing is the gate.'
-      : 'What would flip this back up: Plumbing stress rising above Watch again, especially if substitution or macro turns on.');
-    notLines.push('Not WATCH because: plumbing stress is below the Watch threshold.');
-    notLines.push(bucketsActive
-      ? 'Not REAL_RISK because: plumbing not strong enough, even though substitution and macro may be active.'
-      : 'Not REAL_RISK because: plumbing not strong enough, or substitution and macro are quiet.');
-  } else if (s.label === 'WATCH') {
-    if (s.oilActive && !s.goldConfirm) {
-      bullets.push('Bottom line: Plumbing stress is still present, but the move is not clearly broadening.');
-      bullets.push(`Why this is not worse: Macro is quiet; ${s.gasOrCoalActive ? 'substitution is active' : 'substitution is quiet'}.`);
-      bullets.push('What would make it worse: If macro confirmation flips on while plumbing stays high, this likely moves toward REAL_RISK.');
-      bullets.push(s.gasOrCoalActive ? 'What would ease it: If substitution turns off while plumbing decelerates, pressure is likely cooling.' : 'What would ease it: If substitution and macro stay quiet while plumbing decelerates, pressure is likely cooling.');
-      notLines.push('Not REAL_RISK because: macro is quiet.');
-    } else if (s.goldConfirm && !s.oilActive) {
-      bullets.push('Bottom line: Macro is confirming, but plumbing is not yet at strong stress.');
-      bullets.push('Why this is not worse: The move is still mostly confined to oil.');
-      bullets.push('What would make it worse: If plumbing stress reaches strong (z30 ≥ 2), this likely moves toward REAL_RISK.');
-      bullets.push('What would ease it: If macro turns off, this likely downshifts to CONTAINED.');
-      notLines.push('Not REAL_RISK because: plumbing is not at strong stress.');
-    } else {
-      bullets.push('Bottom line: Plumbing is present, but signals are split across buckets.');
-      bullets.push('Why this is not worse: Substitution and macro are limited.');
-      bullets.push('What would make it worse: If substitution turns on, stress is broadening beyond oil.');
-      bullets.push(s.gasOrCoalActive ? 'What would ease it: If substitution turns off, this remains narrow.' : 'What would ease it: If substitution and macro stay quiet, this remains narrow.');
-      notLines.push('Not REAL_RISK because: macro is quiet or plumbing is not at strong stress.');
-    }
-  } else {
-    bullets.push('Bottom line: Plumbing strong; substitution or macro confirming.');
-    bullets.push(s.gasOrCoalActive ? 'Why this is REAL_RISK: Plumbing strong + substitution active and/or macro confirming.' : 'Why this is REAL_RISK: Plumbing strong + macro confirming.');
-    bullets.push(s.gasOrCoalActive ? 'What would make it worse: If substitution and macro stay on together, broad stress remains in place.' : 'What would make it worse: If substitution turns on, stress is broadening beyond oil.');
-    bullets.push('What would ease it: If macro turns off, this likely downshifts to WATCH.');
-    notLines.push('Not WATCH because: plumbing is Active and macro is confirming.');
-  }
-
-  if (data.productStress?.active) {
-    bullets.push('Refined product stress (UGA/USO) is active, supporting the plumbing read.');
-  }
-
-  return { bullets, notLines, lagLine };
-}
-
 function energyBreadthChipClass(state: 'NARROW' | 'BROADENING' | 'FULL_STRESS'): string {
   switch (state) {
     case 'NARROW':
@@ -398,7 +309,7 @@ function labelBadgeClass(displayLabel: string): string {
 }
 
 export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPanelProps) {
-  const { latest, signals, label, score, history, labelHistory, inputsLast, dataFreshness } = data;
+  const { latest, signals, label, score, history, labelHistory, dataFreshness } = data;
   const [techDetailsOpen, setTechDetailsOpen] = useState(false);
   const panelState = useMemo(() => getPanelState(data), [data]);
   const trajectory = useMemo(() => getTrajectory(data), [data]);
@@ -528,19 +439,19 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             {signals.goldConfirm ? 'Both ratio ROC5 > 0' : 'Not both positive'}
           </p>
         </div>
-        <div className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]">
-          <p className="text-xs font-medium text-slate-400 mb-1">Nat Gas Stress</p>
-          <p className="text-sm text-slate-200">
-            {data.energyComplex?.natGas == null
-              ? 'N/A'
-              : data.energyComplex.natGas.active
-                ? 'ON'
-                : 'OFF'}
-          </p>
-          <p className="text-xs text-slate-500 mt-0.5" title={data.energyComplex?.natGas ? `UNG: roc3 ${data.energyComplex.natGas.roc3}%, z30 ${data.energyComplex.natGas.z30}` : 'Data unavailable'}>
-            {data.energyComplex?.natGas ? `UNG · roc3: ${data.energyComplex.natGas.roc3}%, z30: ${data.energyComplex.natGas.z30}` : '—'}
-          </p>
-        </div>
+        {data.energyComplex?.natGas == null ? (
+          <span className={chipBase}>Nat Gas: N/A</span>
+        ) : (
+          <div className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]">
+            <p className="text-xs font-medium text-slate-400 mb-1">Nat Gas Stress</p>
+            <p className="text-sm text-slate-200">
+              {data.energyComplex.natGas.active ? 'ON' : 'OFF'}
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5" title={`UNG: roc3 ${data.energyComplex.natGas.roc3}%, z30 ${data.energyComplex.natGas.z30}`}>
+              UNG · roc3: {data.energyComplex.natGas.roc3}%, z30: {data.energyComplex.natGas.z30}
+            </p>
+          </div>
+        )}
         {data.energyComplex?.coal != null && (
           <div className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]">
             <p className="text-xs font-medium text-slate-400 mb-1">Coal Stress</p>

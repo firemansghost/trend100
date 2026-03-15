@@ -16,6 +16,8 @@ interface PlumbingWarLieDetectorPanelProps {
 }
 
 const chipBase = 'inline-flex items-center rounded-md px-2 py-0.5 text-xs bg-zinc-900/60 border border-zinc-800 text-slate-300';
+const cardActive = 'rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]';
+const cardInactive = 'rounded border border-zinc-700/60 bg-zinc-900/30 px-3 py-2 min-w-[140px]';
 
 /** Map artifact label to public-facing display. THEATER → CONTAINED per v2 spec. */
 function displayRegime(label: PlumbingWarLieDetector['label']): string {
@@ -470,7 +472,7 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
 
       {/* Signal cards: Oil Stress + Gold Confirm + Gas + Coal */}
       <div className="flex flex-wrap gap-3">
-        <div className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]">
+        <div className={latest.spread_z30 >= 1 ? cardActive : cardInactive}>
           <p className="text-xs font-medium text-slate-400 mb-1">Oil Stress</p>
           <p className="text-sm text-slate-200">
             {latest.spread_z30 >= 2 ? '✓ Active (≥2)' : latest.spread_z30 >= 1 ? '✓ Watch (≥1)' : '✓ Low (<1)'}
@@ -479,7 +481,7 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             z-score: {latest.spread_z30.toFixed(2)}
           </p>
         </div>
-        <div className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]">
+        <div className={signals.goldConfirm ? cardActive : cardInactive}>
           <p className="text-xs font-medium text-slate-400 mb-1">Gold Confirm</p>
           <p className="text-sm text-slate-200">{signals.goldConfirm ? '✓ Yes' : '✗ No'}</p>
           <p className="text-xs text-slate-500 mt-0.5" title="GLD/SPY and GLD/TIP 5-day ROC both positive.">
@@ -489,7 +491,7 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         {data.energyComplex?.natGas == null ? (
           <span className={chipBase}>Nat Gas: N/A</span>
         ) : (
-          <div className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]">
+          <div className={data.energyComplex.natGas.active ? cardActive : cardInactive}>
             <p className="text-xs font-medium text-slate-400 mb-1">Nat Gas Stress</p>
             <p className="text-sm text-slate-200">
               {data.energyComplex.natGas.active ? 'ON' : 'OFF'}
@@ -499,8 +501,10 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             </p>
           </div>
         )}
-        {data.energyComplex?.coal != null && (
-          <div className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]">
+        {data.energyComplex?.coal == null ? (
+          <span className={chipBase}>Coal: N/A</span>
+        ) : (
+          <div className={data.energyComplex.coal.active ? cardActive : cardInactive}>
             <p className="text-xs font-medium text-slate-400 mb-1">Coal Stress</p>
             <p className="text-sm text-slate-200">
               {data.energyComplex.coal.active ? 'ON' : 'OFF'}

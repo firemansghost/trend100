@@ -82,6 +82,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-03 — (UI) War Lie Detector chart timeframe (PR35)
+**Choice:** Chart timeframe chooser (1M / 3M / 6M / Max) above plumbing chart. Only options valid for actual history span are shown (e.g. with ~90-day history: 1M, 3M, Max; 6M when span >= 6 months). Filtering is client-side over existing history and labelHistory; regime bands and both charts use the same filtered date range. Control hidden when only Max is valid. No artifact or script changes.
+
+**Why:** Let users zoom to recent window or view full history without adding fetches or model logic.
+
+---
+
 ### 2026-02 — (Data/Ops) Plumbing War Lie Detector artifact (geopolitical plumbing)
 **Choice:** Added `public/plumbing.war_lie_detector.json` artifact that answers whether physical markets support the political narrative (real shipping/war risk) or are mostly "theater." Uses proxy tickers: BNO (Brent), USO (WTI), GLD (gold), SPY (risk), TIP (TIPS), UUP (dollar). Core metric for z-score and ROC: BNO/USO ratio (more stable than level spread); spread (BNO−USO) kept for display. Label logic: THEATER (z30 < 1 and !goldConfirm), WATCH (z30 ≥ 1 or goldConfirm), REAL_RISK (z30 ≥ 2 and goldConfirm). Score: +2 if z30 ≥ 2, +1 if z30 ≥ 1, +1 if goldConfirm (max 3). Artifacts are generated in CI (workflows/build); never committed. Run `pnpm -s update:plumbing-war-lie-detector` locally; verify with `pnpm -s verify:artifacts`.
 

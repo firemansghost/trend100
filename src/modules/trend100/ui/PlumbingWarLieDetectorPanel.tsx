@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { PlumbingWarLieDetector } from '../types';
 import { PlumbingSimpleChart, type PlumbingRegimeBand } from './PlumbingSimpleChart';
 
@@ -353,31 +353,85 @@ function labelBadgeClass(displayLabel: string): string {
   }
 }
 
+type TimeframeKey = '1M' | '3M' | '6M' | 'Max';
+
+function getValidTimeframeOptions(history: Array<{ date: string }>): TimeframeKey[] {
+  if (!history || history.length === 0) return ['Max'];
+  const first = new Date(history[0]!.date);
+  const last = new Date(history[history.length - 1]!.date);
+  const spanMonths = (last.getTime() - first.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+  const options: TimeframeKey[] = ['Max'];
+  if (spanMonths >= 1) options.unshift('1M');
+  if (spanMonths >= 3) options.splice(1, 0, '3M');
+  if (spanMonths >= 6) options.splice(2, 0, '6M');
+  return options;
+}
+
+function getStartDateForTimeframe(lastDate: string, timeframe: TimeframeKey): string | null {
+  if (timeframe === 'Max') return null;
+  const end = new Date(lastDate);
+  const months = timeframe === '1M' ? 1 : timeframe === '3M' ? 3 : 6;
+  const start = new Date(end);
+  start.setMonth(start.getMonth() - months);
+  return start.toISOString().slice(0, 10);
+}
+
 export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPanelProps) {
   const { latest, signals, label, score, history, labelHistory, dataFreshness } = data;
   const [techDetailsOpen, setTechDetailsOpen] = useState(false);
+  const [timeframe, setTimeframe] = useState<TimeframeKey>('Max');
   const panelState = useMemo(() => getPanelState(data), [data]);
   const trajectory = useMemo(() => getTrajectory(data), [data]);
   const energyBreadth = useMemo(() => getEnergyBreadth(data), [data]);
+
+  const validTimeframeOptions = useMemo(() => getValidTimeframeOptions(history), [history]);
+  useEffect(() => {
+    if (validTimeframeOptions.length > 0 && !validTimeframeOptions.includes(timeframe)) {
+      setTimeframe('Max');
+    }
+  }, [validTimeframeOptions, timeframe]);
+  const lastHistoryDate = history.length > 0 ? history[history.length - 1]!.date : '';
+  const filterStartDate = useMemo(
+    () => getStartDateForTimeframe(lastHistoryDate, timeframe),
+    [lastHistoryDate, timeframe]
+  );
+  const filteredHistory = useMemo(() => {
+    if (!filterStartDate) return history;
+    return history.filter((h) => h.date >= filterStartDate);
+  }, [history, filterStartDate]);
+  const filteredLabelHistory = useMemo(() => {
+    if (!labelHistory || labelHistory.length === 0) return [];
+    if (!filterStartDate) return labelHistory;
+    return labelHistory.filter((entry) => entry.date >= filterStartDate);
+  }, [labelHistory, filterStartDate]);
+
   const regimeBands = useMemo(
-    () => (labelHistory && labelHistory.length > 0 ? buildRegimeBands(labelHistory) : []),
-    [labelHistory]
+    () => (filteredLabelHistory.length > 0 ? buildRegimeBands(filteredLabelHistory) : []),
+    [filteredLabelHistory]
   );
   const transitionNote = useMemo(
     () => getLatestTransitionNote(labelHistory, label),
     [labelHistory, label]
   );
 
-  const spreadChartData = history.map((h) => ({
-    date: h.date,
-    stress: -(h.spread),
-    stress_ma5: Number.isFinite(h.spread_ma5) ? -(h.spread_ma5) : NaN,
-  }));
+  const spreadChartData = useMemo(
+    () =>
+      filteredHistory.map((h) => ({
+        date: h.date,
+        stress: -(h.spread),
+        stress_ma5: Number.isFinite(h.spread_ma5) ? -(h.spread_ma5) : NaN,
+      })),
+    [filteredHistory]
+  );
 
-  const ratioChartData = history.map((h) => ({
-    date: h.date,
-    gld_spy_ratio: h.gld_spy_ratio,
-  }));
+  const ratioChartData = useMemo(
+    () =>
+      filteredHistory.map((h) => ({
+        date: h.date,
+        gld_spy_ratio: h.gld_spy_ratio,
+      })),
+    [filteredHistory]
+  );
 
   const lagTradingDays = dataFreshness?.lagTradingDays ?? 0;
   const laggingList = dataFreshness?.laggingTickers ?? [];
@@ -594,6 +648,24 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
 
       {/* Chart 1: Plumbing stress (inverted spread for stress-up display) */}
       <div className="rounded border border-zinc-800 bg-zinc-900/40 p-3">
+        {validTimeframeOptions.length > 1 && (
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            {validTimeframeOptions.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => setTimeframe(opt)}
+                className={
+                  timeframe === opt
+                    ? 'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium border bg-zinc-700/60 border-zinc-600 text-slate-200'
+                    : 'inline-flex items-center rounded-md px-2 py-0.5 text-xs border bg-zinc-900/60 border-zinc-800 text-slate-400 hover:text-slate-300'
+                }
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
         <p className="text-xs text-slate-400 mb-2">
           Plumbing stress
           <span className="ml-2 text-slate-500">· Derived from Brent−WTI spread; higher = more stress</span>

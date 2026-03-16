@@ -196,6 +196,29 @@ function computeRegimeFromBucketsHistoricalWithProductStress(
   return computeRegimeFromBuckets(bucketState);
 }
 
+/** Historical regime with product stress and TTF. substitutionActive = TTF active that day. */
+function computeRegimeFromBucketsHistoricalWithProductStressAndTTF(
+  z30: number,
+  goldConfirm: boolean,
+  productStressActive: boolean | null,
+  ttfActive: boolean | null
+): PlumbingLabel {
+  const baseFromZ30: BucketState['physicalPlumbing'] =
+    !Number.isFinite(z30) || z30 < 1 ? 'low' : z30 >= 2 ? 'strong' : 'watch';
+  const physicalPlumbing: BucketState['physicalPlumbing'] =
+    baseFromZ30 === 'strong'
+      ? 'strong'
+      : baseFromZ30 === 'watch' && productStressActive === true
+        ? 'strong'
+        : baseFromZ30;
+  const bucketState: BucketState = {
+    physicalPlumbing,
+    substitutionActive: ttfActive === true,
+    macroConfirm: goldConfirm,
+  };
+  return computeRegimeFromBuckets(bucketState);
+}
+
 /** Phase from roc3: RISING >= 0.5%, EASING <= -0.5%, FLAT otherwise. */
 function getPhase(roc3: number): 'RISING' | 'FLAT' | 'EASING' {
   if (roc3 >= 0.5) return 'RISING';
@@ -486,6 +509,78 @@ async function fetchHistoricalProductStress(
     return result;
   } catch (err) {
     console.warn('  WARN: Historical product stress (UGA) fetch failed:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+/** TTF active thresholds (mirror PR36 current-state). */
+const TTF_ROC3_THRESHOLD = 5.0;
+const TTF_Z30_THRESHOLD = 1.0;
+
+/** Per-day historical TTF stress. Returns Map<index, active | null>. Null when TTF data missing. */
+async function fetchHistoricalTTFStress(
+  alignedDates: string[],
+  historyStart: number,
+  lastIdx: number
+): Promise<Map<number, boolean | null> | null> {
+  const endDate = alignedDates[lastIdx]!;
+  const start = new Date(alignedDates[historyStart]!);
+  start.setDate(start.getDate() - 90);
+  const startDate = start.toISOString().split('T')[0]!;
+
+  try {
+    const ttfBars = await fetchEnergyBars('TTF', startDate, endDate);
+    if (!ttfBars || ttfBars.length < 34) return null;
+
+    const ttfByDate = new Map(ttfBars.map((b) => [b.date, b.close]));
+    const result = new Map<number, boolean | null>();
+
+    for (let i = historyStart; i <= lastIdx; i++) {
+      const winStart = Math.max(0, i - 33);
+      const closes: number[] = [];
+      for (let j = winStart; j <= i; j++) {
+        const d = alignedDates[j]!;
+        const c = ttfByDate.get(d);
+        if (c == null || c <= 0) {
+          closes.length = 0;
+          break;
+        }
+        closes.push(c);
+      }
+      if (closes.length < 34) {
+        result.set(i, null);
+        continue;
+      }
+      const roc3Arr: number[] = [];
+      for (let k = 3; k < closes.length; k++) {
+        if (closes[k - 3]! > 0) {
+          roc3Arr.push(((closes[k]! - closes[k - 3]!) / closes[k - 3]!) * 100);
+        } else {
+          roc3Arr.push(NaN);
+        }
+      }
+      const lastRoc3 = roc3Arr[roc3Arr.length - 1];
+      if (!Number.isFinite(lastRoc3)) {
+        result.set(i, null);
+        continue;
+      }
+      const win30 = roc3Arr.slice(-30).filter(Number.isFinite);
+      if (win30.length < 20) {
+        result.set(i, null);
+        continue;
+      }
+      const mean = win30.reduce((a, b) => a + b, 0) / win30.length;
+      const variance = win30.reduce((a, b) => a + (b - mean) ** 2, 0) / win30.length;
+      const std = Math.sqrt(variance) || 1e-10;
+      const z30 = (lastRoc3 - mean) / std;
+      const active =
+        (Number.isFinite(z30) && z30 >= TTF_Z30_THRESHOLD) ||
+        (Number.isFinite(lastRoc3) && lastRoc3 >= TTF_ROC3_THRESHOLD);
+      result.set(i, active);
+    }
+    return result;
+  } catch (err) {
+    console.warn('  WARN: Historical TTF fetch failed:', err instanceof Error ? err.message : err);
     return null;
   }
 }
@@ -880,14 +975,22 @@ async function run() {
     console.warn('  WARN: Product stress fetch failed (continuing without):', err instanceof Error ? err.message : err);
   }
 
-  // Rebuild labelHistory with per-day product stress when UGA data available.
+  // Rebuild labelHistory with per-day product stress and/or TTF when available.
   const productStressByIndex = await fetchHistoricalProductStress(
     closeByDate,
     alignedDates,
     historyStart,
     lastIdx
   );
-  if (productStressByIndex != null) {
+  const ttfByIndex = await fetchHistoricalTTFStress(alignedDates, historyStart, lastIdx);
+  if (ttfByIndex != null) {
+    let ttfActiveCount = 0;
+    for (let i = historyStart; i <= lastIdx; i++) {
+      if (ttfByIndex.get(i) === true) ttfActiveCount++;
+    }
+    console.log(`   Historical TTF: ${ttfActiveCount} days active in window`);
+  }
+  if (productStressByIndex != null || ttfByIndex != null) {
     const newLabelHistory: PlumbingLabelHistoryPoint[] = [];
     for (let i = historyStart; i <= lastIdx; i++) {
       const d = alignedDates[i]!;
@@ -911,11 +1014,13 @@ async function run() {
       }
       const dayGoldConfirm =
         Number.isFinite(dayGldSpyRoc5) && Number.isFinite(dayGldTipRoc5) && dayGldSpyRoc5 > 0 && dayGldTipRoc5 > 0;
-      const dayProductStressActive = productStressByIndex.get(i) ?? null;
-      const dayLabel = computeRegimeFromBucketsHistoricalWithProductStress(
+      const dayProductStressActive = productStressByIndex?.get(i) ?? null;
+      const dayTtfActive = ttfByIndex?.get(i) ?? null;
+      const dayLabel = computeRegimeFromBucketsHistoricalWithProductStressAndTTF(
         dayZ30,
         dayGoldConfirm,
-        dayProductStressActive
+        dayProductStressActive,
+        dayTtfActive
       );
       let dayScore = 0;
       if (Number.isFinite(dayZ30)) {

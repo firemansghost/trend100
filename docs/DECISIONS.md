@@ -97,9 +97,16 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 ---
 
 ### 2026-03 — (Product/Data) War Lie Detector historical TTF alignment (PR38)
-**Choice:** Historical labelHistory now includes per-day TTF when Stooq TTF data is available. Historical substitution = TTF active that day (same logic as current: z30 ≥ 1 or roc3 ≥ 5%); chart bands and transition notes reflect TTF broadening in the past. Same source (Stooq TG.F via fetchEnergyBars) and thresholds as PR36. Per-day UNG/COAL in history remain deferred.
+**Choice:** Historical labelHistory now includes per-day TTF when Stooq TTF data is available. Historical substitution = TTF active that day (same logic as current: z30 ≥ 1 or roc3 ≥ 5%); chart bands and transition notes reflect TTF broadening in the past. Same source (Stooq TG.F via fetchEnergyBars) and thresholds as PR36. PR39 adds per-day UNG/COAL.
 
 **Why:** Chart bands and "Latest REAL_RISK began" previously ignored historical TTF; history now aligns with current-state regime model when TTF data exists.
+
+---
+
+### 2026-03 — (Product/Data) War Lie Detector historical Nat Gas and Coal substitution (PR39)
+**Choice:** Historical labelHistory now includes per-day UNG (Nat Gas) and COAL when data is available. Historical substitution = TTF OR Nat Gas OR Coal active that day; chart bands and transition notes reflect full substitution. Same sources (Stooq ung.us, coal.us via fetchEnergyBars) and thresholds as current (UNG: z30 ≥ 1 or roc3 ≥ 5%; COAL: z30 ≥ 1 or roc3 ≥ 3%). If UNG or COAL fetch fails, script continues without that signal for that run.
+
+**Why:** Chart bands and transition notes previously understated historical substitution when Nat Gas or Coal mattered; history now aligns with current-state substitution model when data exists.
 
 ---
 

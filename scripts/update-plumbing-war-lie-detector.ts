@@ -196,12 +196,14 @@ function computeRegimeFromBucketsHistoricalWithProductStress(
   return computeRegimeFromBuckets(bucketState);
 }
 
-/** Historical regime with product stress and TTF. substitutionActive = TTF active that day. */
-function computeRegimeFromBucketsHistoricalWithProductStressAndTTF(
+/** Historical regime with product stress and full substitution (TTF, Nat Gas, Coal). */
+function computeRegimeFromBucketsHistoricalWithProductStressAndSubstitution(
   z30: number,
   goldConfirm: boolean,
   productStressActive: boolean | null,
-  ttfActive: boolean | null
+  ttfActive: boolean | null,
+  natGasActive: boolean | null,
+  coalActive: boolean | null
 ): PlumbingLabel {
   const baseFromZ30: BucketState['physicalPlumbing'] =
     !Number.isFinite(z30) || z30 < 1 ? 'low' : z30 >= 2 ? 'strong' : 'watch';
@@ -211,9 +213,11 @@ function computeRegimeFromBucketsHistoricalWithProductStressAndTTF(
       : baseFromZ30 === 'watch' && productStressActive === true
         ? 'strong'
         : baseFromZ30;
+  const substitutionActive =
+    ttfActive === true || natGasActive === true || coalActive === true;
   const bucketState: BucketState = {
     physicalPlumbing,
-    substitutionActive: ttfActive === true,
+    substitutionActive,
     macroConfirm: goldConfirm,
   };
   return computeRegimeFromBuckets(bucketState);
@@ -581,6 +585,150 @@ async function fetchHistoricalTTFStress(
     return result;
   } catch (err) {
     console.warn('  WARN: Historical TTF fetch failed:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+/** UNG (Nat Gas) active thresholds (mirror current-state). */
+const UNG_ROC3_THRESHOLD = 5.0;
+const UNG_Z30_THRESHOLD = 1.0;
+
+/** Per-day historical Nat Gas stress. Returns Map<index, active | null>. Null when UNG data missing. */
+async function fetchHistoricalNatGasStress(
+  alignedDates: string[],
+  historyStart: number,
+  lastIdx: number
+): Promise<Map<number, boolean | null> | null> {
+  const endDate = alignedDates[lastIdx]!;
+  const start = new Date(alignedDates[historyStart]!);
+  start.setDate(start.getDate() - 90);
+  const startDate = start.toISOString().split('T')[0]!;
+
+  try {
+    const ungBars = await fetchEnergyBars('UNG', startDate, endDate);
+    if (!ungBars || ungBars.length < 34) return null;
+
+    const ungByDate = new Map(ungBars.map((b) => [b.date, b.close]));
+    const result = new Map<number, boolean | null>();
+
+    for (let i = historyStart; i <= lastIdx; i++) {
+      const winStart = Math.max(0, i - 33);
+      const closes: number[] = [];
+      for (let j = winStart; j <= i; j++) {
+        const d = alignedDates[j]!;
+        const c = ungByDate.get(d);
+        if (c == null || c <= 0) {
+          closes.length = 0;
+          break;
+        }
+        closes.push(c);
+      }
+      if (closes.length < 34) {
+        result.set(i, null);
+        continue;
+      }
+      const roc3Arr: number[] = [];
+      for (let k = 3; k < closes.length; k++) {
+        if (closes[k - 3]! > 0) {
+          roc3Arr.push(((closes[k]! - closes[k - 3]!) / closes[k - 3]!) * 100);
+        } else {
+          roc3Arr.push(NaN);
+        }
+      }
+      const lastRoc3 = roc3Arr[roc3Arr.length - 1];
+      if (!Number.isFinite(lastRoc3)) {
+        result.set(i, null);
+        continue;
+      }
+      const win30 = roc3Arr.slice(-30).filter(Number.isFinite);
+      if (win30.length < 20) {
+        result.set(i, null);
+        continue;
+      }
+      const mean = win30.reduce((a, b) => a + b, 0) / win30.length;
+      const variance = win30.reduce((a, b) => a + (b - mean) ** 2, 0) / win30.length;
+      const std = Math.sqrt(variance) || 1e-10;
+      const z30 = (lastRoc3 - mean) / std;
+      const active =
+        (Number.isFinite(z30) && z30 >= UNG_Z30_THRESHOLD) ||
+        (Number.isFinite(lastRoc3) && lastRoc3 >= UNG_ROC3_THRESHOLD);
+      result.set(i, active);
+    }
+    return result;
+  } catch (err) {
+    console.warn('  WARN: Historical Nat Gas (UNG) fetch failed:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+/** COAL active thresholds (mirror current-state). */
+const COAL_ROC3_THRESHOLD = 3.0;
+const COAL_Z30_THRESHOLD = 1.0;
+
+/** Per-day historical Coal stress. Returns Map<index, active | null>. Null when COAL data missing. */
+async function fetchHistoricalCoalStress(
+  alignedDates: string[],
+  historyStart: number,
+  lastIdx: number
+): Promise<Map<number, boolean | null> | null> {
+  const endDate = alignedDates[lastIdx]!;
+  const start = new Date(alignedDates[historyStart]!);
+  start.setDate(start.getDate() - 90);
+  const startDate = start.toISOString().split('T')[0]!;
+
+  try {
+    const coalBars = await fetchEnergyBars('COAL', startDate, endDate);
+    if (!coalBars || coalBars.length < 34) return null;
+
+    const coalByDate = new Map(coalBars.map((b) => [b.date, b.close]));
+    const result = new Map<number, boolean | null>();
+
+    for (let i = historyStart; i <= lastIdx; i++) {
+      const winStart = Math.max(0, i - 33);
+      const closes: number[] = [];
+      for (let j = winStart; j <= i; j++) {
+        const d = alignedDates[j]!;
+        const c = coalByDate.get(d);
+        if (c == null || c <= 0) {
+          closes.length = 0;
+          break;
+        }
+        closes.push(c);
+      }
+      if (closes.length < 34) {
+        result.set(i, null);
+        continue;
+      }
+      const roc3Arr: number[] = [];
+      for (let k = 3; k < closes.length; k++) {
+        if (closes[k - 3]! > 0) {
+          roc3Arr.push(((closes[k]! - closes[k - 3]!) / closes[k - 3]!) * 100);
+        } else {
+          roc3Arr.push(NaN);
+        }
+      }
+      const lastRoc3 = roc3Arr[roc3Arr.length - 1];
+      if (!Number.isFinite(lastRoc3)) {
+        result.set(i, null);
+        continue;
+      }
+      const win30 = roc3Arr.slice(-30).filter(Number.isFinite);
+      if (win30.length < 20) {
+        result.set(i, null);
+        continue;
+      }
+      const mean = win30.reduce((a, b) => a + b, 0) / win30.length;
+      const variance = win30.reduce((a, b) => a + (b - mean) ** 2, 0) / win30.length;
+      const std = Math.sqrt(variance) || 1e-10;
+      const z30 = (lastRoc3 - mean) / std;
+      const active =
+        (Number.isFinite(z30) && z30 >= COAL_Z30_THRESHOLD) ||
+        (Number.isFinite(lastRoc3) && lastRoc3 >= COAL_ROC3_THRESHOLD);
+      result.set(i, active);
+    }
+    return result;
+  } catch (err) {
+    console.warn('  WARN: Historical Coal (COAL) fetch failed:', err instanceof Error ? err.message : err);
     return null;
   }
 }
@@ -975,7 +1123,7 @@ async function run() {
     console.warn('  WARN: Product stress fetch failed (continuing without):', err instanceof Error ? err.message : err);
   }
 
-  // Rebuild labelHistory with per-day product stress and/or TTF when available.
+  // Rebuild labelHistory with per-day product stress and/or substitution (TTF, Nat Gas, Coal) when available.
   const productStressByIndex = await fetchHistoricalProductStress(
     closeByDate,
     alignedDates,
@@ -983,6 +1131,8 @@ async function run() {
     lastIdx
   );
   const ttfByIndex = await fetchHistoricalTTFStress(alignedDates, historyStart, lastIdx);
+  const natGasByIndex = await fetchHistoricalNatGasStress(alignedDates, historyStart, lastIdx);
+  const coalByIndex = await fetchHistoricalCoalStress(alignedDates, historyStart, lastIdx);
   if (ttfByIndex != null) {
     let ttfActiveCount = 0;
     for (let i = historyStart; i <= lastIdx; i++) {
@@ -990,7 +1140,26 @@ async function run() {
     }
     console.log(`   Historical TTF: ${ttfActiveCount} days active in window`);
   }
-  if (productStressByIndex != null || ttfByIndex != null) {
+  if (natGasByIndex != null) {
+    let natGasActiveCount = 0;
+    for (let i = historyStart; i <= lastIdx; i++) {
+      if (natGasByIndex.get(i) === true) natGasActiveCount++;
+    }
+    console.log(`   Historical Nat Gas: ${natGasActiveCount} days active in window`);
+  }
+  if (coalByIndex != null) {
+    let coalActiveCount = 0;
+    for (let i = historyStart; i <= lastIdx; i++) {
+      if (coalByIndex.get(i) === true) coalActiveCount++;
+    }
+    console.log(`   Historical Coal: ${coalActiveCount} days active in window`);
+  }
+  if (
+    productStressByIndex != null ||
+    ttfByIndex != null ||
+    natGasByIndex != null ||
+    coalByIndex != null
+  ) {
     const newLabelHistory: PlumbingLabelHistoryPoint[] = [];
     for (let i = historyStart; i <= lastIdx; i++) {
       const d = alignedDates[i]!;
@@ -1016,11 +1185,15 @@ async function run() {
         Number.isFinite(dayGldSpyRoc5) && Number.isFinite(dayGldTipRoc5) && dayGldSpyRoc5 > 0 && dayGldTipRoc5 > 0;
       const dayProductStressActive = productStressByIndex?.get(i) ?? null;
       const dayTtfActive = ttfByIndex?.get(i) ?? null;
-      const dayLabel = computeRegimeFromBucketsHistoricalWithProductStressAndTTF(
+      const dayNatGasActive = natGasByIndex?.get(i) ?? null;
+      const dayCoalActive = coalByIndex?.get(i) ?? null;
+      const dayLabel = computeRegimeFromBucketsHistoricalWithProductStressAndSubstitution(
         dayZ30,
         dayGoldConfirm,
         dayProductStressActive,
-        dayTtfActive
+        dayTtfActive,
+        dayNatGasActive,
+        dayCoalActive
       );
       let dayScore = 0;
       if (Number.isFinite(dayZ30)) {

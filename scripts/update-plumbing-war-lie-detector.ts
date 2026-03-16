@@ -99,6 +99,7 @@ interface PlumbingWarLieDetector {
   energyComplex?: {
     natGas?: { ticker: 'UNG'; asOf: string; roc3: number; z30: number; active: boolean };
     coal?: { ticker: 'COAL'; asOf: string; roc3: number; z30: number; active: boolean };
+    ttf?: { ticker: 'TTF'; asOf: string; roc3: number; z30: number; active: boolean };
   };
   /** Optional bucket state for v2 regime logic. Exposed for future PR26 bucket chips. */
   bucketState?: {
@@ -143,7 +144,8 @@ function computeBucketState(
         : baseFromZ30;
   const gasActive = energyComplex?.natGas?.active === true;
   const coalActive = energyComplex?.coal?.active === true;
-  const substitutionActive = gasActive || coalActive;
+  const ttfActive = energyComplex?.ttf?.active === true;
+  const substitutionActive = gasActive || coalActive || ttfActive;
   return {
     physicalPlumbing,
     substitutionActive,
@@ -206,7 +208,9 @@ function computeTrajectory(artifact: PlumbingWarLieDetector): PlumbingWarLieDete
   const { label, signals, latest, energyComplex } = artifact;
   const phase = getPhase(latest.spread_roc3);
   const substitutionActive =
-    energyComplex?.natGas?.active === true || energyComplex?.coal?.active === true;
+    energyComplex?.natGas?.active === true ||
+    energyComplex?.coal?.active === true ||
+    energyComplex?.ttf?.active === true;
 
   const escalating =
     label === 'REAL_RISK' ||
@@ -246,7 +250,8 @@ function computeEnergyBreadth(artifact: PlumbingWarLieDetector): PlumbingWarLieD
   const oilStress = latest.spread_z30 >= 1;
   const gasActive = energyComplex?.natGas?.active === true;
   const coalActive = energyComplex?.coal?.active === true;
-  const gasOrCoalActive = gasActive || coalActive;
+  const ttfActive = energyComplex?.ttf?.active === true;
+  const gasOrCoalActive = gasActive || coalActive || ttfActive;
   const phase = trajectory?.phase ?? getPhase(latest.spread_roc3);
   const oilEasing = phase === 'EASING' || phase === 'FLAT';
 
@@ -295,10 +300,10 @@ function loadEodCache(symbol: string): EodBar[] | null {
 function computeEnergySignal(
   bars: EodBar[],
   wldAsOf: string,
-  ticker: 'UNG' | 'COAL',
+  ticker: 'UNG' | 'COAL' | 'TTF',
   roc3ActiveThreshold: number,
   z30ActiveThreshold: number
-): { ticker: 'UNG' | 'COAL'; asOf: string; roc3: number; z30: number; active: boolean } | null {
+): { ticker: 'UNG' | 'COAL' | 'TTF'; asOf: string; roc3: number; z30: number; active: boolean } | null {
   if (bars.length < 34) return null; // need 3 for roc3 + 30 for z30
   const sorted = [...bars].sort((a, b) => a.date.localeCompare(b.date));
   const lastDate = sorted[sorted.length - 1]!.date;
@@ -495,6 +500,7 @@ async function fetchEnergyComplex(asOf: string): Promise<PlumbingWarLieDetector[
   for (const { symbol, roc3Threshold, z30Threshold } of [
     { symbol: 'UNG' as const, roc3Threshold: 5.0, z30Threshold: 1.0 },
     { symbol: 'COAL' as const, roc3Threshold: 3.0, z30Threshold: 1.0 },
+    { symbol: 'TTF' as const, roc3Threshold: 5.0, z30Threshold: 1.0 },
   ]) {
     try {
       const bars = await fetchEnergyBars(symbol, startDate, endDate);
@@ -502,7 +508,8 @@ async function fetchEnergyComplex(asOf: string): Promise<PlumbingWarLieDetector[
         const sig = computeEnergySignal(bars, asOf, symbol, roc3Threshold, z30Threshold);
         if (sig) {
           if (symbol === 'UNG') result.natGas = sig;
-          else result.coal = sig;
+          else if (symbol === 'COAL') result.coal = sig;
+          else result.ttf = sig;
         }
       }
     } catch (err) {
@@ -846,13 +853,16 @@ async function run() {
     lastIdx,
   } = main();
   try {
-    console.log('  Fetching energy complex (UNG, COAL) from Stooq...');
+    console.log('  Fetching energy complex (UNG, COAL, TTF) from Stooq...');
     artifact.energyComplex = await fetchEnergyComplex(asOf);
     if (artifact.energyComplex?.natGas) {
       console.log(`   UNG: roc3=${artifact.energyComplex.natGas.roc3}, z30=${artifact.energyComplex.natGas.z30}, active=${artifact.energyComplex.natGas.active}`);
     }
     if (artifact.energyComplex?.coal) {
       console.log(`   COAL: roc3=${artifact.energyComplex.coal.roc3}, z30=${artifact.energyComplex.coal.z30}, active=${artifact.energyComplex.coal.active}`);
+    }
+    if (artifact.energyComplex?.ttf) {
+      console.log(`   TTF: roc3=${artifact.energyComplex.ttf.roc3}, z30=${artifact.energyComplex.ttf.z30}, active=${artifact.energyComplex.ttf.active}`);
     }
   } catch (err) {
     console.warn('  WARN: Energy complex fetch failed (continuing without):', err instanceof Error ? err.message : err);

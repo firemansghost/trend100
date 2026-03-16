@@ -89,6 +89,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-03 — (Product/Data) War Lie Detector TTF gas substitution (PR36)
+**Choice:** Added Dutch TTF (Title Transfer Facility) European natural gas stress as a new substitution/broadening signal. TTF is a standalone price series (Stooq TG.F), not a spread. Thresholds mirror UNG (z30 ≥ 1 or roc3 ≥ 5%). substitutionActive = natGas OR coal OR ttf; energyBreadth and trajectory include ttf. TTF surfaced as signal card (or compact chip when N/A). Historical labelHistory does not include per-day TTF; current-state integration only. Requires `EOD_STOOQ_SYMBOL_OVERRIDES=TTF=tg.f`.
+
+**Why:** Captures whether energy stress is broadening into European/LNG/gas markets, not just oil plumbing. TTF is substitution/broadening, not plumbing anchor.
+
+---
+
 ### 2026-02 — (Data/Ops) Plumbing War Lie Detector artifact (geopolitical plumbing)
 **Choice:** Added `public/plumbing.war_lie_detector.json` artifact that answers whether physical markets support the political narrative (real shipping/war risk) or are mostly "theater." Uses proxy tickers: BNO (Brent), USO (WTI), GLD (gold), SPY (risk), TIP (TIPS), UUP (dollar). Core metric for z-score and ROC: BNO/USO ratio (more stable than level spread); spread (BNO−USO) kept for display. Label logic: THEATER (z30 < 1 and !goldConfirm), WATCH (z30 ≥ 1 or goldConfirm), REAL_RISK (z30 ≥ 2 and goldConfirm). Score: +2 if z30 ≥ 2, +1 if z30 ≥ 1, +1 if goldConfirm (max 3). Artifacts are generated in CI (workflows/build); never committed. Run `pnpm -s update:plumbing-war-lie-detector` locally; verify with `pnpm -s verify:artifacts`.
 

@@ -98,9 +98,11 @@ This is the central change in v2. The headline should no longer behave like a mo
 **Current inputs:**
 - Nat gas stress (UNG)
 - Coal stress (COAL)
+- TTF gas stress (Dutch TTF front-month) — European gas / LNG broadening
 
 **Interpretation:**
 - Nat gas and coal represent spread / substitution pressure.
+- TTF active = evidence that gas/LNG stress is broadening into European markets.
 - Coal should no longer be treated as a mere footnote.
 - Coal still should not drive the entire headline by itself, but it is a valid part of wider energy stress.
 

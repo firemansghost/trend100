@@ -694,14 +694,14 @@ function printPlumbingWarLieDetectorStats(): boolean {
         console.error('  ❌ plumbing.war_lie_detector.json: energyComplex must be object if present');
         return false;
       }
-      for (const key of ['natGas', 'coal']) {
+      for (const key of ['natGas', 'coal', 'ttf']) {
         const item = ec[key] as Record<string, unknown> | undefined;
         if (item == null) continue;
         if (typeof item !== 'object') {
           console.error(`  ❌ plumbing.war_lie_detector.json: energyComplex.${key} must be object if present`);
           return false;
         }
-        const expectedTicker = key === 'natGas' ? 'UNG' : 'COAL';
+        const expectedTicker = key === 'natGas' ? 'UNG' : key === 'coal' ? 'COAL' : 'TTF';
         if (item.ticker !== expectedTicker) {
           console.error(`  ❌ plumbing.war_lie_detector.json: energyComplex.${key}.ticker must be "${expectedTicker}"`);
           return false;
@@ -788,8 +788,8 @@ function printPlumbingWarLieDetectorStats(): boolean {
     const ec = obj.energyComplex as Record<string, unknown> | undefined;
     console.log(`  plumbing.war_lie_detector.json: asOf=${asOf}, label=${label}, score=${obj.score ?? '?'}`);
     console.log(`    Latest: spread=${spread}, spread_z30=${spreadZ30}, history=${history.length} points`);
-    if (ec?.natGas || ec?.coal) {
-      console.log(`    energyComplex: natGas=${ec?.natGas ? 'yes' : 'no'}, coal=${ec?.coal ? 'yes' : 'no'}`);
+    if (ec?.natGas || ec?.coal || ec?.ttf) {
+      console.log(`    energyComplex: natGas=${ec?.natGas ? 'yes' : 'no'}, coal=${ec?.coal ? 'yes' : 'no'}, ttf=${ec?.ttf ? 'yes' : 'no'}`);
     }
     if (lastH?.date) {
       console.log(`    Last history date: ${lastH.date}`);

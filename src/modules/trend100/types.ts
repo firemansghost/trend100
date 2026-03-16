@@ -218,10 +218,11 @@ export interface PlumbingWarLieDetector {
     state: 'NARROW' | 'BROADENING' | 'FULL_STRESS';
     reason: string;
   };
-  /** Optional secondary energy-complex confirms (UNG, COAL). Not part of label logic. */
+  /** Optional substitution signals (UNG, COAL, TTF). Feed the substitution bucket; regime remains bucket-based (PR25). */
   energyComplex?: {
     natGas?: { ticker: 'UNG'; asOf: string; roc3: number; z30: number; active: boolean };
     coal?: { ticker: 'COAL'; asOf: string; roc3: number; z30: number; active: boolean };
+    ttf?: { ticker: 'TTF'; asOf: string; roc3: number; z30: number; active: boolean };
   };
   /** Optional bucket state for v2 regime logic (PR25). Exposed for future bucket chips. */
   bucketState?: {

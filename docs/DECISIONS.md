@@ -75,6 +75,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-03 — (UI) War Lie Detector product stress visibility (PR34)
+**Choice:** Product stress (UGA/USO) surfaced as optional chip in bucket row when data present: "Refined product stress: active" or "Refined product stress: quiet". Chip only shown when artifact has productStress; no chip when UGA fetch failed. Tooltip explains UGA/USO as gasoline vs crude supporting physical plumbing read. No model or artifact changes.
+
+**Why:** Make supporting physical signal visible at a glance without adding a new section or full card; Brent-vs-WTI remains anchor.
+
+---
+
 ### 2026-02 — (Data/Ops) Plumbing War Lie Detector artifact (geopolitical plumbing)
 **Choice:** Added `public/plumbing.war_lie_detector.json` artifact that answers whether physical markets support the political narrative (real shipping/war risk) or are mostly "theater." Uses proxy tickers: BNO (Brent), USO (WTI), GLD (gold), SPY (risk), TIP (TIPS), UUP (dollar). Core metric for z-score and ROC: BNO/USO ratio (more stable than level spread); spread (BNO−USO) kept for display. Label logic: THEATER (z30 < 1 and !goldConfirm), WATCH (z30 ≥ 1 or goldConfirm), REAL_RISK (z30 ≥ 2 and goldConfirm). Score: +2 if z30 ≥ 2, +1 if z30 ≥ 1, +1 if goldConfirm (max 3). Artifacts are generated in CI (workflows/build); never committed. Run `pnpm -s update:plumbing-war-lie-detector` locally; verify with `pnpm -s verify:artifacts`.
 

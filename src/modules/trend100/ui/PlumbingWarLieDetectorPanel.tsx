@@ -436,6 +436,11 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             <span className={chipBase}>Plumbing: {bucketPlumbingLabel(bucket.physicalPlumbing)}</span>
             <span className={chipBase}>Substitution: {bucket.substitutionActive ? 'active' : 'inactive'}</span>
             <span className={chipBase}>Macro: {macroLabel}</span>
+            {data.productStress != null && (
+              <span className={chipBase} title="UGA/USO (gasoline vs crude); supports physical plumbing read when active">
+                Refined product stress: {data.productStress.active ? 'active' : 'quiet'}
+              </span>
+            )}
           </div>
         );
       })()}

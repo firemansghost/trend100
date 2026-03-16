@@ -149,7 +149,7 @@ git clean -fd public data/marketstack/eod
   - `score` finite number in [0, 3]
   - `latest.spread`, `latest.spread_z30`, `latest.spread_roc3` are finite numbers
   - `history` is array, sorted ascending by date, length >= 60
-  - `labelHistory` (if present): non-empty, sorted ascending by date. PR28: reflects per-day product stress when UGA data available. PR38: may reflect historical TTF when Stooq TTF data is available; otherwise plumbing+macro only.
+  - `labelHistory` (if present): non-empty, sorted ascending by date. PR28: reflects per-day product stress when UGA data available. PR38: may reflect historical TTF when Stooq TTF data is available. PR39: may reflect historical Nat Gas and Coal when Stooq/Marketstack data is available; historical substitution includes UNG and COAL where data exists; otherwise plumbing+macro only.
   - `inputsLast` (if present): keys BNO, USO, GLD, SPY, TIP, UUP with YYYY-MM-DD values
   - `dataFreshness` (if present): lagTradingDays finite >= 0, laggingTickers string[]
   - `energyComplex` (if present): natGas/coal/ttf objects with ticker (UNG/COAL/TTF), asOf YYYY-MM-DD, roc3/z30 finite numbers, active boolean

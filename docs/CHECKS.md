@@ -53,7 +53,7 @@ pnpm -s tsc --noEmit
 # Pilot refresh (METALS_MINING, PLUMBING, US_SECTORS, US_FACTORS, GLOBAL_EQUITIES)
 $env:EOD_STOOQ_DECKS="METALS_MINING,PLUMBING,US_SECTORS,US_FACTORS,GLOBAL_EQUITIES"
 $env:EOD_STOOQ_FORCE_FALLBACK="BNO,FBTC,FETH,SRUUF"
-# optional: $env:EOD_STOOQ_SYMBOL_OVERRIDES="BRK_B=brk.b.us"
+# optional: $env:EOD_STOOQ_SYMBOL_OVERRIDES="BRK_B=brk.b.us,TTF=tg.f"
 pnpm -s update:snapshots
 pnpm -s update:plumbing-war-lie-detector
 pnpm -s verify:artifacts
@@ -83,7 +83,7 @@ git status
 ### CI pipeline checks
 - **Artifact validation:** CI must pass `pnpm artifacts:refresh` before deploy (vercel-prebuilt-prod.yml on push; daily-artifacts-deploy.yml on schedule)
 - **CI cache: Marketstack EOD (rolling):** CI uses `actions/cache/restore@v4` and `actions/cache/save@v4` so the cache evolves run-to-run. Restore uses prefix `marketstack-eod-v2-` (restore-keys); save uses per-run key `${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}`. Each run saves a new cache; the next run restores the most recent match. To invalidate (e.g. cache format change), bump `v2`→`v3` in both restore-keys and save key. Diagnostics log file count and size after restore and after artifacts. Save runs with `if: always()` so partial improvements persist even on failure. This does not commit `data/marketstack/eod` to git.
-- **Stooq routing in CI:** Workflows read `EOD_STOOQ_DECKS`, `EOD_STOOQ_FORCE_FALLBACK`, `EOD_STOOQ_SYMBOL_OVERRIDES` from GitHub Actions Variables. Recommended: `EOD_STOOQ_DECKS=METALS_MINING,PLUMBING,US_SECTORS,US_FACTORS,GLOBAL_EQUITIES` and `EOD_STOOQ_FORCE_FALLBACK=BNO,FBTC,FETH,SRUUF`. Expected log: `Provider routing: Stooq-first for N symbols (decks: ...), Marketstack direct: K` and `Stooq OK: X | Forced fallback: Y | Stooq failed → Marketstack fallback: Z`
+- **Stooq routing in CI:** Workflows read `EOD_STOOQ_DECKS`, `EOD_STOOQ_FORCE_FALLBACK`, `EOD_STOOQ_SYMBOL_OVERRIDES` from GitHub Actions Variables. Recommended: `EOD_STOOQ_DECKS=METALS_MINING,PLUMBING,US_SECTORS,US_FACTORS,GLOBAL_EQUITIES`, `EOD_STOOQ_FORCE_FALLBACK=BNO,FBTC,FETH,SRUUF`, and `EOD_STOOQ_SYMBOL_OVERRIDES=TTF=tg.f` (for War Lie Detector TTF gas). Expected log: `Provider routing: Stooq-first for N symbols (decks: ...), Marketstack direct: K` and `Stooq OK: X | Forced fallback: Y | Stooq failed → Marketstack fallback: Z`
 - **Strict asOfDate in CI:** Workflows pass `SNAPSHOT_STRICT_ASOF_DECKS` from GitHub Actions Variables. When set (e.g. `US_SECTORS,US_FACTORS,GLOBAL_EQUITIES,METALS_MINING,PLUMBING`), those decks use min(lastDate) as asOfDate so snapshots don't appear fresher than the stalest ticker.
 - **Turbulence gates:** Fetched from Stooq (SPX + VIX EOD); no API key required
 - **Daily deploy:** `daily-artifacts-deploy.yml` runs twice on weekdays: 22:15 UTC (primary) and 01:15 UTC (top-off). The top-off pass catches lagging EOD inputs (e.g. BNO in War Lie Detector) that may not have printed the latest close by the first run. Both runs must pass update:snapshots + verify:artifacts before deploying.
@@ -140,9 +140,9 @@ git clean -fd public data/marketstack/eod
   - nPairs = nAssets*(nAssets-1)/2 when shockRaw is non-null
   - At least one non-null shockRaw; at least one non-null shockZ (if enough history)
   - Warns on high nulls (minAssets/windows)
-- **Gas/Coal confirms (War Lie Detector):** Optional `energyComplex` in `plumbing.war_lie_detector.json` adds Substitution bucket signals: Gas Stress (UNG) and Coal Bid (COAL). Coal uses COAL (Range Global Coal Index ETF), not KOL. As of PR25, substitution (gas OR coal active) can push regime to REAL_RISK when plumbing is strong (z30≥2). Gas ON = nat gas proxy stressed (z30≥1 or roc3≥5%); Coal ON = coal proxy bid (z30≥1 or roc3≥3%). Stooq spot check: UNG https://stooq.com/q/d/l/?s=ung.us&i=d, COAL https://stooq.com/q/d/l/?s=coal.us&i=d.
-- **Energy Breadth (War Lie Detector):** Optional `energyBreadth` answers "How widespread is stress across the energy complex?" — **NARROW** = oil-only; **BROADENING** = oil + gas/coal active; **FULL_STRESS** = oil + gas/coal + gold confirm. Trajectory (ESCALATING/HOLDING/EASING) owns direction; Energy Breadth owns breadth.
-- **Plumbing War Lie Detector:** Validates `public/plumbing.war_lie_detector.json`. Regime is bucket-based (PR25): plumbing low → THEATER; plumbing strong + (substitution OR gold) → REAL_RISK; else WATCH. PR27: product stress (UGA/USO) can upgrade watch→strong when active; optional `productStress` in artifact. PR28: labelHistory includes per-day product stress when UGA available; chart bands align with current model. PR29: panel simplified to one headline, "Why this read" (≤3 bullets), "What would change this read" (≤3 bullets); technical details collapsed. PR30: main chart displays stress-up (inverted spread); raw spread in technical details. PR32: context-aware transition note near chart (Latest REAL_RISK began / upgrade to WATCH / downgrade to CONTAINED). PR33: signal cards use relevance-based styling (active vs inactive); Coal N/A compact chip. PR34: product stress (UGA/USO) optional chip in bucket row when data present. PR35: chart timeframe chooser (1M/3M/6M/Max) from existing history. UGA fetched via Stooq then Marketstack cache; add to EOD_STOOQ_FORCE_FALLBACK if Stooq fails. UI (PR26) displays CONTAINED; bucket chips shown when `bucketState` present or derived.
+- **Gas/Coal/TTF confirms (War Lie Detector):** Optional `energyComplex` in `plumbing.war_lie_detector.json` adds Substitution bucket signals: Gas Stress (UNG), Coal Bid (COAL), TTF Gas Stress (Dutch TTF front-month). Coal uses COAL (Range Global Coal Index ETF), not KOL. TTF uses Stooq TG.F; requires `EOD_STOOQ_SYMBOL_OVERRIDES=TTF=tg.f`. As of PR25, substitution (gas OR coal OR ttf active) can push regime to REAL_RISK when plumbing is strong (z30≥2). Gas ON = nat gas proxy stressed (z30≥1 or roc3≥5%); Coal ON = coal proxy bid (z30≥1 or roc3≥3%); TTF ON = European gas stress (z30≥1 or roc3≥5%). Stooq spot check: UNG https://stooq.com/q/d/l/?s=ung.us&i=d, COAL https://stooq.com/q/d/l/?s=coal.us&i=d, TTF https://stooq.com/q/d/?s=tg.f.
+- **Energy Breadth (War Lie Detector):** Optional `energyBreadth` answers "How widespread is stress across the energy complex?" — **NARROW** = oil-only; **BROADENING** = oil + gas/coal/TTF active; **FULL_STRESS** = oil + gas/coal/TTF + gold confirm. Trajectory (ESCALATING/HOLDING/EASING) owns direction; Energy Breadth owns breadth.
+- **Plumbing War Lie Detector:** Validates `public/plumbing.war_lie_detector.json`. Regime is bucket-based (PR25): plumbing low → THEATER; plumbing strong + (substitution OR gold) → REAL_RISK; else WATCH. PR27: product stress (UGA/USO) can upgrade watch→strong when active; optional `productStress` in artifact. PR28: labelHistory includes per-day product stress when UGA available; chart bands align with current model. PR29: panel simplified to one headline, "Why this read" (≤3 bullets), "What would change this read" (≤3 bullets); technical details collapsed. PR30: main chart displays stress-up (inverted spread); raw spread in technical details. PR32: context-aware transition note near chart (Latest REAL_RISK began / upgrade to WATCH / downgrade to CONTAINED). PR33: signal cards use relevance-based styling (active vs inactive); Coal N/A compact chip. PR34: product stress (UGA/USO) optional chip in bucket row when data present. PR35: chart timeframe chooser (1M/3M/6M/Max) from existing history. PR36: TTF gas stress (Dutch TTF) as substitution signal; optional `energyComplex.ttf`; requires `EOD_STOOQ_SYMBOL_OVERRIDES=TTF=tg.f`. UGA fetched via Stooq then Marketstack cache; add to EOD_STOOQ_FORCE_FALLBACK if Stooq fails. UI (PR26) displays CONTAINED; bucket chips shown when `bucketState` present or derived.
   - File exists, valid JSON
   - `asOf` within 10 calendar days (weekends/holidays can delay updates)
   - `label` in ["THEATER","WATCH","REAL_RISK"]
@@ -152,7 +152,7 @@ git clean -fd public data/marketstack/eod
   - `labelHistory` (if present): non-empty, sorted ascending by date. PR28: reflects per-day product stress when UGA data available; otherwise plumbing+macro only.
   - `inputsLast` (if present): keys BNO, USO, GLD, SPY, TIP, UUP with YYYY-MM-DD values
   - `dataFreshness` (if present): lagTradingDays finite >= 0, laggingTickers string[]
-  - `energyComplex` (if present): natGas/coal objects with ticker (UNG/COAL), asOf YYYY-MM-DD, roc3/z30 finite numbers, active boolean
+  - `energyComplex` (if present): natGas/coal/ttf objects with ticker (UNG/COAL/TTF), asOf YYYY-MM-DD, roc3/z30 finite numbers, active boolean
   - `energyBreadth` (if present): state in [NARROW,BROADENING,FULL_STRESS], reason non-empty string
   - **Data freshness:** UI shows per-ticker last dates, min/max, lagging tickers. If a ticker lags (e.g. BNO stuck at older date), run `pnpm -s update:snapshots` first; BNO may need Marketstack fallback (EOD_STOOQ_FORCE_FALLBACK).
   - Run locally: `pnpm -s update:plumbing-war-lie-detector`
@@ -196,6 +196,12 @@ git clean -fd public data/marketstack/eod
 ### "Missing or insufficient EOD cache for: BNO, ..." (plumbing)
 - **Fix:** Run `pnpm -s update:snapshots` first to populate BNO (added to MACRO deck). The plumbing script (PLUMBING deck; deck ID PLUMBING, UI label "War Lie Detector") requires BNO, USO, GLD, SPY, TIP, UUP with ≥60 bars each.
 - **Insufficient aligned bars:** Extend EOD cache; ensure all 6 symbols have overlapping history.
+
+### "TTF: N/A" in War Lie Detector
+- **Symptom:** TTF Gas Stress shows N/A chip instead of ON/OFF card.
+- **Cause:** TTF (Dutch TTF front-month) is fetched from Stooq; default symbol `ttf.us` does not exist.
+- **Fix:** Add `EOD_STOOQ_SYMBOL_OVERRIDES=TTF=tg.f` to `.env.local` or CI GitHub Actions Variables. Stooq TG.F = Dutch TTF Gas (ICE). Verify: https://stooq.com/q/d/?s=tg.f
+- **Note:** If Stooq fetch fails, script continues without TTF (graceful degradation).
 
 ### "Stooq returned no data" / "Stooq VIX: all symbols failed"
 - **Fix:** Set `TURBULENCE_STOOQ_VIX_SYMBOL` in `.env.local` or CI env. CI pins `vi.c` (S&P 500 VIX Cash). Fallback list: vi.c, ^vix, ^VIX, vi.f. For SPX, set `TURBULENCE_STOOQ_SPX_SYMBOL` (default ^spx; try ^gspc if needed).

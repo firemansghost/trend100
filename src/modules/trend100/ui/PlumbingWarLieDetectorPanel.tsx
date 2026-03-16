@@ -35,7 +35,9 @@ function getBucketStateForDisplay(data: PlumbingWarLieDetector): {
   const physicalPlumbing: 'low' | 'watch' | 'strong' =
     !Number.isFinite(z30) || z30 < 1 ? 'low' : z30 >= 2 ? 'strong' : 'watch';
   const substitutionActive =
-    data.energyComplex?.natGas?.active === true || data.energyComplex?.coal?.active === true;
+    data.energyComplex?.natGas?.active === true ||
+    data.energyComplex?.coal?.active === true ||
+    data.energyComplex?.ttf?.active === true;
   return { physicalPlumbing, substitutionActive, macroConfirm: data.signals.goldConfirm };
 }
 
@@ -52,7 +54,8 @@ interface PanelState {
   gasActive: boolean;
   coalActive: boolean;
   coalAvailable: boolean;
-  gasOrCoalActive: boolean;
+  ttfActive: boolean;
+  gasOrCoalOrTtfActive: boolean;
   goldConfirm: boolean;
   trajectoryState: 'ESCALATING' | 'HOLDING' | 'EASING';
   energyBreadthState: 'NARROW' | 'BROADENING' | 'FULL_STRESS';
@@ -65,7 +68,8 @@ function getPanelState(data: PlumbingWarLieDetector): PanelState {
   const gasActive = data.energyComplex?.natGas?.active === true;
   const coalActive = data.energyComplex?.coal?.active === true;
   const coalAvailable = data.energyComplex?.coal != null;
-  const gasOrCoalActive = gasActive || coalActive;
+  const ttfActive = data.energyComplex?.ttf?.active === true;
+  const gasOrCoalOrTtfActive = gasActive || coalActive || ttfActive;
   const trajectory = getTrajectory(data);
   const energyBreadth = getEnergyBreadth(data);
   return {
@@ -75,7 +79,8 @@ function getPanelState(data: PlumbingWarLieDetector): PanelState {
     gasActive,
     coalActive,
     coalAvailable,
-    gasOrCoalActive,
+    ttfActive,
+    gasOrCoalOrTtfActive,
     goldConfirm: data.signals.goldConfirm,
     trajectoryState: trajectory.state,
     energyBreadthState: energyBreadth.state,
@@ -162,7 +167,7 @@ const ONBOARDING_LINE = 'This dashboard checks whether war-related energy stress
 /** Plain-English headline — acute market stress framing, not war-grade. */
 function getCurrentRead(s: PanelState): string {
   if (s.label === 'THEATER') {
-    const bucketsActive = s.gasOrCoalActive || s.goldConfirm;
+    const bucketsActive = s.gasOrCoalOrTtfActive || s.goldConfirm;
     const easing = s.trajectoryState === 'EASING';
     const base = 'Acute market stress is contained for now.';
     if (!bucketsActive && easing) {
@@ -174,20 +179,20 @@ function getCurrentRead(s: PanelState): string {
     return `${base} Plumbing stress is low; without stronger plumbing the regime does not escalate.`;
   }
   if (s.label === 'REAL_RISK') {
-    if (s.gasOrCoalActive && s.goldConfirm) {
+    if (s.gasOrCoalOrTtfActive && s.goldConfirm) {
       return 'Acute stress is broadening beyond oil. Oil, gold, and the wider energy complex are confirming together.';
     }
     return 'Acute stress is broadening beyond oil. Oil and gold are confirming; watch for gas or coal to join.';
   }
   if (s.label === 'WATCH') {
     if (s.oilActive && !s.goldConfirm) {
-      const quiet = s.gasOrCoalActive ? 'substitution is active' : 'substitution and macro are quiet';
+      const quiet = s.gasOrCoalOrTtfActive ? 'substitution is active' : 'substitution and macro are quiet';
       return `Stress is building, but not yet broadly confirmed. Plumbing is active; ${quiet}.`;
     }
     if (s.goldConfirm && !s.oilActive) {
       return 'Macro is confirming, but plumbing is not yet at strong stress. Stress is localized rather than broadly spreading.';
     }
-    if (s.gasOrCoalActive) {
+    if (s.gasOrCoalOrTtfActive) {
       return 'Stress is broadening beyond oil. Substitution is active.';
     }
     return 'Stress is building, but not yet broadly confirmed. Signals are split across buckets.';
@@ -201,7 +206,7 @@ function getWhatToWatchNext(s: PanelState): string[] {
   if (s.trajectoryState === 'ESCALATING') bullets.push('Stress is broadening; watch for confirmation to persist.');
   else if (s.trajectoryState === 'HOLDING') bullets.push('Stress is present, but not clearly broadening yet.');
   else if (s.trajectoryState === 'EASING') bullets.push('Pressure is cooling unless macro or substitution turns on.');
-  if (s.energyBreadthState === 'NARROW') bullets.push('If substitution (gas or coal) turns on → stress broadening.');
+  if (s.energyBreadthState === 'NARROW') bullets.push('If substitution (gas, coal, or TTF) turns on → stress broadening.');
   else if (s.energyBreadthState === 'BROADENING') bullets.push('If macro confirmation turns on → broadening may become full stress.');
   else if (s.energyBreadthState === 'FULL_STRESS') bullets.push('If substitution and macro stay on together → broad stress remains in place.');
   if (s.label === 'WATCH') {
@@ -228,14 +233,14 @@ function getWhyThisReadBullets(data: PlumbingWarLieDetector, s: PanelState): str
   const energyBreadth = getEnergyBreadth(data);
   const out: string[] = [];
   if (s.label === 'THEATER') {
-    const bucketsActive = s.gasOrCoalActive || s.goldConfirm;
+    const bucketsActive = s.gasOrCoalOrTtfActive || s.goldConfirm;
     out.push(bucketsActive
       ? 'Plumbing stress is low; substitution and macro may be active, but without stronger plumbing the regime does not escalate.'
       : 'Plumbing stress is low; substitution and macro are quiet.');
     out.push(`Trajectory is ${trajectory.state}: recent oil move is ${s.phase === 'EASING' ? 'negative' : s.phase === 'FLAT' ? 'flat' : 'positive'} and plumbing is below Watch.`);
   } else if (s.label === 'WATCH') {
     if (s.oilActive && !s.goldConfirm) {
-      out.push(`Plumbing stress is present; macro is quiet and ${s.gasOrCoalActive ? 'substitution is active' : 'substitution is quiet'}.`);
+      out.push(`Plumbing stress is present; macro is quiet and ${s.gasOrCoalOrTtfActive ? 'substitution is active' : 'substitution is quiet'}.`);
     } else if (s.goldConfirm && !s.oilActive) {
       out.push('Macro is confirming but plumbing is not yet at strong stress; stress is localized.');
     } else {
@@ -243,11 +248,14 @@ function getWhyThisReadBullets(data: PlumbingWarLieDetector, s: PanelState): str
     }
     out.push(`Breadth: ${energyBreadth.state} — ${energyBreadth.reason}`);
   } else {
-    out.push(s.gasOrCoalActive ? 'Plumbing strong + substitution and/or macro confirming.' : 'Plumbing strong + macro confirming.');
+    out.push(s.gasOrCoalOrTtfActive ? 'Plumbing strong + substitution and/or macro confirming.' : 'Plumbing strong + macro confirming.');
     out.push(`Breadth: ${energyBreadth.state} — ${energyBreadth.reason}`);
   }
   if (data.productStress?.active && out.length < 3) {
     out.push('Refined product stress (UGA/USO) is active, supporting the plumbing read.');
+  }
+  if (data.energyComplex?.ttf?.active && out.length < 3) {
+    out.push('European gas (TTF) stress is active, supporting broadening read.');
   }
   return out.slice(0, 3);
 }
@@ -263,16 +271,19 @@ function getPhase(roc3: number): 'RISING' | 'EASING' | 'FLAT' {
 function getTrajectory(data: PlumbingWarLieDetector): NonNullable<PlumbingWarLieDetector['trajectory']> {
   if (data.trajectory) return data.trajectory;
   const phase = getPhase(data.latest.spread_roc3);
-  const natGasActive = data.energyComplex?.natGas?.active === true;
+  const substitutionActive =
+    data.energyComplex?.natGas?.active === true ||
+    data.energyComplex?.coal?.active === true ||
+    data.energyComplex?.ttf?.active === true;
   const escalating =
     data.label === 'REAL_RISK' ||
     data.signals.goldConfirm ||
-    natGasActive ||
+    substitutionActive ||
     (phase === 'RISING' && data.latest.spread_z30 >= 2);
   const easing =
     phase === 'EASING' &&
     !data.signals.goldConfirm &&
-    !natGasActive &&
+    !substitutionActive &&
     data.latest.spread_z30 < 2;
   const state = escalating ? 'ESCALATING' : easing ? 'EASING' : 'HOLDING';
   const reason =
@@ -301,19 +312,20 @@ function getEnergyBreadth(data: PlumbingWarLieDetector): NonNullable<PlumbingWar
   const oilStress = data.latest.spread_z30 >= 1;
   const gasActive = data.energyComplex?.natGas?.active === true;
   const coalActive = data.energyComplex?.coal?.active === true;
-  const gasOrCoalActive = gasActive || coalActive;
+  const ttfActive = data.energyComplex?.ttf?.active === true;
+  const gasOrCoalOrTtfActive = gasActive || coalActive || ttfActive;
   const phase = data.trajectory?.phase ?? getPhase(data.latest.spread_roc3);
   const oilEasing = phase === 'EASING' || phase === 'FLAT';
-  if (oilStress && data.signals.goldConfirm && gasOrCoalActive) {
+  if (oilStress && data.signals.goldConfirm && gasOrCoalOrTtfActive) {
     return { state: 'FULL_STRESS', reason: 'Oil, macro fear, and wider energy stress are all confirming.' };
   }
-  if (oilStress && gasOrCoalActive) {
+  if (oilStress && gasOrCoalOrTtfActive) {
     return { state: 'BROADENING', reason: 'Stress is spreading beyond crude into the wider energy complex.' };
   }
-  if (oilStress && !gasOrCoalActive && !data.signals.goldConfirm) {
+  if (oilStress && !gasOrCoalOrTtfActive && !data.signals.goldConfirm) {
     return { state: 'NARROW', reason: 'Stress is still mostly confined to oil.' };
   }
-  if (oilEasing && !gasOrCoalActive && !data.signals.goldConfirm) {
+  if (oilEasing && !gasOrCoalOrTtfActive && !data.signals.goldConfirm) {
     return { state: 'NARROW', reason: 'Stress is mostly confined to oil.' };
   }
   return { state: oilStress ? 'BROADENING' : 'NARROW', reason: oilStress ? 'Signals are split across buckets.' : 'Stress is still mostly confined to oil.' };
@@ -573,6 +585,19 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             </p>
           </div>
         )}
+        {data.energyComplex?.ttf == null ? (
+          <span className={chipBase}>TTF: N/A</span>
+        ) : (
+          <div className={data.energyComplex.ttf.active ? cardActive : cardInactive}>
+            <p className="text-xs font-medium text-slate-400 mb-1">TTF Gas Stress</p>
+            <p className="text-sm text-slate-200">
+              {data.energyComplex.ttf.active ? 'ON' : 'OFF'}
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5" title="Dutch TTF front-month; European gas stress / broadening signal">
+              TTF · roc3: {data.energyComplex.ttf.roc3}%, z30: {data.energyComplex.ttf.z30}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Technical details (collapsed) */}
@@ -607,6 +632,9 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             </li>
             <li>
               <strong>Coal stress</strong>: {data.energyComplex?.coal == null ? 'N/A' : data.energyComplex.coal.active ? 'ON' : 'OFF'}
+            </li>
+            <li>
+              <strong>TTF gas stress</strong>: {data.energyComplex?.ttf == null ? 'N/A' : data.energyComplex.ttf.active ? 'ON' : 'OFF'}
             </li>
             {data.productStress != null ? (
               <li>

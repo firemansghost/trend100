@@ -96,6 +96,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-03 — (Product/Data) War Lie Detector historical TTF alignment (PR38)
+**Choice:** Historical labelHistory now includes per-day TTF when Stooq TTF data is available. Historical substitution = TTF active that day (same logic as current: z30 ≥ 1 or roc3 ≥ 5%); chart bands and transition notes reflect TTF broadening in the past. Same source (Stooq TG.F via fetchEnergyBars) and thresholds as PR36. Per-day UNG/COAL in history remain deferred.
+
+**Why:** Chart bands and "Latest REAL_RISK began" previously ignored historical TTF; history now aligns with current-state regime model when TTF data exists.
+
+---
+
 ### 2026-02 — (Data/Ops) Plumbing War Lie Detector artifact (geopolitical plumbing)
 **Choice:** Added `public/plumbing.war_lie_detector.json` artifact that answers whether physical markets support the political narrative (real shipping/war risk) or are mostly "theater." Uses proxy tickers: BNO (Brent), USO (WTI), GLD (gold), SPY (risk), TIP (TIPS), UUP (dollar). Core metric for z-score and ROC: BNO/USO ratio (more stable than level spread); spread (BNO−USO) kept for display. Label logic: THEATER (z30 < 1 and !goldConfirm), WATCH (z30 ≥ 1 or goldConfirm), REAL_RISK (z30 ≥ 2 and goldConfirm). Score: +2 if z30 ≥ 2, +1 if z30 ≥ 1, +1 if goldConfirm (max 3). Artifacts are generated in CI (workflows/build); never committed. Run `pnpm -s update:plumbing-war-lie-detector` locally; verify with `pnpm -s verify:artifacts`.
 

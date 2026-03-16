@@ -96,6 +96,7 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+<<<<<<< HEAD
 ### 2026-03 — (Product/Data) War Lie Detector historical TTF alignment (PR38)
 **Choice:** Historical labelHistory now includes per-day TTF when Stooq TTF data is available. Historical substitution = TTF active that day (same logic as current: z30 ≥ 1 or roc3 ≥ 5%); chart bands and transition notes reflect TTF broadening in the past. Same source (Stooq TG.F via fetchEnergyBars) and thresholds as PR36. PR39 adds per-day UNG/COAL.
 
@@ -114,6 +115,12 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 **Choice:** Added optional `historicalInputsUsed` to plumbing artifact (productStress, ttf, natGas, coal booleans). Technical details shows one compact line indicating which historical optional inputs were used when building labelHistory for the run. Display-only; no model changes. Improves trust/debuggability for power users.
 
 **Why:** Power users could not quickly tell which historical components (product stress, TTF, Nat Gas, Coal) were available and used for the current run; visibility was implicit in logs/docs only.
+=======
+### 2026-03 — (UI) War Lie Detector supporting signal emphasis (PR37)
+**Choice:** Supporting signals (product stress chip, Nat Gas, Coal, TTF) get modest active-state emphasis via `chipSupportingActive` and `cardSupportingActive`. Product stress chip uses stronger chip styling when active, muted when quiet. Substitution cards use `cardSupportingActive` when ON (distinct from primary `cardActive`). Oil Stress and Gold Confirm remain primary with `cardActive`. Display-only; no model or artifact changes.
+
+**Why:** Make active supporting signals easier to notice when reinforcing the read, while keeping plumbing/oil visually primary and inactive signals understated.
+>>>>>>> d2e62e5 (ui: add active-state emphasis for supporting signals (PR37))
 
 ---
 

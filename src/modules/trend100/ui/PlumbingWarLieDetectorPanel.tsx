@@ -16,8 +16,10 @@ interface PlumbingWarLieDetectorPanelProps {
 }
 
 const chipBase = 'inline-flex items-center rounded-md px-2 py-0.5 text-xs bg-zinc-900/60 border border-zinc-800 text-slate-300';
+const chipSupportingActive = 'inline-flex items-center rounded-md px-2 py-0.5 text-xs bg-zinc-800/50 border border-zinc-600 text-slate-200';
 const cardActive = 'rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2 min-w-[140px]';
 const cardInactive = 'rounded border border-zinc-700/60 bg-zinc-900/30 px-3 py-2 min-w-[140px]';
+const cardSupportingActive = 'rounded border border-zinc-700 bg-zinc-800/40 px-3 py-2 min-w-[140px]';
 
 /** Map artifact label to public-facing display. THEATER → CONTAINED per v2 spec. */
 function displayRegime(label: PlumbingWarLieDetector['label']): string {
@@ -503,7 +505,10 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
             <span className={chipBase}>Substitution: {bucket.substitutionActive ? 'active' : 'inactive'}</span>
             <span className={chipBase}>Macro: {macroLabel}</span>
             {data.productStress != null && (
-              <span className={chipBase} title="UGA/USO (gasoline vs crude); supports physical plumbing read when active">
+              <span
+                className={data.productStress.active ? chipSupportingActive : chipBase}
+                title="UGA/USO (gasoline vs crude); supports physical plumbing read when active"
+              >
                 Refined product stress: {data.productStress.active ? 'active' : 'quiet'}
               </span>
             )}
@@ -562,7 +567,7 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         {data.energyComplex?.natGas == null ? (
           <span className={chipBase}>Nat Gas: N/A</span>
         ) : (
-          <div className={data.energyComplex.natGas.active ? cardActive : cardInactive}>
+          <div className={data.energyComplex.natGas.active ? cardSupportingActive : cardInactive}>
             <p className="text-xs font-medium text-slate-400 mb-1">Nat Gas Stress</p>
             <p className="text-sm text-slate-200">
               {data.energyComplex.natGas.active ? 'ON' : 'OFF'}
@@ -575,7 +580,7 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         {data.energyComplex?.coal == null ? (
           <span className={chipBase}>Coal: N/A</span>
         ) : (
-          <div className={data.energyComplex.coal.active ? cardActive : cardInactive}>
+          <div className={data.energyComplex.coal.active ? cardSupportingActive : cardInactive}>
             <p className="text-xs font-medium text-slate-400 mb-1">Coal Stress</p>
             <p className="text-sm text-slate-200">
               {data.energyComplex.coal.active ? 'ON' : 'OFF'}
@@ -588,7 +593,7 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
         {data.energyComplex?.ttf == null ? (
           <span className={chipBase}>TTF: N/A</span>
         ) : (
-          <div className={data.energyComplex.ttf.active ? cardActive : cardInactive}>
+          <div className={data.energyComplex.ttf.active ? cardSupportingActive : cardInactive}>
             <p className="text-xs font-medium text-slate-400 mb-1">TTF Gas Stress</p>
             <p className="text-sm text-slate-200">
               {data.energyComplex.ttf.active ? 'ON' : 'OFF'}

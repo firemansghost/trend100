@@ -652,6 +652,19 @@ export function PlumbingWarLieDetectorPanel({ data }: PlumbingWarLieDetectorPane
                 </li>
               );
             })()}
+            {data.historicalInputsUsed != null && (
+              <li>
+                <strong>Historical inputs used</strong>:{' '}
+                {[
+                  data.historicalInputsUsed.productStress && 'Product stress',
+                  data.historicalInputsUsed.ttf && 'TTF',
+                  data.historicalInputsUsed.natGas && 'Nat Gas',
+                  data.historicalInputsUsed.coal && 'Coal',
+                ]
+                  .filter(Boolean)
+                  .join(', ') || '(none)'}
+              </li>
+            )}
             {(() => {
               const lh = data.labelHistory;
               if (!lh || lh.length === 0) return null;

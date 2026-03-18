@@ -1207,6 +1207,13 @@ async function run() {
     artifact.labelHistory = newLabelHistory;
   }
 
+  artifact.historicalInputsUsed = {
+    productStress: productStressByIndex != null,
+    ttf: ttfByIndex != null,
+    natGas: natGasByIndex != null,
+    coal: coalByIndex != null,
+  };
+
   // Bucket-based regime (v2 plumbing-first). Product stress can upgrade watch→strong.
   const bucketState = computeBucketState(
     artifact.latest.spread_z30,

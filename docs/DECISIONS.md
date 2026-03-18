@@ -110,6 +110,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-03 — (Product/Data) War Lie Detector historical inputs visibility (PR40)
+**Choice:** Added optional `historicalInputsUsed` to plumbing artifact (productStress, ttf, natGas, coal booleans). Technical details shows one compact line indicating which historical optional inputs were used when building labelHistory for the run. Display-only; no model changes. Improves trust/debuggability for power users.
+
+**Why:** Power users could not quickly tell which historical components (product stress, TTF, Nat Gas, Coal) were available and used for the current run; visibility was implicit in logs/docs only.
+
+---
+
 ### 2026-02 — (Data/Ops) Plumbing War Lie Detector artifact (geopolitical plumbing)
 **Choice:** Added `public/plumbing.war_lie_detector.json` artifact that answers whether physical markets support the political narrative (real shipping/war risk) or are mostly "theater." Uses proxy tickers: BNO (Brent), USO (WTI), GLD (gold), SPY (risk), TIP (TIPS), UUP (dollar). Core metric for z-score and ROC: BNO/USO ratio (more stable than level spread); spread (BNO−USO) kept for display. Label logic: THEATER (z30 < 1 and !goldConfirm), WATCH (z30 ≥ 1 or goldConfirm), REAL_RISK (z30 ≥ 2 and goldConfirm). Score: +2 if z30 ≥ 2, +1 if z30 ≥ 1, +1 if goldConfirm (max 3). Artifacts are generated in CI (workflows/build); never committed. Run `pnpm -s update:plumbing-war-lie-detector` locally; verify with `pnpm -s verify:artifacts`.
 

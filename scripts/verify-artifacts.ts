@@ -784,6 +784,21 @@ function printPlumbingWarLieDetectorStats(): boolean {
       }
     }
 
+    const hiu = obj.historicalInputsUsed;
+    if (hiu != null) {
+      if (typeof hiu !== 'object' || hiu === null) {
+        console.error('  ❌ plumbing.war_lie_detector.json: historicalInputsUsed must be object if present');
+        return false;
+      }
+      const required = ['productStress', 'ttf', 'natGas', 'coal'] as const;
+      for (const k of required) {
+        if (typeof (hiu as Record<string, unknown>)[k] !== 'boolean') {
+          console.error(`  ❌ plumbing.war_lie_detector.json: historicalInputsUsed.${k} must be boolean`);
+          return false;
+        }
+      }
+    }
+
     const lastH = history[history.length - 1] as { date?: string } | undefined;
     const ec = obj.energyComplex as Record<string, unknown> | undefined;
     console.log(`  plumbing.war_lie_detector.json: asOf=${asOf}, label=${label}, score=${obj.score ?? '?'}`);

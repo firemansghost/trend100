@@ -247,6 +247,13 @@ export interface PlumbingWarLieDetector {
     gld_spy_ratio: number;
   }>;
   labelHistory?: Array<{ date: string; label: 'THEATER' | 'WATCH' | 'REAL_RISK'; score: number }>;
+  /** Which optional historical inputs were used when building labelHistory (PR40). */
+  historicalInputsUsed?: {
+    productStress: boolean;
+    ttf: boolean;
+    natGas: boolean;
+    coal: boolean;
+  };
 }
 
 export interface TrendDeckSection {

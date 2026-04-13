@@ -188,16 +188,16 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 ---
 
 ### 2026-04 — (Data/Ops) CI cache for turbulence gates LKG + post-prefetch diagnostics
-**Choice:** `daily-artifacts-deploy.yml` and `vercel-prebuilt-prod.yml` restore `public/turbulence.gates.json` from a GitHub Actions cache (`turbulence-gates-lkg-v1`, rolling key per run with prefix restore) **before** the live-site curl prefetch. `vercel-prebuilt-prod.yml` then runs **safe** prefetch (temp file → validate → copy); see the next decision. After prefetch handling, diagnostics log file state (no secrets). After `pnpm artifacts:refresh`, if the file still exists, the workflow saves it back to the same cache namespace (skip save if missing—e.g. first run with no prefetch and no restore hit).
+**Choice:** `daily-artifacts-deploy.yml` and `vercel-prebuilt-prod.yml` restore `public/turbulence.gates.json` from a GitHub Actions cache (`turbulence-gates-lkg-v1`, rolling key per run with prefix restore) **before** the live-site curl prefetch. Both workflows then run `ci/gha-turbulence-gates-prep.sh`: if the file is still missing, **copy** the committed bootstrap `ci/bootstrap/turbulence.gates.json` (≥250 weekday rows, same schema as production; not under `public/`). **Safe** prefetch (temp file → non-empty JSON array → copy) may replace `public/` only on success. Logs include `cache_exact_hit`, `gates_file_after_cache_restore`, `seed_bootstrap_applied`, curl/temp/final stats. After `pnpm artifacts:refresh`, if the file still exists, the workflow saves it back to the same cache namespace (skip save if missing).
 
-**Why:** Repo does not commit `public/turbulence.gates.json`; cold CI runs had no on-disk fallback when Stooq blocked and the live prefetch failed. Cross-run cache seeds a reusable last-known-good file alongside the existing production URL prefetch.
+**Why:** Repo does not commit `public/turbulence.gates.json`; cold CI had no file when cache missed and live curl failed. Bootstrap gives Stooq’s `update-turbulence-gates` a valid on-disk fallback without relying on Vercel. **Ops:** If the bootstrap’s `last_date` ages beyond `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` (e.g. 60 in CI), refresh `ci/bootstrap/turbulence.gates.json` in-repo (regenerate synthetic series) so verify stays green on long-lived cold starts.
 
 ---
 
 ### 2026-04 — (Data/Ops) vercel-prebuilt-prod: Node 24 parity + safe turbulence prefetch
-**Choice:** `vercel-prebuilt-prod.yml` matches the daily workflow baseline: `actions/checkout@v6`, `actions/setup-node@v6` with Node **24**, `actions/cache` and `actions/cache/{restore,save}` **v5**, and workflow-level `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`. The production prefetch for `turbulence.gates.json` writes to a **temp file** first; the file is copied into `public/` only when curl succeeds **and** the body parses as a **non-empty JSON array**. Failed curl, empty response, empty `[]`, or non-array JSON leaves any **restored** `public/turbulence.gates.json` unchanged. Logs include restored-before-prefetch, curl outcome, temp presence, temp parse/array checks, and final `final_points` / `final_last_date` when the public file exists.
+**Choice:** `vercel-prebuilt-prod.yml` matches the daily workflow baseline: `actions/checkout@v6`, `actions/setup-node@v6` with Node **24**, `actions/cache` and `actions/cache/{restore,save}` **v5**, and workflow-level `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`. Turbulence prep is shared with daily via `ci/gha-turbulence-gates-prep.sh` (see prior decision: cache → bootstrap → safe prefetch). Failed curl or invalid live JSON leaves restored or seeded `public/turbulence.gates.json` unchanged.
 
-**Why:** `curl -o public/turbulence.gates.json` with `|| true` could replace a good cache restore with an empty or invalid file on failure, removing the fallback Stooq needs.
+**Why:** Direct curl to `public/` could wipe a good cache or committed bootstrap on failure; shared script keeps both workflows aligned.
 
 ---
 

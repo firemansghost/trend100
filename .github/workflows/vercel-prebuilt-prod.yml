@@ -52,6 +52,17 @@ jobs:
           echo "EOD cache file count: $(ls -1 data/marketstack/eod 2>/dev/null | wc -l || true)"
           du -sh data/marketstack/eod 2>/dev/null || true
 
+      - name: Ensure public dir for turbulence gates
+        run: mkdir -p public
+
+      - name: Restore turbulence gates last-known-good cache
+        uses: actions/cache/restore@v4
+        with:
+          path: public/turbulence.gates.json
+          key: ${{ runner.os }}-turbulence-gates-lkg-v1-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-turbulence-gates-lkg-v1-
+
       - name: Prefetch last-known-good turbulence gates
         run: |
           mkdir -p public
@@ -62,6 +73,36 @@ jobs:
             --retry 2 \
             --retry-delay 2 \
             || true
+
+      - name: Turbulence gates diagnostics (after prefetch)
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const p = 'public/turbulence.gates.json';
+          console.log('=== turbulence.gates.json (after prefetch) ===');
+          if (!fs.existsSync(p)) {
+            console.log('exists: false');
+            process.exit(0);
+          }
+          const st = fs.statSync(p);
+          console.log('exists: true');
+          console.log('size_bytes:', st.size);
+          try {
+            const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+            if (!Array.isArray(j)) {
+              console.log('json_parse: fail (not an array)');
+            } else {
+              console.log('json_parse: ok');
+              console.log('points:', j.length);
+              const last = j[j.length - 1];
+              const ld = last && typeof last.date === 'string' ? last.date : 'unknown';
+              console.log('last_date:', ld);
+            }
+          } catch (e) {
+            console.log('json_parse: fail');
+            console.log('json_error:', e instanceof Error ? e.message : String(e));
+          }
+          NODE
 
       - name: Generate and verify artifacts
         env:
@@ -87,6 +128,23 @@ jobs:
         run: |
           echo "EOD cache file count: $(ls -1 data/marketstack/eod 2>/dev/null | wc -l || true)"
           du -sh data/marketstack/eod 2>/dev/null || true
+
+      - name: Check turbulence gates file for cache save
+        id: turbulence-gates-lkg
+        if: always()
+        run: |
+          if [ -f public/turbulence.gates.json ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Save turbulence gates last-known-good cache
+        if: always() && steps.turbulence-gates-lkg.outputs.exists == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: public/turbulence.gates.json
+          key: ${{ runner.os }}-turbulence-gates-lkg-v1-${{ github.run_id }}
 
       - name: Save Marketstack EOD cache
         if: always()

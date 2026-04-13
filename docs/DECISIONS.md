@@ -188,9 +188,16 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 ---
 
 ### 2026-04 — (Data/Ops) CI cache for turbulence gates LKG + post-prefetch diagnostics
-**Choice:** `daily-artifacts-deploy.yml` and `vercel-prebuilt-prod.yml` restore `public/turbulence.gates.json` from a GitHub Actions cache (`turbulence-gates-lkg-v1`, rolling key per run with prefix restore) **before** the live-site curl prefetch, then prefetch as today. After prefetch, a step logs whether the file exists, size in bytes, JSON parse success, and `last_date` when readable (no secrets). After `pnpm artifacts:refresh`, if the file still exists, the workflow saves it back to the same cache namespace (skip save if missing—e.g. first run with no prefetch and no restore hit).
+**Choice:** `daily-artifacts-deploy.yml` and `vercel-prebuilt-prod.yml` restore `public/turbulence.gates.json` from a GitHub Actions cache (`turbulence-gates-lkg-v1`, rolling key per run with prefix restore) **before** the live-site curl prefetch. `vercel-prebuilt-prod.yml` then runs **safe** prefetch (temp file → validate → copy); see the next decision. After prefetch handling, diagnostics log file state (no secrets). After `pnpm artifacts:refresh`, if the file still exists, the workflow saves it back to the same cache namespace (skip save if missing—e.g. first run with no prefetch and no restore hit).
 
 **Why:** Repo does not commit `public/turbulence.gates.json`; cold CI runs had no on-disk fallback when Stooq blocked and the live prefetch failed. Cross-run cache seeds a reusable last-known-good file alongside the existing production URL prefetch.
+
+---
+
+### 2026-04 — (Data/Ops) vercel-prebuilt-prod: Node 24 parity + safe turbulence prefetch
+**Choice:** `vercel-prebuilt-prod.yml` matches the daily workflow baseline: `actions/checkout@v6`, `actions/setup-node@v6` with Node **24**, `actions/cache` and `actions/cache/{restore,save}` **v5**, and workflow-level `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`. The production prefetch for `turbulence.gates.json` writes to a **temp file** first; the file is copied into `public/` only when curl succeeds **and** the body parses as a **non-empty JSON array**. Failed curl, empty response, empty `[]`, or non-array JSON leaves any **restored** `public/turbulence.gates.json` unchanged. Logs include restored-before-prefetch, curl outcome, temp presence, temp parse/array checks, and final `final_points` / `final_last_date` when the public file exists.
+
+**Why:** `curl -o public/turbulence.gates.json` with `|| true` could replace a good cache restore with an empty or invalid file on failure, removing the fallback Stooq needs.
 
 ---
 

@@ -5,18 +5,22 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Align with daily-artifacts-deploy: Node 24 + JS actions opt-in during GitHub Node 20 deprecation.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Enable Corepack and pnpm
         run: |
@@ -29,7 +33,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
       - name: Cache pnpm store
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
@@ -40,7 +44,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Restore Marketstack EOD cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: data/marketstack/eod
           key: ${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}
@@ -56,51 +60,99 @@ jobs:
         run: mkdir -p public
 
       - name: Restore turbulence gates last-known-good cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: public/turbulence.gates.json
           key: ${{ runner.os }}-turbulence-gates-lkg-v1-${{ github.run_id }}
           restore-keys: |
             ${{ runner.os }}-turbulence-gates-lkg-v1-
 
-      - name: Prefetch last-known-good turbulence gates
+      - name: Prefetch turbulence gates (safe) + diagnostics
+        env:
+          PREFETCH_TMP: ${{ runner.temp }}/turbulence.gates.prefetch.json
         run: |
+          set +e
           mkdir -p public
+          TARGET="public/turbulence.gates.json"
+          echo "=== turbulence gates prefetch ==="
+          if [ -f "$TARGET" ]; then
+            echo "restored_file_before_prefetch: true"
+          else
+            echo "restored_file_before_prefetch: false"
+          fi
           ts=$(date +%s)
-          curl -sf -o public/turbulence.gates.json \
+          rm -f "$PREFETCH_TMP"
+          curl -sf -o "$PREFETCH_TMP" \
             "https://trend100.vercel.app/turbulence.gates.json?v=$ts" \
             --max-time 30 \
             --retry 2 \
-            --retry-delay 2 \
-            || true
-
-      - name: Turbulence gates diagnostics (after prefetch)
-        run: |
+            --retry-delay 2
+          CURL_EXIT=$?
+          export CURL_EXIT
+          if [ "$CURL_EXIT" -eq 0 ]; then
+            echo "curl: success"
+          else
+            echo "curl: failed (exit $CURL_EXIT)"
+          fi
+          if [ -f "$PREFETCH_TMP" ]; then
+            echo "temp_file_exists: true"
+          else
+            echo "temp_file_exists: false"
+          fi
           node <<'NODE'
           const fs = require('fs');
-          const p = 'public/turbulence.gates.json';
-          console.log('=== turbulence.gates.json (after prefetch) ===');
-          if (!fs.existsSync(p)) {
-            console.log('exists: false');
+          const tmp = process.env.PREFETCH_TMP || '';
+          const target = 'public/turbulence.gates.json';
+          const curlOk = process.env.CURL_EXIT === '0';
+          let tempParseOk = false;
+          let tempIsArray = false;
+          let tempNonEmptyArray = false;
+          if (fs.existsSync(tmp)) {
+            try {
+              const j = JSON.parse(fs.readFileSync(tmp, 'utf8'));
+              tempParseOk = true;
+              tempIsArray = Array.isArray(j);
+              tempNonEmptyArray = tempIsArray && j.length > 0;
+              console.log('temp_json_parse: ok');
+              console.log('temp_json_is_array:', tempIsArray);
+              console.log('temp_json_non_empty_array:', tempNonEmptyArray);
+            } catch (e) {
+              console.log('temp_json_parse: fail');
+              console.log('temp_json_error:', e instanceof Error ? e.message : String(e));
+            }
+          } else {
+            console.log('temp_json_parse: skipped (no temp file)');
+          }
+          if (curlOk && tempParseOk && tempNonEmptyArray) {
+            fs.copyFileSync(tmp, target);
+            console.log('prefetch: copied valid non-empty array JSON to public/turbulence.gates.json');
+          } else {
+            console.log('prefetch: did not overwrite public/turbulence.gates.json (curl failed or JSON not a non-empty array)');
+          }
+          try {
+            fs.unlinkSync(tmp);
+          } catch (_) {}
+          console.log('=== turbulence.gates.json (after prefetch handling) ===');
+          if (!fs.existsSync(target)) {
+            console.log('final_exists: false');
             process.exit(0);
           }
-          const st = fs.statSync(p);
-          console.log('exists: true');
-          console.log('size_bytes:', st.size);
+          console.log('final_exists: true');
+          const st = fs.statSync(target);
+          console.log('final_size_bytes:', st.size);
           try {
-            const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+            const j = JSON.parse(fs.readFileSync(target, 'utf8'));
             if (!Array.isArray(j)) {
-              console.log('json_parse: fail (not an array)');
+              console.log('final_json: not an array');
             } else {
-              console.log('json_parse: ok');
-              console.log('points:', j.length);
+              console.log('final_points:', j.length);
               const last = j[j.length - 1];
               const ld = last && typeof last.date === 'string' ? last.date : 'unknown';
-              console.log('last_date:', ld);
+              console.log('final_last_date:', ld);
             }
           } catch (e) {
-            console.log('json_parse: fail');
-            console.log('json_error:', e instanceof Error ? e.message : String(e));
+            console.log('final_json_parse: fail');
+            console.log('final_json_error:', e instanceof Error ? e.message : String(e));
           }
           NODE
 
@@ -141,14 +193,14 @@ jobs:
 
       - name: Save turbulence gates last-known-good cache
         if: always() && steps.turbulence-gates-lkg.outputs.exists == 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: public/turbulence.gates.json
           key: ${{ runner.os }}-turbulence-gates-lkg-v1-${{ github.run_id }}
 
       - name: Save Marketstack EOD cache
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: data/marketstack/eod
           key: ${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}

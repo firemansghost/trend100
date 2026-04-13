@@ -187,6 +187,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-04 — (Data/Ops) CI cache for turbulence gates LKG + post-prefetch diagnostics
+**Choice:** `daily-artifacts-deploy.yml` and `vercel-prebuilt-prod.yml` restore `public/turbulence.gates.json` from a GitHub Actions cache (`turbulence-gates-lkg-v1`, rolling key per run with prefix restore) **before** the live-site curl prefetch, then prefetch as today. After prefetch, a step logs whether the file exists, size in bytes, JSON parse success, and `last_date` when readable (no secrets). After `pnpm artifacts:refresh`, if the file still exists, the workflow saves it back to the same cache namespace (skip save if missing—e.g. first run with no prefetch and no restore hit).
+
+**Why:** Repo does not commit `public/turbulence.gates.json`; cold CI runs had no on-disk fallback when Stooq blocked and the live prefetch failed. Cross-run cache seeds a reusable last-known-good file alongside the existing production URL prefetch.
+
+---
+
 ### 2026-02-19 — (Data/UI) Turbulence Green Bar null-aware PENDING state when gates lag
 **Choice:** When gates (turbulence.gates.json) lag shock (turbulence.shock.json) by a day—e.g., gates last date 2026-02-17 vs shock 2026-02-18—greenbar uses an explicit PENDING state instead of treating missing gates as false. For dates with shock but no gates: `spxAbove50dma`, `vixBelow25`, and `isGreenBar` are set to `null`. UI shows "Turbulence: PENDING" with subtext explaining. Chart overlays render only when `isGreenBar === true` (never for null). verify-artifacts enforces: if gate fields are null, isGreenBar must be null; if gates present, isGreenBar must be boolean.
 

@@ -8,22 +8,26 @@ on:
     - cron: "15 1 * * 1-5"
   workflow_dispatch:
 
+# Opt JavaScript actions to Node 24 during GitHub’s Node 20 deprecation phase; aligns with setup-node 24 below.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Artifacts scheduled run start
         run: |
           echo "Artifacts scheduled run starting (UTC: $(date -u '+%Y-%m-%d %H:%M:%S'))"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Enable Corepack and pnpm
         run: |
@@ -36,7 +40,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
       - name: Cache pnpm store
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
@@ -47,7 +51,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Restore Marketstack EOD cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: data/marketstack/eod
           key: ${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}
@@ -78,6 +82,8 @@ jobs:
           MARKETSTACK_EXTEND_MAX_SYMBOLS: 200
           TURBULENCE_GATES_START: "2019-10-01"
           TURBULENCE_STOOQ_VIX_SYMBOL: "vi.c"
+          TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS: "60"
+          TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS: "60"
           TURBULENCE_SHOCK_START: "2019-10-01"
           TURBULENCE_SHOCK_Z_THRESHOLD: "2.0"
           EOD_STOOQ_DECKS: ${{ vars.EOD_STOOQ_DECKS || '' }}
@@ -86,7 +92,27 @@ jobs:
           SNAPSHOT_STRICT_ASOF_DECKS: ${{ vars.SNAPSHOT_STRICT_ASOF_DECKS || '' }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: pnpm -s artifacts:refresh
+        run: |
+          set -e
+          echo "=== Pre-artifacts diagnostics (no secret values) ==="
+          echo "node: $(node --version)"
+          echo "pnpm: $(pnpm --version)"
+          echo "DATA_PROVIDER=${DATA_PROVIDER:-}"
+          if [ -n "${MARKETSTACK_API_KEY:-}" ]; then echo "MARKETSTACK_API_KEY: set"; else echo "MARKETSTACK_API_KEY: unset"; fi
+          if [ -n "${VERCEL_ORG_ID:-}" ]; then echo "VERCEL_ORG_ID: set"; else echo "VERCEL_ORG_ID: unset"; fi
+          if [ -n "${VERCEL_PROJECT_ID:-}" ]; then echo "VERCEL_PROJECT_ID: set"; else echo "VERCEL_PROJECT_ID: unset"; fi
+          if [ -n "${EOD_STOOQ_DECKS:-}" ]; then echo "EOD_STOOQ_DECKS: non-empty"; else echo "EOD_STOOQ_DECKS: empty"; fi
+          if [ -n "${EOD_STOOQ_FORCE_FALLBACK:-}" ]; then echo "EOD_STOOQ_FORCE_FALLBACK: non-empty"; else echo "EOD_STOOQ_FORCE_FALLBACK: empty"; fi
+          if [ -n "${EOD_STOOQ_SYMBOL_OVERRIDES:-}" ]; then echo "EOD_STOOQ_SYMBOL_OVERRIDES: non-empty"; else echo "EOD_STOOQ_SYMBOL_OVERRIDES: empty"; fi
+          if [ -n "${SNAPSHOT_STRICT_ASOF_DECKS:-}" ]; then echo "SNAPSHOT_STRICT_ASOF_DECKS: non-empty"; else echo "SNAPSHOT_STRICT_ASOF_DECKS: empty"; fi
+          echo "=== Running pnpm artifacts:refresh ==="
+          pnpm -s artifacts:refresh
+
+      - name: Job failure diagnostics
+        if: failure()
+        run: |
+          echo "A step in this job failed. If the failure was in 'Generate and verify artifacts', look for errors from pnpm artifacts:refresh in that step's log."
+          echo "Runtime: node $(node --version 2>/dev/null || echo unknown), pnpm $(pnpm --version 2>/dev/null || echo unknown)"
 
       - name: EOD cache diagnostics (after artifacts)
         run: |
@@ -95,7 +121,7 @@ jobs:
 
       - name: Save Marketstack EOD cache
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: data/marketstack/eod
           key: ${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}

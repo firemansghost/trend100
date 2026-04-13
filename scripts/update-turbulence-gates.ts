@@ -11,6 +11,9 @@
  * - TURBULENCE_STOOQ_SPX_SYMBOL (optional; default "^spx")
  * - TURBULENCE_STOOQ_VIX_SYMBOL (optional; default "vi.c" = S&P 500 VIX Cash)
  *   If set, tried first; on failure, fallback list is used. CI pins vi.c for stability.
+ * - TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS (optional; default "60")
+ *   When Stooq fetch fails, existing public/turbulence.gates.json may be kept if structurally
+ *   valid and last date is at most this many calendar days old.
  */
 
 import './load-env';
@@ -70,6 +73,17 @@ function toYyyyMmDd(dateStr: string): string {
   return dateStr.replace(/-/g, '');
 }
 
+/** Stooq sometimes returns an API-key / captcha HTML page instead of CSV (no Date/Close header). */
+function isLikelyStooqAuthOrBlockPage(text: string): boolean {
+  const t = text.trim().toLowerCase();
+  if (t.includes('get_apikey')) return true;
+  if (t.includes('get your api')) return true;
+  if (t.includes('captcha')) return true;
+  const head = t.slice(0, 1200);
+  if (head.includes('<!doctype html') || head.includes('<html')) return true;
+  return false;
+}
+
 async function fetchStooqCsv(
   symbol: string,
   start: string,
@@ -86,6 +100,12 @@ async function fetchStooqCsv(
 
   const text = await res.text();
   const trimmed = text.trim();
+
+  if (isLikelyStooqAuthOrBlockPage(trimmed)) {
+    throw new Error(
+      `STOOQ_AUTH_BLOCKED: Stooq returned an auth/API or HTML block page instead of CSV for symbol "${symbol}". URL: ${url}`
+    );
+  }
 
   if (!trimmed || trimmed === 'No data.' || trimmed.toLowerCase().includes('no data')) {
     throw new Error(
@@ -107,6 +127,11 @@ async function fetchStooqCsv(
   const dateIdx = header.split(',').findIndex((c) => c.trim() === 'date');
 
   if (closeIdx < 0 || dateIdx < 0) {
+    if (isLikelyStooqAuthOrBlockPage(trimmed)) {
+      throw new Error(
+        `STOOQ_AUTH_BLOCKED: Stooq response had no CSV Date/Close header (likely auth/block page) for symbol "${symbol}". URL: ${url}`
+      );
+    }
     throw new Error(`Stooq CSV missing Date or Close column. URL: ${url}`);
   }
 
@@ -176,23 +201,46 @@ function computeSpx50dma(
 }
 
 const GATES_OUT_PATH = join(process.cwd(), 'public', 'turbulence.gates.json');
-const GATES_STALENESS_MAX_DAYS = 10;
+/** Min rows for existing file to count as structurally usable fallback. */
+const GATES_FALLBACK_MIN_POINTS = 200;
 
-function isLastKnownGoodValid(): boolean {
-  if (!existsSync(GATES_OUT_PATH)) return false;
+function getFallbackMaxStalenessDays(): number {
+  const raw = process.env.TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS;
+  const n = raw != null && raw !== '' ? parseInt(raw, 10) : 60;
+  return Number.isFinite(n) && n >= 1 ? n : 60;
+}
+
+function isGateRowShape(x: unknown): x is { date: string } {
+  if (x === null || typeof x !== 'object') return false;
+  const d = (x as { date?: unknown }).date;
+  return typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d);
+}
+
+/**
+ * If public/turbulence.gates.json exists, parses as array of gate points with enough history.
+ * Returns null if missing, invalid, or last date too stale for fallback (see env).
+ */
+function getUsableExistingGatesForFallback(): {
+  lastDate: string;
+  daysStale: number;
+  pointCount: number;
+} | null {
+  if (!existsSync(GATES_OUT_PATH)) return null;
   try {
     const content = readFileSync(GATES_OUT_PATH, 'utf-8');
-    const arr = JSON.parse(content);
-    if (!Array.isArray(arr) || arr.length < 250) return false;
-    const lastDate = arr[arr.length - 1]?.date;
-    if (!lastDate) return false;
+    const arr = JSON.parse(content) as unknown;
+    if (!Array.isArray(arr) || arr.length < GATES_FALLBACK_MIN_POINTS) return null;
+    if (!isGateRowShape(arr[0]) || !isGateRowShape(arr[arr.length - 1])) return null;
+    const lastDate = arr[arr.length - 1]!.date as string;
     const today = new Date().toISOString().split('T')[0]!;
-    const daysSince = Math.floor(
+    const daysStale = Math.floor(
       (new Date(today).getTime() - new Date(lastDate).getTime()) / (1000 * 60 * 60 * 24)
     );
-    return daysSince <= GATES_STALENESS_MAX_DAYS;
+    const maxStale = getFallbackMaxStalenessDays();
+    if (daysStale > maxStale) return null;
+    return { lastDate, daysStale, pointCount: arr.length };
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -249,9 +297,35 @@ async function main() {
       console.log(`   Last vixBelow25: ${last.vixBelow25 ?? 'null'}`);
     }
   } catch (err) {
-    if (isLastKnownGoodValid()) {
-      console.warn('\n⚠️  Stooq gates fetch failed; using last-known-good turbulence.gates.json');
+    const msg = err instanceof Error ? err.message : String(err);
+    const authBlocked = msg.includes('STOOQ_AUTH_BLOCKED');
+    const fallback = getUsableExistingGatesForFallback();
+
+    if (fallback) {
+      console.warn('\n⚠️  WARNING: Turbulence gates were NOT refreshed this run.');
+      if (authBlocked) {
+        console.warn(
+          '   Stooq blocked the CSV fetch (auth/API key or captcha/HTML page instead of market data).'
+        );
+      } else {
+        console.warn(`   Fetch/processing failed: ${msg}`);
+      }
+      console.warn(
+        `   Continuing with existing public/turbulence.gates.json (${fallback.pointCount} points, last date ${fallback.lastDate}, ~${fallback.daysStale} calendar day(s) behind UTC today).`
+      );
+      console.warn(
+        '   Consumers should treat gate series as potentially stale until a successful refresh.'
+      );
       process.exit(0);
+    }
+
+    if (authBlocked) {
+      console.error(
+        '\n❌ Stooq auth/block page prevented gates refresh, and no usable existing public/turbulence.gates.json fallback was found.'
+      );
+      console.error(
+        `   Tune TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS (default ${getFallbackMaxStalenessDays()}) or ensure a valid committed/prefetched gates file.`
+      );
     }
     throw err;
   }

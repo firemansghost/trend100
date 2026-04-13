@@ -82,10 +82,11 @@ git status
 
 ### CI pipeline checks
 - **Artifact validation:** CI must pass `pnpm artifacts:refresh` before deploy (vercel-prebuilt-prod.yml on push; daily-artifacts-deploy.yml on schedule)
-- **CI cache: Marketstack EOD (rolling):** CI uses `actions/cache/restore@v4` and `actions/cache/save@v4` so the cache evolves run-to-run. Restore uses prefix `marketstack-eod-v2-` (restore-keys); save uses per-run key `${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}`. Each run saves a new cache; the next run restores the most recent match. To invalidate (e.g. cache format change), bump `v2`→`v3` in both restore-keys and save key. Diagnostics log file count and size after restore and after artifacts. Save runs with `if: always()` so partial improvements persist even on failure. This does not commit `data/marketstack/eod` to git.
+- **CI cache: Marketstack EOD (rolling):** `daily-artifacts-deploy.yml` uses `actions/cache/restore@v5` and `actions/cache/save@v5` (pnpm store uses `actions/cache@v5`). Restore uses prefix `marketstack-eod-v2-` (restore-keys); save uses per-run key `${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}`. Each run saves a new cache; the next run restores the most recent match. To invalidate (e.g. cache format change), bump `v2`→`v3` in both restore-keys and save key. Diagnostics log file count and size after restore and after artifacts. Save runs with `if: always()` so partial improvements persist even on failure. This does not commit `data/marketstack/eod` to git.
+- **Daily Artifacts Deploy (PR41):** Node 24 via `actions/setup-node@v6`; workflow `env` includes `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`. The artifacts step logs non-secret diagnostics before `pnpm artifacts:refresh`.
 - **Stooq routing in CI:** Workflows read `EOD_STOOQ_DECKS`, `EOD_STOOQ_FORCE_FALLBACK`, `EOD_STOOQ_SYMBOL_OVERRIDES` from GitHub Actions Variables. Recommended: `EOD_STOOQ_DECKS=METALS_MINING,PLUMBING,US_SECTORS,US_FACTORS,GLOBAL_EQUITIES`, `EOD_STOOQ_FORCE_FALLBACK=BNO,FBTC,FETH,SRUUF`, and `EOD_STOOQ_SYMBOL_OVERRIDES=TTF=tg.f` (for War Lie Detector TTF gas). Expected log: `Provider routing: Stooq-first for N symbols (decks: ...), Marketstack direct: K` and `Stooq OK: X | Forced fallback: Y | Stooq failed → Marketstack fallback: Z`
 - **Strict asOfDate in CI:** Workflows pass `SNAPSHOT_STRICT_ASOF_DECKS` from GitHub Actions Variables. When set (e.g. `US_SECTORS,US_FACTORS,GLOBAL_EQUITIES,METALS_MINING,PLUMBING`), those decks use min(lastDate) as asOfDate so snapshots don't appear fresher than the stalest ticker.
-- **Turbulence gates:** Fetched from Stooq (SPX + VIX EOD); no API key required
+- **Turbulence gates:** Fetched from Stooq (SPX + VIX EOD). Stooq may intermittently return an auth/API-key or captcha page instead of CSV; `update-turbulence-gates` then keeps a structurally valid last-known-good `public/turbulence.gates.json` when within `TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS` (default 60). CI workflows set that and matching `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` to 60 so `verify:artifacts` does not fail the job after a skipped refresh.
 - **Daily deploy:** `daily-artifacts-deploy.yml` runs twice on weekdays: 22:15 UTC (primary) and 01:15 UTC (top-off). The top-off pass catches lagging EOD inputs (e.g. BNO in War Lie Detector) that may not have printed the latest close by the first run. Both runs must pass update:snapshots + verify:artifacts before deploying.
 - **Production smoke checks:** After deploy, key artifact endpoints should return 200:
   - https://trend100.vercel.app/snapshot.MACRO.json
@@ -129,7 +130,7 @@ git clean -fd public data/marketstack/eod
 - **Turbulence gates:** Validates `public/turbulence.gates.json`:
   - File exists, is an array, ≥250 points
   - Sorted ascending by date
-  - Last point date within 7 calendar days (fails if stale to prevent stale deploys)
+  - Last point date within `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` calendar days of UTC today (default **10**; CI sets **60** to align with Stooq fallback). Fails if older to block unintentionally stale deploys under the chosen threshold.
   - Null rules: if `spx` or `spx50dma` is null, `spxAbove50dma` must be null; if `vix` is null, `vixBelow25` must be null
   - At least one non-null `spx50dma` (ensures compute is not broken)
 - **Turbulence shock:** Validates `public/turbulence.shock.json`:

@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-04 — (Ops) Daily Artifacts Deploy workflow Node 24 and diagnostics (PR41)
+**Choice:** `daily-artifacts-deploy.yml` uses `actions/checkout@v6`, `actions/setup-node@v6` with `node-version: "24"`, `actions/cache@v5` and `actions/cache/restore@v5` / `actions/cache/save@v5`. Workflow-level `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` opts JS actions to Node 24 during GitHub’s Node 20 deprecation phase. The artifacts step prints non-secret diagnostics (node/pnpm versions, whether key env vars are set or non-empty) before `pnpm artifacts:refresh`; a `if: failure()` step adds a short hint. Schedule and EOD cache keys unchanged.
+
+**Why:** Node 20 for Actions is deprecated; align with Node 24–ready action versions and make artifact failures easier to debug without exposing secrets.
+
+---
+
 ### 2026-03 — (Product/Architecture) War Lie Detector v2 conceptual model (PR24)
 **Choice:** Lock War Lie Detector v2 conceptual model: 3-bucket framework (Physical Plumbing → Substitution → Macro Confirmation), THEATER→CONTAINED rename justification, signal mapping. See [WAR_LIE_DETECTOR_V2.md](WAR_LIE_DETECTOR_V2.md).
 
@@ -170,6 +177,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 **Choice:** Stooq returns "no data" for ^vix. Switched default VIX symbol to `vi.c` (S&P 500 VIX Cash, spot index). Added fallback: try `TURBULENCE_STOOQ_VIX_SYMBOL` first if set, else try [vi.c, ^vix, ^VIX, vi.f] in order. Log which symbol succeeded. CI workflows explicitly set `TURBULENCE_STOOQ_VIX_SYMBOL: "vi.c"` so artifacts are stable.
 
 **Why:** ^vix fails in CI; vi.c is Stooq's spot VIX and returns data. Env pinning prevents future regressions if defaults change.
+
+---
+
+### 2026-04 — (Data/Ops) Stooq auth/captcha block + last-known-good gates fallback
+**Choice:** Stooq sometimes returns a plain-text/HTML "get API key" or captcha page with HTTP 200 instead of CSV. `update-turbulence-gates.ts` detects likely auth/block bodies (`get_apikey`, "get your api", `captcha`, leading `<html`) and treats them as fetch failure (`STOOQ_AUTH_BLOCKED`). If `public/turbulence.gates.json` already exists, has enough points (≥200), passes light shape checks, and last date is within `TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS` (default 60), the script logs explicit warnings that gates were **not** refreshed and exits 0 without overwriting the file. `verify-artifacts` uses `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` (default 10); CI workflows set both gate env vars to 60 so a fallback run still passes verification.
+
+**Why:** Avoids hard-failing scheduled/CI artifact generation when Stooq rate-limits or gates anonymous CSV; keeps output honest (warnings, no fake "fresh" log line) while allowing a conservative stale continuation.
 
 ---
 

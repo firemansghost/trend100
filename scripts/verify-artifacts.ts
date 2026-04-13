@@ -18,6 +18,13 @@ import { isWeekend, hasFullHealthSchema } from './healthHistorySanitize';
 const PUBLIC_DIR = join(process.cwd(), 'public');
 const EOD_CACHE_DIR = join(process.cwd(), 'data', 'marketstack', 'eod');
 
+/** Max calendar days between last gate point and UTC "today" before verify fails (default 10). CI may set 60 to match update-turbulence-gates fallback. */
+function getTurbulenceGatesVerifyMaxStalenessDays(): number {
+  const raw = process.env.TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS;
+  const n = raw != null && raw !== '' ? parseInt(raw, 10) : 10;
+  return Number.isFinite(n) && n >= 1 ? n : 10;
+}
+
 function getHealthHistoryRetentionDays(): number {
   const raw = process.env.HEALTH_HISTORY_RETENTION_DAYS;
   if (!raw || raw.trim() === '') return 0;
@@ -327,9 +334,10 @@ function printTurbulenceGatesStats(): boolean {
     const lastDateObj = new Date(lastDate);
     const todayObj = new Date(today);
     const daysSinceLast = Math.floor((todayObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysSinceLast > 10) {
+    const maxStaleDays = getTurbulenceGatesVerifyMaxStalenessDays();
+    if (daysSinceLast > maxStaleDays) {
       console.error(
-        `  ❌ turbulence.gates.json: Stale (last date ${lastDate} is ${daysSinceLast} days ago, max 10)`
+        `  ❌ turbulence.gates.json: Stale (last date ${lastDate} is ${daysSinceLast} days ago, max ${maxStaleDays} per TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS)`
       );
       return false;
     }

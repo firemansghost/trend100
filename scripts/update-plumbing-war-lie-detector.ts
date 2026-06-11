@@ -118,6 +118,13 @@ interface PlumbingWarLieDetector {
   };
   history: PlumbingHistoryPoint[];
   labelHistory: PlumbingLabelHistoryPoint[];
+  /** Which optional historical inputs were used when building labelHistory. */
+  historicalInputsUsed?: {
+    productStress: boolean;
+    ttf: boolean;
+    natGas: boolean;
+    coal: boolean;
+  };
 }
 
 /** Bucket state for v2 regime logic. Physical Plumbing = anchor; Substitution = spread; Macro = supportive. */
@@ -324,13 +331,13 @@ function loadEodCache(symbol: string): EodBar[] | null {
 }
 
 /** Compute roc3, z30, active for a single-ticker series. z30 = z-score of last 30 ROC3 values. */
-function computeEnergySignal(
+function computeEnergySignal<T extends 'UNG' | 'COAL' | 'TTF'>(
   bars: EodBar[],
   wldAsOf: string,
-  ticker: 'UNG' | 'COAL' | 'TTF',
+  ticker: T,
   roc3ActiveThreshold: number,
   z30ActiveThreshold: number
-): { ticker: 'UNG' | 'COAL' | 'TTF'; asOf: string; roc3: number; z30: number; active: boolean } | null {
+): { ticker: T; asOf: string; roc3: number; z30: number; active: boolean } | null {
   if (bars.length < 34) return null; // need 3 for roc3 + 30 for z30
   const sorted = [...bars].sort((a, b) => a.date.localeCompare(b.date));
   const lastDate = sorted[sorted.length - 1]!.date;
@@ -740,24 +747,34 @@ async function fetchEnergyComplex(asOf: string): Promise<PlumbingWarLieDetector[
   const startDate = start.toISOString().split('T')[0]!;
   const result: NonNullable<PlumbingWarLieDetector['energyComplex']> = {};
 
-  for (const { symbol, roc3Threshold, z30Threshold } of [
-    { symbol: 'UNG' as const, roc3Threshold: 5.0, z30Threshold: 1.0 },
-    { symbol: 'COAL' as const, roc3Threshold: 3.0, z30Threshold: 1.0 },
-    { symbol: 'TTF' as const, roc3Threshold: 5.0, z30Threshold: 1.0 },
-  ]) {
-    try {
-      const bars = await fetchEnergyBars(symbol, startDate, endDate);
-      if (bars) {
-        const sig = computeEnergySignal(bars, asOf, symbol, roc3Threshold, z30Threshold);
-        if (sig) {
-          if (symbol === 'UNG') result.natGas = sig;
-          else if (symbol === 'COAL') result.coal = sig;
-          else result.ttf = sig;
-        }
-      }
-    } catch (err) {
-      console.warn(`  WARN: Energy complex ${symbol} fetch failed:`, err instanceof Error ? err.message : err);
+  try {
+    const ungBars = await fetchEnergyBars('UNG', startDate, endDate);
+    if (ungBars) {
+      const sig = computeEnergySignal(ungBars, asOf, 'UNG', 5.0, 1.0);
+      if (sig) result.natGas = sig;
     }
+  } catch (err) {
+    console.warn('  WARN: Energy complex UNG fetch failed:', err instanceof Error ? err.message : err);
+  }
+
+  try {
+    const coalBars = await fetchEnergyBars('COAL', startDate, endDate);
+    if (coalBars) {
+      const sig = computeEnergySignal(coalBars, asOf, 'COAL', 3.0, 1.0);
+      if (sig) result.coal = sig;
+    }
+  } catch (err) {
+    console.warn('  WARN: Energy complex COAL fetch failed:', err instanceof Error ? err.message : err);
+  }
+
+  try {
+    const ttfBars = await fetchEnergyBars('TTF', startDate, endDate);
+    if (ttfBars) {
+      const sig = computeEnergySignal(ttfBars, asOf, 'TTF', 5.0, 1.0);
+      if (sig) result.ttf = sig;
+    }
+  } catch (err) {
+    console.warn('  WARN: Energy complex TTF fetch failed:', err instanceof Error ? err.message : err);
   }
   return Object.keys(result).length > 0 ? result : undefined;
 }
@@ -1017,7 +1034,7 @@ function main() {
   const asOf = alignedDates[lastIdx]!;
   const artifact: PlumbingWarLieDetector = {
     asOf,
-    inputsLast: Object.keys(inputsLast).length === 6 ? (inputsLast as PlumbingInputsLast) : undefined,
+    inputsLast: Object.keys(inputsLast).length === 6 ? (inputsLast as unknown as PlumbingInputsLast) : undefined,
     dataFreshness,
     energyComplex: undefined,
     inputs: {

@@ -81,7 +81,7 @@ git status
 ```
 
 ### Tests workflow (non-deploy)
-- **Unit tests / typecheck / build:** `.github/workflows/tests.yml` runs `pnpm test`, `pnpm typecheck`, and `pnpm build` on pull requests, pushes to `main`, and `workflow_dispatch`. No deploy, no secrets, no `artifacts:refresh`.
+- **Unit tests / typecheck / build:** `.github/workflows/tests.yml` runs `pnpm test`, `pnpm typecheck`, `pnpm typecheck:scripts`, and `pnpm build` on pull requests, pushes to `main`, and `workflow_dispatch`. App typecheck covers `src/`; scripts typecheck uses [`tsconfig.scripts.json`](../tsconfig.scripts.json) for ETL/CI scripts under `scripts/`. No deploy, no secrets, no `artifacts:refresh`.
 - **Turbulence bootstrap seed staleness:** Same workflow job `turbulence-bootstrap-check` runs `pnpm check:turbulence-bootstrap` (read-only). The committed seed [`ci/bootstrap/turbulence.gates.json`](../ci/bootstrap/turbulence.gates.json) backs cold CI when cache and live prefetch fail; deploy workflows allow **120** calendar days of staleness (`TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS`). The check warns when the seed is within **30** days of that window (~90 days stale) and **fails** within **14** days (~106 days stale) so daily deploy breakage is visible early. To refresh later: regenerate and commit an updated bootstrap file in a separate ops PR when Stooq is reachable (do not rely on this check to mutate files).
 
 ### CI pipeline checks

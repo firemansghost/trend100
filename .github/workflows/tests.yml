@@ -85,6 +85,9 @@ jobs:
       - name: Run TypeScript typecheck
         run: pnpm typecheck
 
+      - name: Run scripts TypeScript typecheck
+        run: pnpm typecheck:scripts
+
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15

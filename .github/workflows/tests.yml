@@ -120,3 +120,41 @@ jobs:
 
       - name: Run Next.js production build
         run: pnpm build
+
+  turbulence-bootstrap-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS: "120"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Enable Corepack and pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          pnpm --version
+
+      - name: Get pnpm store directory
+        id: pnpm-store
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check turbulence bootstrap seed staleness
+        run: pnpm check:turbulence-bootstrap

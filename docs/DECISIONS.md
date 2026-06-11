@@ -201,6 +201,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-06 — (Data/Ops) Early bootstrap seed staleness check in Tests workflow
+**Choice:** Added read-only `scripts/check-turbulence-bootstrap-seed.ts` and Tests job `turbulence-bootstrap-check` (`pnpm check:turbulence-bootstrap`). Uses UTC calendar-day math on `ci/bootstrap/turbulence.gates.json` `last_date` vs `TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS` (default **120**). Warns within **30** days of expiration (exit 0); fails within **14** days (exit 1). Does not fetch Stooq, mutate files, or change daily deploy behavior.
+
+**Why:** Daily deploy only fails once the seed is already too stale on cold cache misses. Non-deploying CI gives advance notice to refresh the committed bootstrap before `update-turbulence-gates` / `verify:artifacts` reject fallback again.
+
+---
+
 ### 2026-04 — (Data/Ops) vercel-prebuilt-prod: Node 24 parity + safe turbulence prefetch
 **Choice:** `vercel-prebuilt-prod.yml` matches the daily workflow baseline: `actions/checkout@v6`, `actions/setup-node@v6` with Node **24**, `actions/cache` and `actions/cache/{restore,save}` **v5**, and workflow-level `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`. Turbulence prep is shared with daily via `ci/gha-turbulence-gates-prep.sh` (see prior decision: cache → bootstrap → safe prefetch). Failed curl or invalid live JSON leaves restored or seeded `public/turbulence.gates.json` unchanged.
 

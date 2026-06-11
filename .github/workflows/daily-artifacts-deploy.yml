@@ -79,6 +79,8 @@ jobs:
         env:
           PREFETCH_TMP: ${{ runner.temp }}/turbulence.gates.prefetch.json
           CACHE_RESTORE_EXACT_HIT: ${{ steps.turbulence-gates-cache.outputs.cache-hit }}
+          TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS: "120"
+          TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS: "120"
         run: bash ci/gha-turbulence-gates-prep.sh
 
       - name: Generate and verify artifacts
@@ -89,8 +91,8 @@ jobs:
           MARKETSTACK_EXTEND_MAX_SYMBOLS: 200
           TURBULENCE_GATES_START: "2019-10-01"
           TURBULENCE_STOOQ_VIX_SYMBOL: "vi.c"
-          TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS: "60"
-          TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS: "60"
+          TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS: "120"
+          TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS: "120"
           TURBULENCE_SHOCK_START: "2019-10-01"
           TURBULENCE_SHOCK_Z_THRESHOLD: "2.0"
           EOD_STOOQ_DECKS: ${{ vars.EOD_STOOQ_DECKS || '' }}

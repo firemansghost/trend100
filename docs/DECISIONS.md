@@ -181,16 +181,23 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 ---
 
 ### 2026-04 — (Data/Ops) Stooq auth/captcha block + last-known-good gates fallback
-**Choice:** Stooq sometimes returns a plain-text/HTML "get API key" or captcha page with HTTP 200 instead of CSV. `update-turbulence-gates.ts` detects likely auth/block bodies (`get_apikey`, "get your api", `captcha`, leading `<html`) and treats them as fetch failure (`STOOQ_AUTH_BLOCKED`). If `public/turbulence.gates.json` already exists, has enough points (≥200), passes light shape checks, and last date is within `TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS` (default 60), the script logs explicit warnings that gates were **not** refreshed and exits 0 without overwriting the file. `verify-artifacts` uses `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` (default 10); CI workflows set both gate env vars to 60 so a fallback run still passes verification.
+**Choice:** Stooq sometimes returns a plain-text/HTML "get API key" or captcha page with HTTP 200 instead of CSV. `update-turbulence-gates.ts` detects likely auth/block bodies (`get_apikey`, "get your api", `captcha`, leading `<html`) and treats them as fetch failure (`STOOQ_AUTH_BLOCKED`). If `public/turbulence.gates.json` already exists, has enough points (≥200), passes light shape checks, and last date is within `TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS` (default 60), the script logs explicit warnings that gates were **not** refreshed and exits 0 without overwriting the file. `verify-artifacts` uses `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` (default 10); CI workflows set both gate env vars to **120** (was 60) so a fallback run still passes verification during prolonged Stooq blocks.
 
-**Why:** Avoids hard-failing scheduled/CI artifact generation when Stooq rate-limits or gates anonymous CSV; keeps output honest (warnings, no fake "fresh" log line) while allowing a conservative stale continuation.
+**Why:** Avoids hard-failing scheduled/CI artifact generation when Stooq rate-limits or gates anonymous CSV; keeps output honest (warnings, no fake "fresh" log line) while allowing a conservative stale continuation. Gates may be materially stale relative to market while Stooq remains blocked; the workflow does not claim a successful Stooq refresh.
 
 ---
 
 ### 2026-04 — (Data/Ops) CI cache for turbulence gates LKG + post-prefetch diagnostics
 **Choice:** `daily-artifacts-deploy.yml` and `vercel-prebuilt-prod.yml` restore `public/turbulence.gates.json` from a GitHub Actions cache (`turbulence-gates-lkg-v1`, rolling key per run with prefix restore) **before** the live-site curl prefetch. Both workflows then run `ci/gha-turbulence-gates-prep.sh`: if the file is still missing, **copy** the committed bootstrap `ci/bootstrap/turbulence.gates.json` (≥250 weekday rows, same schema as production; not under `public/`). **Safe** prefetch (temp file → non-empty JSON array → copy) may replace `public/` only on success. Logs include `cache_exact_hit`, `gates_file_after_cache_restore`, `seed_bootstrap_applied`, curl/temp/final stats. After `pnpm artifacts:refresh`, if the file still exists, the workflow saves it back to the same cache namespace (skip save if missing).
 
-**Why:** Repo does not commit `public/turbulence.gates.json`; cold CI had no file when cache missed and live curl failed. Bootstrap gives Stooq’s `update-turbulence-gates` a valid on-disk fallback without relying on Vercel. **Ops:** If the bootstrap’s `last_date` ages beyond `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` (e.g. 60 in CI), refresh `ci/bootstrap/turbulence.gates.json` in-repo (regenerate synthetic series) so verify stays green on long-lived cold starts.
+**Why:** Repo does not commit `public/turbulence.gates.json`; cold CI had no file when cache missed and live curl failed. Bootstrap gives Stooq’s `update-turbulence-gates` a valid on-disk fallback without relying on Vercel. **Ops:** If the bootstrap’s `last_date` ages beyond `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` (e.g. **120** in CI), refresh `ci/bootstrap/turbulence.gates.json` in-repo (regenerate synthetic series) so verify stays green on long-lived cold starts. Prep logs `final_days_stale`, configured max staleness env values, and `staleness_vs_fallback` (report-only).
+
+---
+
+### 2026-06 — (Data/Ops) CI turbulence gates fallback window 120 days
+**Choice:** Raised `TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS` and `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` from 60 to **120** in both CI workflows (prep and artifacts steps). Stooq continued returning auth/block pages; committed bootstrap `last_date` (~2026-04-10) exceeded the 60-day window by mid-2026, causing `update-turbulence-gates` to reject fallback even though cache/seed/bootstrap prep succeeded.
+
+**Why:** Unblock Daily Artifacts Deploy without changing turbulence model logic or adding a new data provider. Deploys may ship stale gates during extended Stooq outages; `update-turbulence-gates` warnings and prep diagnostics remain the honest signal that refresh did not occur.
 
 ---
 

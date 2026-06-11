@@ -95,6 +95,16 @@ if (!fs.existsSync(target)) {
 console.log('final_exists: true');
 const st = fs.statSync(target);
 console.log('final_size_bytes:', st.size);
+const fallbackMaxRaw = process.env.TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS;
+const verifyMaxRaw = process.env.TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS;
+console.log(
+  'fallback_max_staleness_days:',
+  fallbackMaxRaw != null && fallbackMaxRaw !== '' ? fallbackMaxRaw : '(unset)'
+);
+console.log(
+  'verify_max_staleness_days:',
+  verifyMaxRaw != null && verifyMaxRaw !== '' ? verifyMaxRaw : '(unset)'
+);
 try {
   const j = JSON.parse(fs.readFileSync(target, 'utf8'));
   if (!Array.isArray(j)) {
@@ -104,6 +114,20 @@ try {
     const last = j[j.length - 1];
     const ld = last && typeof last.date === 'string' ? last.date : 'unknown';
     console.log('final_last_date:', ld);
+    if (ld !== 'unknown' && /^\d{4}-\d{2}-\d{2}$/.test(ld)) {
+      const today = new Date().toISOString().split('T')[0];
+      const daysStale = Math.floor(
+        (new Date(today).getTime() - new Date(ld).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      console.log('final_days_stale:', daysStale);
+      const fallbackMax = parseInt(fallbackMaxRaw || '', 10);
+      if (Number.isFinite(fallbackMax) && fallbackMax >= 1) {
+        console.log(
+          'staleness_vs_fallback:',
+          daysStale > fallbackMax ? 'exceeds' : 'within'
+        );
+      }
+    }
   }
 } catch (e) {
   console.log('final_json_parse: fail');

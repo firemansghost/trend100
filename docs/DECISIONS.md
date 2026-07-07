@@ -215,6 +215,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-07 — (Ops) Turbulence gates bootstrap runbook; defer seed replacement (PR10)
+**Choice:** Document bootstrap refresh and contingency in [`docs/CHECKS.md`](CHECKS.md) (runbook section). **Do not** replace `ci/bootstrap/turbulence.gates.json` in PR10. Seed `last_date` remains **2026-04-10**; warning ~2026-07-09, Tests check failure ~2026-07-25, 120-day cold-start risk ~2026-08-08. Approved refresh when Stooq CSV works: `pnpm update:turbulence-gates` only, validate, copy last 280 weekdays to bootstrap, restore `public/` before commit. Contingency after ~2026-07-20 if still blocked: real alternate provider (e.g. FRED bootstrap-only) or staleness extension as last resort with explicit decision entry.
+
+**Why:** 2026-07-07 audit found live production gates byte-identical to bootstrap, local `public/` older, and Stooq still returning HTML/JS challenge pages — no fresher valid source. Synthetic data rejected; copying production/local would not help. Runbook gives operators deadlines and approved paths without changing the seed prematurely.
+
+---
+
 ### 2026-04 — (Data/Ops) vercel-prebuilt-prod: Node 24 parity + safe turbulence prefetch
 **Choice:** `vercel-prebuilt-prod.yml` matches the daily workflow baseline: `actions/checkout@v6`, `actions/setup-node@v6` with Node **24**, `actions/cache` and `actions/cache/{restore,save}` **v5**, and workflow-level `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`. Turbulence prep is shared with daily via `ci/gha-turbulence-gates-prep.sh` (see prior decision: cache → bootstrap → safe prefetch). Failed curl or invalid live JSON leaves restored or seeded `public/turbulence.gates.json` unchanged.
 

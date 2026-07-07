@@ -103,7 +103,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
-<<<<<<< HEAD
+### 2026-03 — (UI) War Lie Detector supporting signal emphasis (PR37)
+**Choice:** Supporting signals (product stress chip, Nat Gas, Coal, TTF) get modest active-state emphasis via `chipSupportingActive` and `cardSupportingActive`. Product stress chip uses stronger chip styling when active, muted when quiet. Substitution cards use `cardSupportingActive` when ON (distinct from primary `cardActive`). Oil Stress and Gold Confirm remain primary with `cardActive`. Display-only; no model or artifact changes.
+
+**Why:** Make active supporting signals easier to notice when reinforcing the read, while keeping plumbing/oil visually primary and inactive signals understated.
+
+---
+
 ### 2026-03 — (Product/Data) War Lie Detector historical TTF alignment (PR38)
 **Choice:** Historical labelHistory now includes per-day TTF when Stooq TTF data is available. Historical substitution = TTF active that day (same logic as current: z30 ≥ 1 or roc3 ≥ 5%); chart bands and transition notes reflect TTF broadening in the past. Same source (Stooq TG.F via fetchEnergyBars) and thresholds as PR36. PR39 adds per-day UNG/COAL.
 
@@ -122,12 +128,6 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 **Choice:** Added optional `historicalInputsUsed` to plumbing artifact (productStress, ttf, natGas, coal booleans). Technical details shows one compact line indicating which historical optional inputs were used when building labelHistory for the run. Display-only; no model changes. Improves trust/debuggability for power users.
 
 **Why:** Power users could not quickly tell which historical components (product stress, TTF, Nat Gas, Coal) were available and used for the current run; visibility was implicit in logs/docs only.
-=======
-### 2026-03 — (UI) War Lie Detector supporting signal emphasis (PR37)
-**Choice:** Supporting signals (product stress chip, Nat Gas, Coal, TTF) get modest active-state emphasis via `chipSupportingActive` and `cardSupportingActive`. Product stress chip uses stronger chip styling when active, muted when quiet. Substitution cards use `cardSupportingActive` when ON (distinct from primary `cardActive`). Oil Stress and Gold Confirm remain primary with `cardActive`. Display-only; no model or artifact changes.
-
-**Why:** Make active supporting signals easier to notice when reinforcing the read, while keeping plumbing/oil visually primary and inactive signals understated.
->>>>>>> d2e62e5 (ui: add active-state emphasis for supporting signals (PR37))
 
 ---
 
@@ -212,6 +212,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 **Choice:** Added `TURBULENCE_SHOCK_VERIFY_MAX_STALENESS_DAYS` and `TURBULENCE_GREENBAR_VERIFY_MAX_STALENESS_DAYS` to `verify-artifacts.ts` (local default **7** each). CI deploy workflows set both to **45**. Turbulence gates retain **120**-day fallback/verify under Stooq block; shock/greenbar last dates may validly trail snapshots because shock trims trailing null rows after correlation windows (short=20, long=60, z=252 trading days).
 
 **Why:** Daily Artifacts Deploy failed when shock `last_date` was ~33 calendar days behind UTC today while a hardcoded 7-day verify rejected valid model-lagged output. **45** days accommodates expected shock lag plus weekends/holidays; ages beyond that indicate a real pipeline stall.
+
+---
+
+### 2026-07 — (Ops) Turbulence gates bootstrap runbook; defer seed replacement (PR10)
+**Choice:** Document bootstrap refresh and contingency in [`docs/CHECKS.md`](CHECKS.md) (runbook section). **Do not** replace `ci/bootstrap/turbulence.gates.json` in PR10. Seed `last_date` remains **2026-04-10**; warning ~2026-07-09, Tests check failure ~2026-07-25, 120-day cold-start risk ~2026-08-08. Approved refresh when Stooq CSV works: `pnpm update:turbulence-gates` only, validate, copy last 280 weekdays to bootstrap, restore `public/` before commit. Contingency after ~2026-07-20 if still blocked: real alternate provider (e.g. FRED bootstrap-only) or staleness extension as last resort with explicit decision entry.
+
+**Why:** 2026-07-07 audit found live production gates byte-identical to bootstrap, local `public/` older, and Stooq still returning HTML/JS challenge pages — no fresher valid source. Synthetic data rejected; copying production/local would not help. Runbook gives operators deadlines and approved paths without changing the seed prematurely.
 
 ---
 

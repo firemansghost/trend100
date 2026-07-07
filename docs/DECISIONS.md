@@ -103,7 +103,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
-<<<<<<< HEAD
+### 2026-03 — (UI) War Lie Detector supporting signal emphasis (PR37)
+**Choice:** Supporting signals (product stress chip, Nat Gas, Coal, TTF) get modest active-state emphasis via `chipSupportingActive` and `cardSupportingActive`. Product stress chip uses stronger chip styling when active, muted when quiet. Substitution cards use `cardSupportingActive` when ON (distinct from primary `cardActive`). Oil Stress and Gold Confirm remain primary with `cardActive`. Display-only; no model or artifact changes.
+
+**Why:** Make active supporting signals easier to notice when reinforcing the read, while keeping plumbing/oil visually primary and inactive signals understated.
+
+---
+
 ### 2026-03 — (Product/Data) War Lie Detector historical TTF alignment (PR38)
 **Choice:** Historical labelHistory now includes per-day TTF when Stooq TTF data is available. Historical substitution = TTF active that day (same logic as current: z30 ≥ 1 or roc3 ≥ 5%); chart bands and transition notes reflect TTF broadening in the past. Same source (Stooq TG.F via fetchEnergyBars) and thresholds as PR36. PR39 adds per-day UNG/COAL.
 
@@ -122,12 +128,6 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 **Choice:** Added optional `historicalInputsUsed` to plumbing artifact (productStress, ttf, natGas, coal booleans). Technical details shows one compact line indicating which historical optional inputs were used when building labelHistory for the run. Display-only; no model changes. Improves trust/debuggability for power users.
 
 **Why:** Power users could not quickly tell which historical components (product stress, TTF, Nat Gas, Coal) were available and used for the current run; visibility was implicit in logs/docs only.
-=======
-### 2026-03 — (UI) War Lie Detector supporting signal emphasis (PR37)
-**Choice:** Supporting signals (product stress chip, Nat Gas, Coal, TTF) get modest active-state emphasis via `chipSupportingActive` and `cardSupportingActive`. Product stress chip uses stronger chip styling when active, muted when quiet. Substitution cards use `cardSupportingActive` when ON (distinct from primary `cardActive`). Oil Stress and Gold Confirm remain primary with `cardActive`. Display-only; no model or artifact changes.
-
-**Why:** Make active supporting signals easier to notice when reinforcing the read, while keeping plumbing/oil visually primary and inactive signals understated.
->>>>>>> d2e62e5 (ui: add active-state emphasis for supporting signals (PR37))
 
 ---
 
@@ -306,116 +306,116 @@ The UI chart can switch between Health/Heat/%AboveUpper/Stretch using `?metric=h
 ---
 
 ### 2026-01-23 — (Data) Backfill UNKNOWN points must include full health-history schema to pass validation
-**Choice:** All health-history points (VALID or UNKNOWN) must include the complete required schema with all fields as finite numbers. UNKNOWN points use 0/0/0 for greenPct/yellowPct/redPct (not null) and 0/0/totalTickers for diffusion fields. Introduced `makeUnknownPoint()` helper function to ensure consistent schema compliance.  
-**Why:** The `verify:artifacts` validator enforces `hasFullHealthSchema()` which requires all percentage and diffusion fields to be finite numbers. UNKNOWN points with null percentages or missing diffusion fields fail validation, causing backfill workflows to fail.  
+**Choice:** All health-history points (VALID or UNKNOWN) must include the complete required schema with all fields as finite numbers. UNKNOWN points use 0/0/0 for greenPct/yellowPct/redPct (not null) and 0/0/totalTickers for diffusion fields. Introduced `makeUnknownPoint()` helper function to ensure consistent schema compliance.
+**Why:** The `verify:artifacts` validator enforces `hasFullHealthSchema()` which requires all percentage and diffusion fields to be finite numbers. UNKNOWN points with null percentages or missing diffusion fields fail validation, causing backfill workflows to fail.
 **Alternatives considered:** Allow null percentages for UNKNOWN points (breaks validator contract), make validator less strict (defeats purpose of validation), filter out UNKNOWN points (loses timeline continuity).
 
 ---
 
 ### 2026-01-23 — (Product) METALS_MINING deck with group filtering
-**Choice:** Added new deck "Metals & Mining" (METALS_MINING) with 11 tickers split into two groups: METALS (physical/basket ETFs: GLTR, GLDM, SLV, PPLT, PALL) and MINERS (equity ETFs: GDX, GDXJ, SIL, SILJ, XME, PICK). Added optional `group` field to `TrendUniverseItem` and `TrendTickerSnapshot` types. UI shows toggle (All / Metals / Miners) when deck has grouped tickers. Group filter preserved in URL query param (`?group=metals|miners|all`).  
-**Why:** Users want to compare physical metals performance vs mining equity performance. Grouping allows filtering without separate decks. URL param enables shareable filtered views.  
+**Choice:** Added new deck "Metals & Mining" (METALS_MINING) with 11 tickers split into two groups: METALS (physical/basket ETFs: GLTR, GLDM, SLV, PPLT, PALL) and MINERS (equity ETFs: GDX, GDXJ, SIL, SILJ, XME, PICK). Added optional `group` field to `TrendUniverseItem` and `TrendTickerSnapshot` types. UI shows toggle (All / Metals / Miners) when deck has grouped tickers. Group filter preserved in URL query param (`?group=metals|miners|all`).
+**Why:** Users want to compare physical metals performance vs mining equity performance. Grouping allows filtering without separate decks. URL param enables shareable filtered views.
 **Alternatives considered:** Separate decks for metals vs miners (more duplication), tag-based filtering only (less discoverable), no filtering (doesn't meet requirement).
 
 ---
 
 ### 2026-01-23 — (Ops) Consolidate scheduled writer workflows to avoid concurrency cancellations
-**Choice:** Removed schedule from "Update Health History" workflow (now manual-only via `workflow_dispatch`). Changed all writer workflows' concurrency from `cancel-in-progress: true` to `cancel-in-progress: false` so they queue instead of canceling each other. Only "Update Snapshots" remains scheduled (weekdays 12:15 UTC).  
-**Why:** Both "Update Snapshots" and "Update Health History" were scheduled at the same time (12:15 UTC) and shared the same concurrency group with `cancel-in-progress: true`, causing one to cancel the other. Since "Update Snapshots" already updates health history as part of its run, having a separate scheduled health history workflow was redundant and caused cancellations.  
+**Choice:** Removed schedule from "Update Health History" workflow (now manual-only via `workflow_dispatch`). Changed all writer workflows' concurrency from `cancel-in-progress: true` to `cancel-in-progress: false` so they queue instead of canceling each other. Only "Update Snapshots" remains scheduled (weekdays 12:15 UTC).
+**Why:** Both "Update Snapshots" and "Update Health History" were scheduled at the same time (12:15 UTC) and shared the same concurrency group with `cancel-in-progress: true`, causing one to cancel the other. Since "Update Snapshots" already updates health history as part of its run, having a separate scheduled health history workflow was redundant and caused cancellations.
 **Alternatives considered:** Different concurrency groups (defeats serialization), different schedule times (still risk overlap), keeping both scheduled with queueing (redundant since Update Snapshots already handles health history).
 
 ---
 
 ### 2026-01-23 — (Data) Health history sanitization: remove weekend and partial-schema points
-**Choice:** Added sanitization step to health history loading that removes weekend dates (Saturday/Sunday) and partial-schema points (missing required fields). Added guards to prevent weekend points from being appended. Added verification checks that fail loudly if weekend or partial points are found.  
-**Why:** Weekend dates have no market data and corrupt charts (e.g., 2026-01-24 Saturday point caused massive dip). Partial-schema points (missing knownCount/unknownCount/totalTickers/diffusion fields) indicate incomplete computation and should not be persisted.  
+**Choice:** Added sanitization step to health history loading that removes weekend dates (Saturday/Sunday) and partial-schema points (missing required fields). Added guards to prevent weekend points from being appended. Added verification checks that fail loudly if weekend or partial points are found.
+**Why:** Weekend dates have no market data and corrupt charts (e.g., 2026-01-24 Saturday point caused massive dip). Partial-schema points (missing knownCount/unknownCount/totalTickers/diffusion fields) indicate incomplete computation and should not be persisted.
 **Alternatives considered:** Filtering in UI only (data corruption remains), manual cleanup (error-prone), accepting weekend points (chart corruption).
 
 ---
 
 ### 2026-01-23 — (Ops) Inception-limited metadata persistence for cache extension budget protection
-**Choice:** Added metadata sidecar files in `data/marketstack/eod/.meta/` to track symbols that cannot extend earlier than their oldest cached date (inception-limited). When extension attempts return 0 older bars, we mark the symbol as inception-limited and skip future extension attempts to preserve budget.  
-**Why:** Some symbols (ARM, PLTR, SNOW, etc.) legitimately cannot extend back to 2019 because Marketstack has no historical data. Without metadata, the script would waste extension budget on these symbols every run.  
+**Choice:** Added metadata sidecar files in `data/marketstack/eod/.meta/` to track symbols that cannot extend earlier than their oldest cached date (inception-limited). When extension attempts return 0 older bars, we mark the symbol as inception-limited and skip future extension attempts to preserve budget.
+**Why:** Some symbols (ARM, PLTR, SNOW, etc.) legitimately cannot extend back to 2019 because Marketstack has no historical data. Without metadata, the script would waste extension budget on these symbols every run.
 **Alternatives considered:** Heuristic-based detection only (unreliable), hardcoded allowlist (not scalable), accepting wasted budget (inefficient).
 
 ### 2026-01-23 — (Ops) Earliest-available floor metadata (`data/marketstack/meta/earliest.json`)
-**Choice:** Added committed `data/marketstack/meta/earliest.json` mapping symbol → earliest-available date. When Marketstack returns 0 bars for an extension request, we record the floor and skip future extension attempts that would request dates before it. Before each extension attempt, we check this file; if the request would go earlier than the known floor, we skip and log `SKIP extend X: known floor Y` (no API call). Writes are atomic (temp file then rename).  
-**Why:** CI repeatedly attempted extend for symbols like SNOW, FBTC—wasting Marketstack calls. The `.meta/` per-symbol files are in the cache (which may not persist across runs); `.meta/` is gitignored. A committed `earliest.json` lets CI learn over time and avoid repeated attempts.  
+**Choice:** Added committed `data/marketstack/meta/earliest.json` mapping symbol → earliest-available date. When Marketstack returns 0 bars for an extension request, we record the floor and skip future extension attempts that would request dates before it. Before each extension attempt, we check this file; if the request would go earlier than the known floor, we skip and log `SKIP extend X: known floor Y` (no API call). Writes are atomic (temp file then rename).
+**Why:** CI repeatedly attempted extend for symbols like SNOW, FBTC—wasting Marketstack calls. The `.meta/` per-symbol files are in the cache (which may not persist across runs); `.meta/` is gitignored. A committed `earliest.json` lets CI learn over time and avoid repeated attempts.
 **Alternatives considered:** Rely only on `.meta/` (not committed, cache-dependent), hardcoded allowlist (not scalable), accepting wasted budget (inefficient).
 
 ---
 
 ### 2026-01-23 — (Data) Increase Marketstack cache retention to 2300 calendar days
-**Choice:** Increased `MARKETSTACK_CACHE_DAYS` from 1600 to 2300 calendar days across all workflows and scripts. This provides sufficient lookback for indicator warm-up (SMA200 + 50-week MAs) while keeping health-history retention at 365 days for the chart window.  
-**Why:** Indicator warm-up requires more history than the chart displays. With 2300-day cache, the full 1-year health-history window has meaningful values (not flat/zero for early dates).  
+**Choice:** Increased `MARKETSTACK_CACHE_DAYS` from 1600 to 2300 calendar days across all workflows and scripts. This provides sufficient lookback for indicator warm-up (SMA200 + 50-week MAs) while keeping health-history retention at 365 days for the chart window.
+**Why:** Indicator warm-up requires more history than the chart displays. With 2300-day cache, the full 1-year health-history window has meaningful values (not flat/zero for early dates).
 **Alternatives considered:** Keep 1600 days (insufficient for full-year meaningful history), unlimited cache (repo size concerns), separate indicator cache (complexity).
 
 ---
 
 ### 2026-01-23 — (Ops) dotenv + .env.local loading via side-effect import pattern
-**Choice:** Implemented local environment variable loading using `dotenv` package with side-effect import pattern (`import './load-env'`). Scripts load `.env.local` first, then `.env` as fallback. Uses `override: false` to ensure CI env vars take precedence.  
-**Why:** ESM import order requires env vars to be loaded during import phase, before other modules evaluate. Side-effect import ensures `loadEnv()` runs immediately when the module is imported.  
+**Choice:** Implemented local environment variable loading using `dotenv` package with side-effect import pattern (`import './load-env'`). Scripts load `.env.local` first, then `.env` as fallback. Uses `override: false` to ensure CI env vars take precedence.
+**Why:** ESM import order requires env vars to be loaded during import phase, before other modules evaluate. Side-effect import ensures `loadEnv()` runs immediately when the module is imported.
 **Alternatives considered:** Manual `loadEnv()` calls (unreliable in ESM), runtime-only loading (misses import-time reads), hardcoded CI-only approach (poor local dev experience).
 
 ---
 
 ### 2026-01-22 — (Ops) Workflow: concurrency + rebase/retry to avoid non-fast-forward push failures
-**Choice:** Added concurrency group with `cancel-in-progress: true` to prevent overlapping workflow runs. Implemented rebase-before-commit and retry loop (3 attempts) in push step to handle race conditions when main advances during job execution.  
-**Why:** Workflow was failing with "cannot lock ref" errors due to concurrent runs or main advancing between commit and push. Concurrency prevents overlaps; rebase+retry handles remaining race conditions without force-push.  
+**Choice:** Added concurrency group with `cancel-in-progress: true` to prevent overlapping workflow runs. Implemented rebase-before-commit and retry loop (3 attempts) in push step to handle race conditions when main advances during job execution.
+**Why:** Workflow was failing with "cannot lock ref" errors due to concurrent runs or main advancing between job execution. Concurrency prevents overlaps; rebase+retry handles remaining race conditions without force-push.
 **Alternatives considered:** Force-push (rejected - dangerous), locking mechanism (overkill), accepting failures (unreliable).
 
 ---
 
 ### 2026-01-21 — (Architecture) Client-side deck switching to avoid server caching issues
-**Choice:** Implement deck selection and resolution in a client component (ClientDeckPage) that reads `useSearchParams()` directly. Compute snapshot and fetch history client-side.  
-**Why:** Server-side rendering with Next.js had caching/static generation issues where URL param changes didn't trigger re-renders. Client-side approach ensures URL changes always update UI immediately.  
+**Choice:** Implement deck selection and resolution in a client component (ClientDeckPage) that reads `useSearchParams()` directly. Compute snapshot and fetch history client-side.
+**Why:** Server-side rendering with Next.js had caching/static generation issues where URL param changes didn't trigger re-renders. Client-side approach ensures URL changes always update UI immediately.
 **Alternatives considered:** Server-side with router.refresh() (unreliable), dynamic route segments (more complex), forcing dynamic rendering (still had caching issues).
 
 ---
 
 ### 2026-01-21 — (Architecture) Multi-deck architecture with URL selector and per-deck persistence
-**Choice:** Implement Trend100 as a command center with multiple curated Decks (universes). Use URL search param `?deck=<DECK_ID>` for selection (Leadership default hides param for clean URLs). Persist health history per deck in `public/health-history.<DECK_ID>.json` files.  
-**Why:** Separate regimes by universe; keep shareable links; avoid database for now. File-based persistence is simple, version-controlled, and sufficient for daily updates.  
+**Choice:** Implement Trend100 as a command center with multiple curated Decks (universes). Use URL search param `?deck=<DECK_ID>` for selection (Leadership default hides param for clean URLs). Persist health history per deck in `public/health-history.<DECK_ID>.json` files.
+**Why:** Separate regimes by universe; keep shareable links; avoid database for now. File-based persistence is simple, version-controlled, and sufficient for daily updates.
 **Alternatives considered:** One giant universe (loses signal clarity), routes per deck (more complex routing), database (Supabase) now (overkill for V1, can add later).
 
 ---
 
 ### 2026-01-21 — (UI) Sort control added with green-first status ordering
-**Choice:** Added Sort toggle with default UNIVERSE (preserves original order). STATUS sort orders GREEN → YELLOW → RED → UNKNOWN (green-first).  
-**Why:** Users need to reorder tiles for analysis. Green-first aligns with "leadership tells the truth" philosophy. UNIVERSE default preserves curated order.  
+**Choice:** Added Sort toggle with default UNIVERSE (preserves original order). STATUS sort orders GREEN → YELLOW → RED → UNKNOWN (green-first).
+**Why:** Users need to reorder tiles for analysis. Green-first aligns with "leadership tells the truth" philosophy. UNIVERSE default preserves curated order.
 **Alternatives considered:** Red-first status ordering (may add as option later), no default sort (chose UNIVERSE for consistency).
 
 ---
 
 ### 2026-01-21 — (Ops) Trend100 deployed to Vercel
-**Choice:** Trend100 is live on Vercel at https://trend100.vercel.app/  
-**Why:** Live URL enables rapid iteration, shareability, and continuous deployment from main  
+**Choice:** Trend100 is live on Vercel at https://trend100.vercel.app/
+**Why:** Live URL enables rapid iteration, shareability, and continuous deployment from main
 **Alternatives considered:** Waiting until UI is polished, self-hosting, delaying deployment
 
 ---
 
 ### 2026-01-19 — (Ops) Trend100 is its own repo
-**Choice:** Create Trend100 as a standalone repository (standalone deploy).  
-**Why:** Cleanest public shipping path; avoids coupling to Ghost Allocator while preserving future module embedding.  
+**Choice:** Create Trend100 as a standalone repository (standalone deploy).
+**Why:** Cleanest public shipping path; avoids coupling to Ghost Allocator while preserving future module embedding.
 **Alternatives considered:** Sub-app/package inside an existing repo (faster future embed, more coupling now).
 
 ---
 
 ### 2026-01-19 — (Architecture) Hybrid module strategy
-**Choice:** Build as a standalone-feeling app, but organize internals as a self-contained module: `engine/`, `data/`, `ui/`, `types`.  
-**Why:** Ships V1 fast while preserving future integration into Ghost Allocator/GhostRegime with minimal rework.  
+**Choice:** Build as a standalone-feeling app, but organize internals as a self-contained module: `engine/`, `data/`, `ui/`, `types`.
+**Why:** Ships V1 fast while preserving future integration into Ghost Allocator/GhostRegime with minimal rework.
 **Alternatives considered:** Build directly inside Ghost Allocator (slower public shipping; harder to keep clean boundaries).
 
 ---
 
 ### 2026-01-19 — (Product) Trend classification rules
-**Choice:** Green/Yellow/Red classification using 200d SMA + 50w SMA/EMA support band.  
-**Why:** Simple, explainable, testable, and aligned with “leadership tells the truth.”  
+**Choice:** Green/Yellow/Red classification using 200d SMA + 50w SMA/EMA support band.
+**Why:** Simple, explainable, testable, and aligned with “leadership tells the truth.”
 **Alternatives considered:** Multi-factor regime models (more nuance; more drift; harder to explain).
 
 ---
 
 ### 2026-01-19 — (Data) Snapshot-first loading
-**Choice:** UI reads latest precomputed snapshot (mock first; real provider later via server-side job).  
-**Why:** Fast loads, fewer rate-limit headaches, consistent shareable state.  
+**Choice:** UI reads latest precomputed snapshot (mock first; real provider later via server-side job).
+**Why:** Fast loads, fewer rate-limit headaches, consistent shareable state.
 **Alternatives considered:** Client-side live fetching (fragile; slower; rate limits; inconsistent “as-of” state).

@@ -13,6 +13,22 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  conflict-marker-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Check for unresolved merge conflict markers
+        run: |
+          if git grep -n -E '^(<<<<<<<|=======|>>>>>>>)' -- . ':!pnpm-lock.yaml' ':!.next' ':!node_modules'; then
+            echo "❌ Unresolved merge conflict markers found."
+            exit 1
+          else
+            echo "✅ No unresolved merge conflict markers found."
+          fi
+
   unit-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 10

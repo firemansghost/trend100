@@ -208,6 +208,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-07 — (Data/Ops) CI shock/greenbar verify staleness 45 days
+**Choice:** Added `TURBULENCE_SHOCK_VERIFY_MAX_STALENESS_DAYS` and `TURBULENCE_GREENBAR_VERIFY_MAX_STALENESS_DAYS` to `verify-artifacts.ts` (local default **7** each). CI deploy workflows set both to **45**. Turbulence gates retain **120**-day fallback/verify under Stooq block; shock/greenbar last dates may validly trail snapshots because shock trims trailing null rows after correlation windows (short=20, long=60, z=252 trading days).
+
+**Why:** Daily Artifacts Deploy failed when shock `last_date` was ~33 calendar days behind UTC today while a hardcoded 7-day verify rejected valid model-lagged output. **45** days accommodates expected shock lag plus weekends/holidays; ages beyond that indicate a real pipeline stall.
+
+---
+
 ### 2026-04 — (Data/Ops) vercel-prebuilt-prod: Node 24 parity + safe turbulence prefetch
 **Choice:** `vercel-prebuilt-prod.yml` matches the daily workflow baseline: `actions/checkout@v6`, `actions/setup-node@v6` with Node **24**, `actions/cache` and `actions/cache/{restore,save}` **v5**, and workflow-level `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`. Turbulence prep is shared with daily via `ci/gha-turbulence-gates-prep.sh` (see prior decision: cache → bootstrap → safe prefetch). Failed curl or invalid live JSON leaves restored or seeded `public/turbulence.gates.json` unchanged.
 

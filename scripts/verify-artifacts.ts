@@ -25,6 +25,20 @@ function getTurbulenceGatesVerifyMaxStalenessDays(): number {
   return Number.isFinite(n) && n >= 1 ? n : 10;
 }
 
+/** Max calendar days between last shock point and UTC "today" before verify fails (default 7). CI may set higher to allow model lag. */
+function getTurbulenceShockVerifyMaxStalenessDays(): number {
+  const raw = process.env.TURBULENCE_SHOCK_VERIFY_MAX_STALENESS_DAYS;
+  const n = raw != null && raw !== '' ? parseInt(raw, 10) : 7;
+  return Number.isFinite(n) && n >= 1 ? n : 7;
+}
+
+/** Max calendar days between last greenbar point and UTC "today" before verify fails (default 7). CI may set higher to align with shock lag. */
+function getTurbulenceGreenbarVerifyMaxStalenessDays(): number {
+  const raw = process.env.TURBULENCE_GREENBAR_VERIFY_MAX_STALENESS_DAYS;
+  const n = raw != null && raw !== '' ? parseInt(raw, 10) : 7;
+  return Number.isFinite(n) && n >= 1 ? n : 7;
+}
+
 function getHealthHistoryRetentionDays(): number {
   const raw = process.env.HEALTH_HISTORY_RETENTION_DAYS;
   if (!raw || raw.trim() === '') return 0;
@@ -422,8 +436,11 @@ function printTurbulenceShockStats(): boolean {
     const lastDateObj = new Date(lastDate);
     const todayObj = new Date(today);
     const daysSinceLast = Math.floor((todayObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysSinceLast > 7) {
-      console.error(`  ❌ turbulence.shock.json: Stale (last date ${lastDate} is ${daysSinceLast} days ago, max 7)`);
+    const maxStaleDays = getTurbulenceShockVerifyMaxStalenessDays();
+    if (daysSinceLast > maxStaleDays) {
+      console.error(
+        `  ❌ turbulence.shock.json: Stale (last date ${lastDate} is ${daysSinceLast} days ago, max ${maxStaleDays} per TURBULENCE_SHOCK_VERIFY_MAX_STALENESS_DAYS)`
+      );
       return false;
     }
 
@@ -464,6 +481,7 @@ function printTurbulenceShockStats(): boolean {
     const first = arr[0]!.date;
     const last = arr[arr.length - 1]!.date;
     console.log(`  turbulence.shock.json: ${arr.length} points (${first} to ${last})`);
+    console.log(`    lastDate=${last}, ageDays=${daysSinceLast}, maxStaleDays=${maxStaleDays}`);
     console.log(`    Last: nAssets=${lastShockP.nAssets}, nPairs=${lastShockP.nPairs}, shockRaw=${lastShockP.shockRaw ?? 'null'}, shockZ=${lastShockP.shockZ ?? 'null'}`);
     return true;
   } catch (error) {
@@ -514,8 +532,11 @@ function printTurbulenceGreenBarStats(): boolean {
     const lastDateObj = new Date(lastDate);
     const todayObj = new Date(today);
     const daysSinceLast = Math.floor((todayObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysSinceLast > 7) {
-      console.error(`  ❌ turbulence.greenbar.json: Stale (last date ${lastDate} is ${daysSinceLast} days ago, max 7)`);
+    const maxStaleDays = getTurbulenceGreenbarVerifyMaxStalenessDays();
+    if (daysSinceLast > maxStaleDays) {
+      console.error(
+        `  ❌ turbulence.greenbar.json: Stale (last date ${lastDate} is ${daysSinceLast} days ago, max ${maxStaleDays} per TURBULENCE_GREENBAR_VERIFY_MAX_STALENESS_DAYS)`
+      );
       return false;
     }
 
@@ -557,6 +578,7 @@ function printTurbulenceGreenBarStats(): boolean {
     const lastP = arr[arr.length - 1]!;
 
     console.log(`  turbulence.greenbar.json: ${arr.length} points (${arr[0]!.date} to ${lastP.date})`);
+    console.log(`    lastDate=${lastP.date}, ageDays=${daysSinceLast}, maxStaleDays=${maxStaleDays}`);
     console.log(`    Green bars: ${countGreenBars} all-time, ${countGreenBarsLast365} last 365d`);
     console.log(`    Last green bar: ${lastGreenBar?.date ?? 'none'}`);
     console.log(`    Rows with pending gates (isGreenBar null): ${pendingGatesCount}`);

@@ -141,7 +141,7 @@ git clean -fd public data/marketstack/eod
 - **Turbulence shock:** Validates `public/turbulence.shock.json`:
   - File exists, is an array, ≥100 points (prefer ≥250)
   - Sorted ascending by date
-  - Last point date within 7 calendar days (fails if stale)
+  - Last point date within `TURBULENCE_SHOCK_VERIFY_MAX_STALENESS_DAYS` calendar days of UTC today (default **7**; CI sets **45** to allow expected model lag). Shock trims trailing null rows to last computed date (~20+ trading-day windows); last date may trail snapshots. Fails if older than threshold (pipeline stall).
   - Required keys: date, nAssets, nPairs, shockRaw, shockZ
   - nPairs = nAssets*(nAssets-1)/2 when shockRaw is non-null
   - At least one non-null shockRaw; at least one non-null shockZ (if enough history)
@@ -175,7 +175,7 @@ git clean -fd public data/marketstack/eod
 - **Turbulence green bar:** Validates `public/turbulence.greenbar.json`:
   - File exists, is an array, ≥250 rows
   - Sorted ascending by date
-  - Last date within 7 calendar days (fails if stale)
+  - Last date within `TURBULENCE_GREENBAR_VERIFY_MAX_STALENESS_DAYS` calendar days of UTC today (default **7**; CI sets **45**, aligned with shock lag). Greenbar follows last computed shock date; gates may lag further under Stooq fallback (**120**-day policy).
   - Last row must have non-null shockRaw and shockZ
   - When gate fields (spxAbove50dma or vixBelow25) are null, isGreenBar must be null (PENDING state)
   - When both gates are non-null, isGreenBar must be boolean

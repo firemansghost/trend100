@@ -1,4 +1,6 @@
-# Manual-only utility workflow. Does not commit artifacts. Production deploy happens via vercel-prebuilt-prod.yml / daily-artifacts-deploy.yml.
+# Manual-only. Does not commit artifacts. Production deploy happens via vercel-prebuilt-prod.yml / daily-artifacts-deploy.yml.
+# Does not restore or save the production Actions EOD cache. Do not use this for internal-gap repair;
+# use "Repair EOD Internal Gaps" instead. A future PR may retire this workflow.
 name: Extend EOD Cache
 
 on:

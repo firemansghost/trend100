@@ -1,0 +1,105 @@
+# Manual-only. Does not deploy. Does not rebuild health-history.
+name: Repair EOD Internal Gaps
+
+on:
+  workflow_dispatch:
+    inputs:
+      repair:
+        description: 'When false: audit only, zero provider calls. When true: fetch and repair bounded internal gaps for audited long-gap candidates.'
+        type: boolean
+        default: false
+      start_date:
+        description: 'Audit/repair window start (SPY session calendar)'
+        required: false
+        default: '2026-02-18'
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  gaps:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Enable Corepack and pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          pnpm --version
+
+      - name: Get pnpm store directory
+        id: pnpm-store
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Restore Marketstack EOD cache
+        id: marketstack-eod-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: data/marketstack/eod
+          key: ${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-marketstack-eod-v2-
+
+      - name: Require production EOD Actions cache
+        env:
+          EOD_CACHE_MATCHED_KEY: ${{ steps.marketstack-eod-cache.outputs.cache-matched-key }}
+        run: |
+          if [ -z "${EOD_CACHE_MATCHED_KEY}" ]; then
+            echo "No production Marketstack EOD Actions cache was restored."
+            echo "Refusing EOD internal-gap audit/repair rather than using repo fallback."
+            exit 1
+          fi
+          echo "EOD cache matched key: ${EOD_CACHE_MATCHED_KEY}"
+
+      - name: Require fresh-enough SPY EOD
+        run: pnpm exec tsx scripts/assert-spy-eod-fresh.ts
+
+      - name: Audit EOD internal gaps (provider-free)
+        env:
+          MARKETSTACK_OFFLINE: '1'
+          START_DATE: ${{ github.event.inputs.start_date || '2026-02-18' }}
+        run: pnpm exec tsx scripts/audit-marketstack-eod-gaps.ts -- --start "${START_DATE}"
+
+      - name: Repair long internal gaps (Marketstack only)
+        if: github.event.inputs.repair == 'true'
+        env:
+          MARKETSTACK_API_KEY: ${{ secrets.MARKETSTACK_API_KEY }}
+          START_DATE: ${{ github.event.inputs.start_date || '2026-02-18' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${MARKETSTACK_API_KEY:-}" ]; then
+            echo "MARKETSTACK_API_KEY is required for repair=true"
+            exit 1
+          fi
+          echo "MARKETSTACK_API_KEY: set (value not printed)"
+          pnpm exec tsx scripts/repair-marketstack-eod-gaps.ts -- --start "${START_DATE}"
+
+      - name: Save Marketstack EOD cache
+        if: success() && github.event.inputs.repair == 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: data/marketstack/eod
+          key: ${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}

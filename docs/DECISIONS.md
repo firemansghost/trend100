@@ -222,6 +222,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-08 — (Data/Ops) Turbulence gates from Marketstack GSPC.INDX + VIX.INDX
+**Choice:** Replace Stooq as the turbulence gates primary provider. `update-turbulence-gates.ts` now fetches cash S&P 500 (`GSPC.INDX`) and CBOE VIX (`VIX.INDX`) via existing `fetchEodSeries()` / `MARKETSTACK_API_KEY`. History from `TURBULENCE_GATES_START` (default 2019-10-01) is retrieved in 12-month chunks so the 1000-bar provider default does not truncate the series. Gate rows use **intersection dates** only (both closes present) so a newer VIX print cannot advance `last_date` without SPX. Semantics unchanged: SPX > 50-DMA, VIX < 25. Bootstrap `ci/bootstrap/turbulence.gates.json` is the last 280 real common-date rows from that series. Last-known-good keep-on-failure remains, still bounded by existing staleness env (CI **120**); **no threshold increase**. Failed Marketstack fetches are not logged as successful refreshes. No new secret or provider.
+
+**Why:** Daily Artifacts Deploy generated core decks (LEADERSHIP asOf 2026-08-24) then died in Stooq-only gates (`last_date` 2026-04-10, 137 days stale). PR 11 audit confirmed Marketstack index EOD for both symbols. Stooq remains unused for gates; deck `EOD_STOOQ_DECKS` routing is unchanged in this PR.
+
+---
+
 ### 2026-04 — (Data/Ops) vercel-prebuilt-prod: Node 24 parity + safe turbulence prefetch
 **Choice:** `vercel-prebuilt-prod.yml` matches the daily workflow baseline: `actions/checkout@v6`, `actions/setup-node@v6` with Node **24**, `actions/cache` and `actions/cache/{restore,save}` **v5**, and workflow-level `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`. Turbulence prep is shared with daily via `ci/gha-turbulence-gates-prep.sh` (see prior decision: cache → bootstrap → safe prefetch). Failed curl or invalid live JSON leaves restored or seeded `public/turbulence.gates.json` unchanged.
 

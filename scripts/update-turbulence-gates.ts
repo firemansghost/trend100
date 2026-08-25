@@ -1,65 +1,25 @@
 /**
- * Update turbulence gates artifact from Stooq (SPX + VIX EOD closes)
+ * Update turbulence gates artifact from Marketstack (SPX + VIX EOD closes)
  *
- * Fetches SPX and VIX daily closes from Stooq CSV, computes SPX 50-day MA and
- * gate booleans, writes public/turbulence.gates.json for Turbulence Model (PR26).
- *
- * Replaces FRED to eliminate 0–1 day lag — gates now align with ShockZ timing.
+ * Fetches S&P 500 cash (GSPC.INDX) and CBOE VIX (VIX.INDX) daily closes via the
+ * existing Marketstack provider, computes SPX 50-day MA and gate booleans, writes
+ * public/turbulence.gates.json for Turbulence Model (PR26 schema).
  *
  * Env:
  * - TURBULENCE_GATES_START (optional; default "2019-10-01")
- * - TURBULENCE_STOOQ_SPX_SYMBOL (optional; default "^spx")
- * - TURBULENCE_STOOQ_VIX_SYMBOL (optional; default "vi.c" = S&P 500 VIX Cash)
- *   If set, tried first; on failure, fallback list is used. CI pins vi.c for stability.
+ * - TURBULENCE_MARKETSTACK_SPX_SYMBOL (optional; default "GSPC.INDX")
+ * - TURBULENCE_MARKETSTACK_VIX_SYMBOL (optional; default "VIX.INDX")
  * - TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS (optional; default "60")
- *   When Stooq fetch fails, existing public/turbulence.gates.json may be kept if structurally
- *   valid and last date is at most this many calendar days old.
+ *   When the Marketstack refresh fails, existing public/turbulence.gates.json may be kept
+ *   if structurally valid and last date is at most this many calendar days old.
+ *   Expired files are not kept. A failed refresh is never logged as success.
  */
 
 import './load-env';
 
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import { isLikelyStooqAuthOrBlockPage } from '../src/modules/trend100/data/stooqBlockPage';
-
-const STOOQ_BASE = 'https://stooq.com/q/d/l/';
-
-const FETCH_TIMEOUT_MS = 28000;
-const RETRY_DELAYS_MS = [1000, 2000, 4000];
-
-async function fetchWithRetry(url: string): Promise<Response> {
-  let lastErr: Error | null = null;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    try {
-      const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeout);
-      if (res.status >= 500 && res.status < 600) {
-        lastErr = new Error(`HTTP ${res.status} ${res.statusText}`);
-        if (attempt < 2) {
-          await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
-          continue;
-        }
-        throw lastErr;
-      }
-      return res;
-    } catch (err) {
-      clearTimeout(timeout);
-      lastErr = err instanceof Error ? err : new Error(String(err));
-      const isRetryable =
-        lastErr.message.includes('fetch failed') ||
-        lastErr.message.includes('abort') ||
-        lastErr.message.includes('timeout') ||
-        lastErr.message.includes('UND_ERR_CONNECT_TIMEOUT') ||
-        lastErr.message.includes('ECONNRESET') ||
-        lastErr.message.includes('ETIMEDOUT');
-      if (!isRetryable || attempt >= 2) throw lastErr;
-      await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
-    }
-  }
-  throw lastErr ?? new Error('fetchWithRetry failed');
-}
+import { fetchEodSeries, type EodBar } from '../src/modules/trend100/data/providers/marketstack';
 
 interface TurbulenceGatePoint {
   date: string;
@@ -70,103 +30,118 @@ interface TurbulenceGatePoint {
   vixBelow25: boolean | null;
 }
 
-function toYyyyMmDd(dateStr: string): string {
-  return dateStr.replace(/-/g, '');
+const GATES_OUT_PATH = join(process.cwd(), 'public', 'turbulence.gates.json');
+/** Min rows for existing file to count as structurally usable fallback. */
+const GATES_FALLBACK_MIN_POINTS = 200;
+/** Calendar months per Marketstack chunk so each request stays well under the 1000-bar default. */
+const CHUNK_MONTHS = 12;
+const CHUNK_GAP_MS = 300;
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function redactSecrets(message: string): string {
+  return message.replace(/access_key=[^&\s'"]+/gi, 'access_key=REDACTED');
 }
 
-async function fetchStooqCsv(
+function parseYyyyMmDdUtc(dateStr: string): Date {
+  if (!DATE_RE.test(dateStr)) {
+    throw new Error(`Invalid date (expected YYYY-MM-DD): ${dateStr}`);
+  }
+  const year = Number(dateStr.slice(0, 4));
+  const month = Number(dateStr.slice(5, 7));
+  const day = Number(dateStr.slice(8, 10));
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function formatYyyyMmDdUtc(d: Date): string {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function addUtcMonths(dateStr: string, months: number): string {
+  const d = parseYyyyMmDdUtc(dateStr);
+  const out = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + months, d.getUTCDate()));
+  return formatYyyyMmDdUtc(out);
+}
+
+function minDate(a: string, b: string): string {
+  return a <= b ? a : b;
+}
+
+/** Non-overlapping ~12-month calendar chunks covering [start, end] inclusive. */
+function dateChunks(start: string, end: string): Array<{ from: string; to: string }> {
+  if (start > end) {
+    throw new Error(`Invalid gates date range: start ${start} is after end ${end}`);
+  }
+  const chunks: Array<{ from: string; to: string }> = [];
+  let cursor = start;
+  while (cursor <= end) {
+    const rawTo = addUtcMonths(cursor, CHUNK_MONTHS);
+    // Exclusive next-chunk start minus 1 day: use day before next period start.
+    const nextStart = rawTo;
+    const toDate = parseYyyyMmDdUtc(nextStart);
+    toDate.setUTCDate(toDate.getUTCDate() - 1);
+    const chunkTo = minDate(formatYyyyMmDdUtc(toDate), end);
+    if (chunkTo < cursor) {
+      chunks.push({ from: cursor, to: end });
+      break;
+    }
+    chunks.push({ from: cursor, to: chunkTo });
+    const following = parseYyyyMmDdUtc(chunkTo);
+    following.setUTCDate(following.getUTCDate() + 1);
+    cursor = formatYyyyMmDdUtc(following);
+  }
+  return chunks;
+}
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise((r) => setTimeout(r, ms));
+}
+
+/**
+ * Fetch a full date range via existing fetchEodSeries, chunked so history from
+ * TURBULENCE_GATES_START is not silently truncated at the provider's 1000-bar default.
+ */
+async function fetchIndexClosesChunked(
   symbol: string,
   start: string,
   end: string
 ): Promise<Map<string, number>> {
-  const d1 = toYyyyMmDd(start);
-  const d2 = toYyyyMmDd(end);
-  const url = `${STOOQ_BASE}?s=${encodeURIComponent(symbol)}&d1=${d1}&d2=${d2}&i=d`;
+  const chunks = dateChunks(start, end);
+  const byDate = new Map<string, number>();
 
-  const res = await fetchWithRetry(url);
-  if (!res.ok) {
-    throw new Error(`Stooq fetch failed for ${symbol}: ${res.status} ${res.statusText}\nURL: ${url}`);
-  }
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i]!;
+    const bars: EodBar[] = await fetchEodSeries(symbol, {
+      startDate: chunk.from,
+      endDate: chunk.to,
+      limit: 1000,
+    });
 
-  const text = await res.text();
-  const trimmed = text.trim();
-
-  if (isLikelyStooqAuthOrBlockPage(trimmed)) {
-    throw new Error(
-      `STOOQ_AUTH_BLOCKED: Stooq returned an auth/API or HTML block page instead of CSV for symbol "${symbol}". URL: ${url}`
-    );
-  }
-
-  if (!trimmed || trimmed === 'No data.' || trimmed.toLowerCase().includes('no data')) {
-    throw new Error(
-      `Stooq returned no data for symbol "${symbol}". URL used: ${url}\n` +
-        'Hint: The symbol may be wrong. Try ^spx, ^gspc for SPX; ^vix for VIX.'
-    );
-  }
-
-  const lines = trimmed.split('\n').filter((l) => l.trim());
-  if (lines.length < 2) {
-    throw new Error(
-      `Stooq CSV has no data rows for symbol "${symbol}". URL used: ${url}\n` +
-        'Hint: Check the symbol and date range.'
-    );
-  }
-
-  const header = lines[0]!.toLowerCase();
-  const closeIdx = header.split(',').findIndex((c) => c.trim() === 'close');
-  const dateIdx = header.split(',').findIndex((c) => c.trim() === 'date');
-
-  if (closeIdx < 0 || dateIdx < 0) {
-    if (isLikelyStooqAuthOrBlockPage(trimmed)) {
+    if (bars.length >= 1000) {
       throw new Error(
-        `STOOQ_AUTH_BLOCKED: Stooq response had no CSV Date/Close header (likely auth/block page) for symbol "${symbol}". URL: ${url}`
+        `Marketstack returned ${bars.length} bars for ${symbol} in ${chunk.from}..${chunk.to}; ` +
+          'chunk may be truncated at the 1000-bar limit. Narrow CHUNK_MONTHS.'
       );
     }
-    throw new Error(`Stooq CSV missing Date or Close column. URL: ${url}`);
-  }
 
-  const map = new Map<string, number>();
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i]!.split(',');
-    const date = cols[dateIdx]?.trim();
-    const closeStr = cols[closeIdx]?.trim();
-    if (!date || !closeStr) continue;
-    const close = parseFloat(closeStr);
-    if (Number.isFinite(close)) map.set(date, close);
-  }
+    for (const bar of bars) {
+      if (!DATE_RE.test(bar.date) || !Number.isFinite(bar.close)) continue;
+      byDate.set(bar.date, bar.close);
+    }
 
-  if (map.size === 0) {
-    throw new Error(
-      `Stooq CSV parsed 0 valid rows for symbol "${symbol}". URL used: ${url}\n` +
-        'Hint: The symbol may be incorrect for this exchange.'
-    );
-  }
-
-  return map;
-}
-
-const VIX_FALLBACK_SYMBOLS = ['vi.c', '^vix', '^VIX', 'vi.f'];
-
-async function fetchVixWithFallback(
-  start: string,
-  end: string
-): Promise<{ map: Map<string, number>; symbolUsed: string }> {
-  const envSymbol = process.env.TURBULENCE_STOOQ_VIX_SYMBOL?.trim();
-  const toTry = envSymbol ? [envSymbol, ...VIX_FALLBACK_SYMBOLS.filter((s) => s !== envSymbol)] : VIX_FALLBACK_SYMBOLS;
-
-  let lastError: Error | null = null;
-  for (const symbol of toTry) {
-    try {
-      const map = await fetchStooqCsv(symbol, start, end);
-      return { map, symbolUsed: symbol };
-    } catch (err) {
-      lastError = err instanceof Error ? err : new Error(String(err));
+    if (i < chunks.length - 1) {
+      await sleep(CHUNK_GAP_MS);
     }
   }
 
-  throw new Error(
-    `Stooq VIX: all symbols failed. Tried: ${toTry.join(', ')}. Last error: ${lastError?.message ?? 'unknown'}`
-  );
+  if (byDate.size === 0) {
+    throw new Error(`Marketstack returned 0 valid EOD closes for ${symbol} in ${start}..${end}`);
+  }
+
+  return byDate;
 }
 
 function computeSpx50dma(
@@ -190,10 +165,6 @@ function computeSpx50dma(
   return result;
 }
 
-const GATES_OUT_PATH = join(process.cwd(), 'public', 'turbulence.gates.json');
-/** Min rows for existing file to count as structurally usable fallback. */
-const GATES_FALLBACK_MIN_POINTS = 200;
-
 function getFallbackMaxStalenessDays(): number {
   const raw = process.env.TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS;
   const n = raw != null && raw !== '' ? parseInt(raw, 10) : 60;
@@ -203,7 +174,7 @@ function getFallbackMaxStalenessDays(): number {
 function isGateRowShape(x: unknown): x is { date: string } {
   if (x === null || typeof x !== 'object') return false;
   const d = (x as { date?: unknown }).date;
-  return typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d);
+  return typeof d === 'string' && DATE_RE.test(d);
 }
 
 /**
@@ -237,25 +208,41 @@ function getUsableExistingGatesForFallback(): {
 async function main() {
   const start = process.env.TURBULENCE_GATES_START || '2019-10-01';
   const end = new Date().toISOString().split('T')[0]!;
-  const spxSymbol = process.env.TURBULENCE_STOOQ_SPX_SYMBOL || '^spx';
+  const spxSymbol = process.env.TURBULENCE_MARKETSTACK_SPX_SYMBOL?.trim() || 'GSPC.INDX';
+  const vixSymbol = process.env.TURBULENCE_MARKETSTACK_VIX_SYMBOL?.trim() || 'VIX.INDX';
 
   try {
-    console.log(`Fetching Stooq ${spxSymbol} and VIX (${start} to ${end})...`);
+    console.log(
+      `Fetching Marketstack ${spxSymbol} and ${vixSymbol} (${start} to ${end}) in ${CHUNK_MONTHS}-month chunks...`
+    );
 
-    const [spxMap, vixResult] = await Promise.all([
-      fetchStooqCsv(spxSymbol, start, end),
-      fetchVixWithFallback(start, end),
-    ]);
+    const spxMap = await fetchIndexClosesChunked(spxSymbol, start, end);
+    await sleep(CHUNK_GAP_MS);
+    const vixMap = await fetchIndexClosesChunked(vixSymbol, start, end);
 
-    const vixMap = vixResult.map;
-    console.log(`   VIX symbol used: ${vixResult.symbolUsed}`);
+    console.log(`   ${spxSymbol} closes: ${spxMap.size}`);
+    console.log(`   ${vixSymbol} closes: ${vixMap.size}`);
 
-    const allDates = new Set<string>([...spxMap.keys(), ...vixMap.keys()]);
-    const dates = [...allDates].sort();
+    const commonDates = [...spxMap.keys()]
+      .filter((d) => vixMap.has(d))
+      .sort();
 
-    const spx50dmaByDate = computeSpx50dma(dates, spxMap);
+    if (commonDates.length === 0) {
+      throw new Error(
+        `No common trading dates between ${spxSymbol} and ${vixSymbol} in ${start}..${end}`
+      );
+    }
 
-    const points: TurbulenceGatePoint[] = dates.map((date) => {
+    const spxOnly = [...spxMap.keys()].filter((d) => !vixMap.has(d)).length;
+    const vixOnly = [...vixMap.keys()].filter((d) => !spxMap.has(d)).length;
+    console.log(
+      `   Common dates: ${commonDates.length} (${commonDates[0]} to ${commonDates[commonDates.length - 1]})` +
+        (spxOnly || vixOnly ? `; omitted SPX-only=${spxOnly} VIX-only=${vixOnly}` : '')
+    );
+
+    const spx50dmaByDate = computeSpx50dma(commonDates, spxMap);
+
+    const points: TurbulenceGatePoint[] = commonDates.map((date) => {
       const spx = spxMap.get(date) ?? null;
       const spx50dma = spx50dmaByDate.get(date) ?? null;
       const vix = vixMap.get(date) ?? null;
@@ -287,19 +274,12 @@ async function main() {
       console.log(`   Last vixBelow25: ${last.vixBelow25 ?? 'null'}`);
     }
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    const authBlocked = msg.includes('STOOQ_AUTH_BLOCKED');
+    const msg = redactSecrets(err instanceof Error ? err.message : String(err));
     const fallback = getUsableExistingGatesForFallback();
 
     if (fallback) {
       console.warn('\n⚠️  WARNING: Turbulence gates were NOT refreshed this run.');
-      if (authBlocked) {
-        console.warn(
-          '   Stooq blocked the CSV fetch (auth/API key or captcha/HTML page instead of market data).'
-        );
-      } else {
-        console.warn(`   Fetch/processing failed: ${msg}`);
-      }
+      console.warn(`   Marketstack fetch/processing failed: ${msg}`);
       console.warn(
         `   Continuing with existing public/turbulence.gates.json (${fallback.pointCount} points, last date ${fallback.lastDate}, ~${fallback.daysStale} calendar day(s) behind UTC today).`
       );
@@ -309,19 +289,15 @@ async function main() {
       process.exit(0);
     }
 
-    if (authBlocked) {
-      console.error(
-        '\n❌ Stooq auth/block page prevented gates refresh, and no usable existing public/turbulence.gates.json fallback was found.'
-      );
-      console.error(
-        `   Tune TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS (default ${getFallbackMaxStalenessDays()}) or ensure a valid committed/prefetched gates file.`
-      );
-    }
-    throw err;
+    console.error(
+      '\n❌ Marketstack gates refresh failed, and no usable existing public/turbulence.gates.json fallback was found ' +
+        `(file missing, invalid, or older than TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS=${getFallbackMaxStalenessDays()}).`
+    );
+    throw new Error(msg);
   }
 }
 
 main().catch((err) => {
-  console.error(err);
+  console.error(redactSecrets(err instanceof Error ? err.message : String(err)));
   process.exit(1);
 });

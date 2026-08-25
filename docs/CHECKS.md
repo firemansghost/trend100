@@ -82,105 +82,45 @@ git status
 
 ### Tests workflow (non-deploy)
 - **Unit tests / typecheck / build:** `.github/workflows/tests.yml` runs `pnpm test`, `pnpm typecheck`, `pnpm typecheck:scripts`, and `pnpm build` on pull requests, pushes to `main`, and `workflow_dispatch`. App typecheck covers `src/`; scripts typecheck uses [`tsconfig.scripts.json`](../tsconfig.scripts.json) for ETL/CI scripts under `scripts/`. No deploy, no secrets, no `artifacts:refresh`.
-- **Turbulence bootstrap seed staleness:** Same workflow job `turbulence-bootstrap-check` runs `pnpm check:turbulence-bootstrap` (read-only). The committed seed [`ci/bootstrap/turbulence.gates.json`](../ci/bootstrap/turbulence.gates.json) backs cold CI when cache and live prefetch fail; deploy workflows allow **120** calendar days of staleness (`TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS`). The check warns when the seed is within **30** days of that window (~90 days stale) and **fails** within **14** days (~106 days stale) so daily deploy breakage is visible early. To refresh later: regenerate and commit an updated bootstrap file in a separate ops PR when Stooq is reachable (do not rely on this check to mutate files).
+- **Turbulence bootstrap seed staleness:** Same workflow job `turbulence-bootstrap-check` runs `pnpm check:turbulence-bootstrap` (read-only). The committed seed [`ci/bootstrap/turbulence.gates.json`](../ci/bootstrap/turbulence.gates.json) backs cold CI when cache and live prefetch fail; deploy workflows allow **120** calendar days of staleness (`TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS`). The check warns when the seed is within **30** days of that window (~90 days stale) and **fails** within **14** days (~106 days stale) so daily deploy breakage is visible early. Refresh the seed from real Marketstack `GSPC.INDX` + `VIX.INDX` gates (see runbook below). Do not synthesize market data; do not rely on this check to mutate files.
 
 ### Turbulence gates bootstrap refresh runbook
 
-Cold-start CI and deploy copy [`ci/bootstrap/turbulence.gates.json`](../ci/bootstrap/turbulence.gates.json) when cache restore and live prefetch do not produce a valid gates file. This runbook documents the approved refresh and contingency plan. **PR 10 (docs-only) does not replace the seed** — no fresher valid source exists while Stooq remains blocked.
+Cold-start CI copies [`ci/bootstrap/turbulence.gates.json`](../ci/bootstrap/turbulence.gates.json) when cache restore and live prefetch do not produce a valid gates file. **Primary gates source is Marketstack**, not Stooq. Do not wait for Stooq CSV to unblock.
 
-#### 1. Current status (as of 2026-07-07 audit)
+#### Symbols and generation
 
-| Milestone | Approximate date | Notes |
-|-----------|------------------|-------|
-| Bootstrap `last_date` | **2026-04-10** | 280 weekday rows; healthy but aging |
-| Tests workflow **warning** | **~2026-07-09** | ~90 calendar days stale (`pnpm check:turbulence-bootstrap` exit 0 + warning) |
-| Tests workflow **failure** | **~2026-07-25** | ~106 calendar days stale (exit 1) |
-| **120-day** cold-start deploy risk | **~2026-08-08** | `update-turbulence-gates` / `verify:artifacts` reject fallback on cache miss |
+- **SPX:** `GSPC.INDX` (override: `TURBULENCE_MARKETSTACK_SPX_SYMBOL`)
+- **VIX:** `VIX.INDX` (override: `TURBULENCE_MARKETSTACK_VIX_SYMBOL`)
+- Reuses existing `MARKETSTACK_API_KEY`. Never print the key.
+- Gate rows use **common trading dates** only (both series have a valid close). Semantics unchanged: `spxAbove50dma = SPX > 50-DMA`, `vixBelow25 = VIX < 25`.
+- Generated `public/turbulence.gates.json` is **CI/local output — never commit it**.
 
-Live production `https://trend100.vercel.app/turbulence.gates.json` was **byte-identical** to the committed bootstrap on 2026-07-07 (same `last_date`). Shock/greenbar and snapshots deploy fresher; gates do not refresh while Stooq CSV is blocked.
+```bash
+pnpm -s update:turbulence-gates
+```
 
-Check current age anytime:
+Optional: `TURBULENCE_GATES_START=2019-10-01`. Do **not** run `pnpm artifacts:refresh` just to refresh bootstrap.
+
+#### Validate generated gates / bootstrap freshness
 
 ```bash
 pnpm check:turbulence-bootstrap
 ```
 
-#### 2. Source policy
+Generated `public/turbulence.gates.json` must be a sorted JSON array, ≥250 points, schema `{date,spx,spx50dma,spxAbove50dma,vix,vixBelow25}`, non-null `spx50dma` after 50-day warm-up, `last_date` near the latest common Marketstack EOD.
 
-- **Do not** copy production into bootstrap if production is identical to bootstrap (no gain).
-- **Do not** copy stale local `public/turbulence.gates.json` (often older than bootstrap; not authoritative).
-- **Do not** synthesize or fabricate market data for the seed.
-- **Prefer** real, validated Stooq CSV when Stooq unblocks (`update-turbulence-gates.ts` logic).
-- **Treat** extending `TURBULENCE_GATES_*_MAX_STALENESS_DAYS` as **last resort only** (masks stale gates; does not refresh data).
+#### Future bootstrap refresh
 
-#### 3. Read-only Stooq probe
+1. If `public/turbulence.gates.json` exists locally, copy it aside (outside the repo).
+2. Run **only** `pnpm -s update:turbulence-gates`.
+3. Copy the **last 280** real common-date rows into `ci/bootstrap/turbulence.gates.json`.
+4. Restore or discard `public/` so it is not committed.
+5. Never synthesize rows. Never copy stale production/local residue. Do not extend staleness windows as the first option.
 
-Probe SPX and VIX **without writing repo files**. Success = HTTP 200 and a CSV header containing `Date` and `Close`. Failure = HTML/JS challenge, captcha, API-key text, or empty body (matches `STOOQ_AUTH_BLOCKED` in `update-turbulence-gates.ts`).
+#### Provider failure / LKG
 
-**bash (CI-style):**
-
-```bash
-for sym in '^spx' 'vi.c'; do
-  url="https://stooq.com/q/d/l/?s=${sym}&d1=20260701&d2=20260707&i=d"
-  echo "=== $sym ==="
-  head -c 400 "$(curl -sf "$url" -o /tmp/stooq-probe.csv && echo /tmp/stooq-probe.csv)" 2>/dev/null || curl -sf "$url" | head -c 400
-  echo
-done
-```
-
-**PowerShell (local):**
-
-```powershell
-foreach ($sym in @('^spx','vi.c')) {
-  $url = "https://stooq.com/q/d/l/?s=$([uri]::EscapeDataString($sym))&d1=20260701&d2=20260707&i=d"
-  Write-Host "=== $sym ==="
-  $r = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 30
-  $head = $r.Content.Substring(0, [Math]::Min(400, $r.Content.Length))
-  if ($head -match 'get_apikey|get your api|captcha|<html|<!DOCTYPE') { Write-Host 'BLOCKED (not CSV)' }
-  elseif ($head -match 'Date.*Close') { Write-Host 'OK (CSV header)' }
-  else { Write-Host $head }
-}
-```
-
-Repeat probe periodically until both symbols return CSV. Do not save responses under `public/` or `ci/bootstrap/`.
-
-#### 4. Approved refresh path (separate ops PR, when Stooq works)
-
-1. Confirm read-only probe returns CSV for SPX and VIX.
-2. Run **only** `pnpm update:turbulence-gates` — **not** `pnpm artifacts:refresh`.
-   - Optional env: `TURBULENCE_GATES_START=2019-10-01`, `TURBULENCE_STOOQ_VIX_SYMBOL=vi.c`
-3. Validate `public/turbulence.gates.json`:
-   - JSON array, ≥250 points, sorted ascending by `date`
-   - Schema: `date`, `spx`, `spx50dma`, `spxAbove50dma`, `vix`, `vixBelow25`
-   - `last_date` **newer than 2026-04-10**
-   - At least one non-null `spx50dma`
-4. Copy a validated slice into `ci/bootstrap/turbulence.gates.json`:
-   - **Prefer last 280 weekdays** (matches current cold-start shape) unless intentionally changing bootstrap size
-5. Restore generated files before commit: `git restore public` (and `data/` if touched)
-6. Commit **only** `ci/bootstrap/turbulence.gates.json` and any doc updates — never commit `public/*.json`
-
-#### 5. Contingency path
-
-If Stooq is **still blocked around 2026-07-20**, evaluate (separate approved PRs):
-
-- **Real alternate provider** — e.g. FRED bootstrap-only fallback (requires new script work + API key; 0–1 day lag vs shock acceptable for cold-start seed only), or
-- **Temporary staleness extension** — raise `TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS` / `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` and bootstrap check thresholds — **last resort only**
-
-Any staleness extension **must** include an explicit [`docs/DECISIONS.md`](DECISIONS.md) entry stating it masks stale gates and does not refresh market data.
-
-#### 6. Verification commands (future seed refresh PR)
-
-```bash
-pnpm check:turbulence-bootstrap
-git grep -n -E '^(<<<<<<<|=======|>>>>>>>)' -- . ':!pnpm-lock.yaml' ':!.next' ':!node_modules'
-pnpm test
-pnpm typecheck
-pnpm typecheck:scripts
-pnpm build
-git status --short
-```
-
-Expected: bootstrap check healthy (or improved `last_date`), no conflict markers, tests/typecheck/build pass, `git status` shows only `ci/bootstrap/turbulence.gates.json` and docs (no `public/` or `data/`).
+If Marketstack refresh fails, `update-turbulence-gates` may keep an existing `public/turbulence.gates.json` **only while it is inside** `TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS` (script default 60; CI 120). Expired files are rejected. A failed fetch is logged as a warning, not a successful refresh.
 
 ### CI pipeline checks
 - **Artifact validation:** CI must pass `pnpm artifacts:refresh` before deploy (vercel-prebuilt-prod.yml on push; daily-artifacts-deploy.yml on schedule)
@@ -189,7 +129,7 @@ Expected: bootstrap check healthy (or improved `last_date`), no conflict markers
 - **Daily Artifacts Deploy (PR41):** Node 24 via `actions/setup-node@v6`; workflow `env` includes `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`. The artifacts step logs non-secret diagnostics before `pnpm artifacts:refresh`.
 - **Stooq routing in CI:** Workflows read `EOD_STOOQ_DECKS`, `EOD_STOOQ_FORCE_FALLBACK`, `EOD_STOOQ_SYMBOL_OVERRIDES` from GitHub Actions Variables. Recommended: `EOD_STOOQ_DECKS=METALS_MINING,PLUMBING,US_SECTORS,US_FACTORS,GLOBAL_EQUITIES`, `EOD_STOOQ_FORCE_FALLBACK=BNO,FBTC,FETH,SRUUF`, and `EOD_STOOQ_SYMBOL_OVERRIDES=TTF=tg.f` (for War Lie Detector TTF gas). Expected log: `Provider routing: Stooq-first for N symbols (decks: ...), Marketstack direct: K` and `Stooq OK: X | Forced fallback: Y | Stooq failed → Marketstack fallback: Z`
 - **Strict asOfDate in CI:** Workflows pass `SNAPSHOT_STRICT_ASOF_DECKS` from GitHub Actions Variables. When set (e.g. `US_SECTORS,US_FACTORS,GLOBAL_EQUITIES,METALS_MINING,PLUMBING`), those decks use min(lastDate) as asOfDate so snapshots don't appear fresher than the stalest ticker.
-- **Turbulence gates:** Fetched from Stooq (SPX + VIX EOD). Stooq may intermittently return an auth/API-key or captcha page instead of CSV; `update-turbulence-gates` then keeps a structurally valid last-known-good `public/turbulence.gates.json` when within `TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS` (script default 60). CI workflows set that and matching `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` to **120** so `verify:artifacts` does not fail after a skipped refresh; gates may be stale during prolonged Stooq blocks (warnings in script logs, not a claimed fresh refresh).
+- **Turbulence gates:** Fetched from Marketstack EOD (`GSPC.INDX` + `VIX.INDX`) using existing `MARKETSTACK_API_KEY`. `update-turbulence-gates` chunks history so the series is not truncated at 1000 bars. If Marketstack fails, a structurally valid last-known-good `public/turbulence.gates.json` may be kept only while within `TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS` (script default 60). CI sets that and `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` to **120**. Failed refreshes log warnings and are not claimed as successful. Do not extend those windows without an explicit DECISIONS entry.
 - **Daily deploy:** `daily-artifacts-deploy.yml` runs twice on weekdays: 22:15 UTC (primary) and 01:15 UTC (top-off). The top-off pass catches lagging EOD inputs (e.g. BNO in War Lie Detector) that may not have printed the latest close by the first run. Both runs must pass update:snapshots + verify:artifacts before deploying.
 - **Production smoke checks:** After deploy, key artifact endpoints should return 200:
   - https://trend100.vercel.app/snapshot.MACRO.json
@@ -233,7 +173,7 @@ git clean -fd public data/marketstack/eod
 - **Turbulence gates:** Validates `public/turbulence.gates.json`:
   - File exists, is an array, ≥250 points
   - Sorted ascending by date
-  - Last point date within `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` calendar days of UTC today (default **10**; CI sets **120** to align with Stooq fallback). Fails if older to block unintentionally stale deploys under the chosen threshold.
+  - Last point date within `TURBULENCE_GATES_VERIFY_MAX_STALENESS_DAYS` calendar days of UTC today (default **10**; CI sets **120**). Fails if older to block unintentionally stale deploys under the chosen threshold.
   - Null rules: if `spx` or `spx50dma` is null, `spxAbove50dma` must be null; if `vix` is null, `vixBelow25` must be null
   - At least one non-null `spx50dma` (ensures compute is not broken)
 - **Turbulence shock:** Validates `public/turbulence.shock.json`:

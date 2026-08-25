@@ -139,9 +139,10 @@ jobs:
           echo "TREND100_STRICT_WARMUP=${TREND100_STRICT_WARMUP}"
           TODAY=$(date -u '+%Y-%m-%d')
           if [ "${REPAIR_INTEGRITY}" = "true" ]; then
-            echo "=== EOD continuity gate: health-history integrity repair requires symbolsWithLongGap=0 ==="
-            echo "A partial EOD repair LKG is not sufficient."
-            pnpm exec tsx scripts/audit-marketstack-eod-gaps.ts -- --start 2026-02-18 --fail-on-long-gap
+            echo "=== EOD continuity gate: health-history integrity repair requires symbolsWithUnverifiedLongGap=0 ==="
+            echo "Provider-limited residuals (live Marketstack evidence) are allowed; unverified long gaps are not."
+            echo "A partial EOD repair LKG is not sufficient unless remaining long gaps are provider-confirmed."
+            pnpm exec tsx scripts/audit-marketstack-eod-gaps.ts -- --start 2026-02-18 --fail-on-unverified-long-gap
             echo "=== PASS A: fill sparse tail 2026-02-18 → ${TODAY} (all decks, base + variants) ==="
             pnpm update:health-history -- --start 2026-02-18 --end "${TODAY}"
             echo "=== PASS B: MACRO section variants 2019-10-01 → ${TODAY} (not base MACRO) ==="

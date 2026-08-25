@@ -140,13 +140,13 @@ jobs:
           path: data/marketstack/eod
           key: ${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}
 
-      - name: Completeness gate (long gaps remaining)
+      - name: Completeness gate (unverified long gaps)
         if: github.event.inputs.repair == 'true' && steps.repair.outcome == 'success'
         env:
           START_DATE: ${{ github.event.inputs.start_date || '2026-02-18' }}
           MARKETSTACK_OFFLINE: '1'
         run: |
           set -euo pipefail
-          echo "A red completeness gate can still follow a successful EOD LKG save of validated partial repair."
-          echo "Health-history integrity repair remains blocked until symbolsWithLongGap=0."
-          pnpm exec tsx scripts/audit-marketstack-eod-gaps.ts -- --start "${START_DATE}" --fail-on-long-gap
+          echo "Provider-limited residuals may remain. The job is green if symbolsWithUnverifiedLongGap=0."
+          echo "Health-history integrity repair uses the same unverified-long-gap gate."
+          pnpm exec tsx scripts/audit-marketstack-eod-gaps.ts -- --start "${START_DATE}" --fail-on-unverified-long-gap

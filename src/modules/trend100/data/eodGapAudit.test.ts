@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  addUtcCalendarDays,
   auditSymbolGaps,
   existingDatesPreserved,
   evaluateStagedPostMerge,
@@ -204,6 +205,7 @@ describe('evaluateStagedPostMerge', () => {
       pre,
     });
     expect(v.resolvable).toBe(true);
+    expect(v.classification).toBe('RESOLVED');
     expect(v.post.longestMissingRun).toBe(1);
   });
 
@@ -226,7 +228,7 @@ describe('evaluateStagedPostMerge', () => {
     expect(v.resolvable).toBe(true);
   });
 
-  it('rejects remaining five consecutive missing sessions', () => {
+  it('classifies remaining five consecutive missing sessions as PROVIDER_LIMITED', () => {
     const { existing, pre } = preOnlyStart();
     const fetched = REF10.slice(0, 5).map((date) => ({ date, close: 10 }));
     const v = evaluateStagedPostMerge({
@@ -242,6 +244,8 @@ describe('evaluateStagedPostMerge', () => {
       pre,
     });
     expect(v.post.longestMissingRun).toBe(5);
+    expect(v.classification).toBe('PROVIDER_LIMITED');
+    expect(v.mergeable).toBe(true);
     expect(v.resolvable).toBe(false);
   });
 
@@ -333,6 +337,123 @@ describe('evaluateStagedPostMerge', () => {
       pre,
     });
     expect(v.resolvable).toBe(true);
+    expect(v.classification).toBe('RESOLVED');
     expect(v.post.missingDates).toEqual([june4Like]);
+  });
+});
+
+function makeSessions(count: number, start = '2026-02-18'): string[] {
+  const dates: string[] = [];
+  let d = start;
+  for (let i = 0; i < count; i++) {
+    dates.push(d);
+    d = addUtcCalendarDays(d, 1);
+  }
+  return dates;
+}
+
+describe('evaluateStagedPostMerge 105-session hole', () => {
+  const REF = makeSessions(106);
+  const existing = [REF[0]!];
+  const pre = auditSymbolGaps({
+    symbol: 'HOLE',
+    referenceDates: REF,
+    presentDates: existing,
+    firstCachedDate: existing[0]!,
+    lastCachedDate: existing[0]!,
+    windowStart: REF[0]!,
+    windowEnd: REF[REF.length - 1]!,
+  });
+
+  it('A: fill leaving longest 1 is RESOLVED', () => {
+    expect(pre.longestMissingRun).toBe(105);
+    const isolated = REF[40]!;
+    const fetched = REF.filter((d) => d !== isolated).map((date) => ({ date, close: 10 }));
+    const v = evaluateStagedPostMerge({
+      symbol: 'HOLE',
+      referenceDates: REF,
+      windowStart: REF[0]!,
+      windowEnd: REF[REF.length - 1]!,
+      existingDates: existing,
+      fetchedBars: fetched,
+      truncated: false,
+      firstCachedDate: existing[0]!,
+      lastCachedDate: existing[0]!,
+      pre,
+    });
+    expect(v.post.longestMissingRun).toBe(1);
+    expect(v.classification).toBe('RESOLVED');
+    expect(v.mergeable).toBe(true);
+  });
+
+  it('B: fill leaving longest 10 is PROVIDER_LIMITED', () => {
+    const residual = new Set(REF.slice(40, 50));
+    const fetched = REF.filter((d) => !residual.has(d)).map((date) => ({ date, close: 10 }));
+    const v = evaluateStagedPostMerge({
+      symbol: 'HOLE',
+      referenceDates: REF,
+      windowStart: REF[0]!,
+      windowEnd: REF[REF.length - 1]!,
+      existingDates: existing,
+      fetchedBars: fetched,
+      truncated: false,
+      firstCachedDate: existing[0]!,
+      lastCachedDate: existing[0]!,
+      pre,
+    });
+    expect(v.post.longestMissingRun).toBe(10);
+    expect(v.post.missingSessions).toBeLessThan(pre.missingSessions);
+    expect(v.classification).toBe('PROVIDER_LIMITED');
+    expect(v.mergeable).toBe(true);
+  });
+
+  it('D: partial fetch preserves neighboring existing dates', () => {
+    const neighbors = [REF[0]!, REF[REF.length - 1]!];
+    const preN = auditSymbolGaps({
+      symbol: 'HOLE',
+      referenceDates: REF,
+      presentDates: neighbors,
+      firstCachedDate: neighbors[0]!,
+      lastCachedDate: neighbors[1]!,
+      windowStart: REF[0]!,
+      windowEnd: REF[REF.length - 1]!,
+    });
+    const residual = new Set(REF.slice(40, 50));
+    const fetched = REF.filter((d) => !residual.has(d) && d !== neighbors[1]).map((date) => ({
+      date,
+      close: 10,
+    }));
+    const v = evaluateStagedPostMerge({
+      symbol: 'HOLE',
+      referenceDates: REF,
+      windowStart: REF[0]!,
+      windowEnd: REF[REF.length - 1]!,
+      existingDates: neighbors,
+      fetchedBars: fetched,
+      truncated: false,
+      firstCachedDate: neighbors[0]!,
+      lastCachedDate: neighbors[1]!,
+      pre: preN,
+    });
+    expect(v.mergeable).toBe(true);
+    expect(v.post.presentSessions).toBe(REF.length - 10);
+  });
+
+  it('C: unchanged 105-session hole is UNRESOLVED', () => {
+    const v = evaluateStagedPostMerge({
+      symbol: 'HOLE',
+      referenceDates: REF,
+      windowStart: REF[0]!,
+      windowEnd: REF[REF.length - 1]!,
+      existingDates: existing,
+      fetchedBars: [{ date: existing[0]!, close: 10 }],
+      truncated: false,
+      firstCachedDate: existing[0]!,
+      lastCachedDate: existing[0]!,
+      pre,
+    });
+    expect(v.post.longestMissingRun).toBe(105);
+    expect(v.classification).toBe('UNRESOLVED');
+    expect(v.mergeable).toBe(false);
   });
 });

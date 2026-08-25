@@ -1,7 +1,7 @@
 /**
  * Offline EOD internal-gap audit I/O. No provider calls.
  */
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
 import {
@@ -12,6 +12,12 @@ import {
   type SymbolGapReport,
   type UsableBar,
 } from '../src/modules/trend100/data/eodGapAudit';
+import {
+  classifyReportAgainstResiduals,
+  parseProviderGapResidualsJson,
+  PROVIDER_GAP_RESIDUALS_FILENAME,
+  type ProviderGapResidualsFile,
+} from '../src/modules/trend100/data/eodProviderGapResiduals';
 import { sanitizeCachedEodBars } from '../src/modules/trend100/data/providers/eodClose';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
 
@@ -56,6 +62,24 @@ export function loadUsableCachedBars(symbol: string): UsableBar[] {
   }
 }
 
+export function providerGapResidualsPath(): string {
+  return join(EOD_CACHE_DIR, PROVIDER_GAP_RESIDUALS_FILENAME);
+}
+
+export function loadProviderGapResiduals(): ProviderGapResidualsFile | null {
+  const filePath = providerGapResidualsPath();
+  if (!existsSync(filePath)) return null;
+  try {
+    return parseProviderGapResidualsJson(readFileSync(filePath, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
+export function saveProviderGapResiduals(file: ProviderGapResidualsFile): void {
+  writeFileSync(providerGapResidualsPath(), `${JSON.stringify(file, null, 2)}\n`, 'utf-8');
+}
+
 export function countEodJsonFiles(): number {
   if (!existsSync(EOD_CACHE_DIR)) return 0;
   return readdirSync(EOD_CACHE_DIR).filter((n) => n.endsWith('.json') && !n.startsWith('.')).length;
@@ -73,6 +97,7 @@ export function runInternalGapAudit(args?: {
   reports: SymbolGapReport[];
   summary: ReturnType<typeof summarizeGapReports>;
   longGapMin: number;
+  residuals: ReturnType<typeof loadProviderGapResiduals>;
 } {
   const start = args?.start ?? DEFAULT_EOD_GAP_AUDIT_START;
   const longGapMin = args?.longGapMin ?? DEFAULT_LONG_GAP_MIN_SESSIONS;
@@ -105,14 +130,26 @@ export function runInternalGapAudit(args?: {
     );
   }
 
+  const residuals = loadProviderGapResiduals();
+  const summary = summarizeGapReports(reports, longGapMin, (report) =>
+    classifyReportAgainstResiduals({
+      report,
+      residuals,
+      auditStart: start,
+      auditEnd: end,
+      longGapMin,
+    })
+  );
+
   return {
     start,
     end,
     spySymbol,
     referenceDates,
     reports,
-    summary: summarizeGapReports(reports, longGapMin),
+    summary,
     longGapMin,
+    residuals,
   };
 }
 
@@ -154,11 +191,30 @@ export function printInternalGapAudit(result: ReturnType<typeof runInternalGapAu
     console.log(`${deckId}: ${hit.join(', ')}`);
   }
 
+  if (summary.providerLimitedSymbols.length > 0) {
+    console.log('\n--- Provider-limited residuals (live-fetch evidence) ---');
+    for (const symbol of summary.providerLimitedSymbols) {
+      const r = reports.find((x) => x.symbol === symbol);
+      const ranges = r?.missingRanges.map((g) => `${g.start}..${g.end}(${g.sessions})`).join(', ');
+      console.log(
+        `${symbol} longestMissingRun=${r?.longestMissingRun} missing=${r?.missingSessions} ranges=${ranges || 'none'}`
+      );
+    }
+  }
+
   console.log('\n=== Summary ===');
   console.log(`symbolsAudited: ${summary.symbolsAudited}`);
   console.log(`symbolsComplete: ${summary.symbolsComplete}`);
   console.log(`symbolsWithMissingSessions: ${summary.symbolsWithMissingSessions}`);
   console.log(`symbolsWithLongGap: ${summary.symbolsWithLongGap}`);
+  console.log(`symbolsWithProviderLimitedLongGap: ${summary.symbolsWithProviderLimitedLongGap}`);
+  console.log(`symbolsWithUnverifiedLongGap: ${summary.symbolsWithUnverifiedLongGap}`);
+  console.log(
+    `providerLimitedSymbols: ${summary.providerLimitedSymbols.join(', ') || '(none)'}`
+  );
+  console.log(
+    `unverifiedLongGapSymbols: ${summary.unverifiedLongGapSymbols.join(', ') || '(none)'}`
+  );
   console.log(`maxLongestMissingRun: ${summary.maxLongestMissingRun}`);
   console.log(`projectedRepairSymbols: ${summary.projectedRepairSymbols.length}`);
   console.log(

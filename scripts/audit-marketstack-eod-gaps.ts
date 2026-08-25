@@ -26,6 +26,14 @@ function main() {
     );
     process.exit(1);
   }
+  const failOnUnverified = argv.includes('--fail-on-unverified-long-gap');
+  if (failOnUnverified && result.summary.symbolsWithUnverifiedLongGap > 0) {
+    console.error(
+      `Readiness gate: symbolsWithUnverifiedLongGap=${result.summary.symbolsWithUnverifiedLongGap} ` +
+        `(${result.summary.unverifiedLongGapSymbols.join(', ')})`
+    );
+    process.exit(1);
+  }
 }
 
 main();

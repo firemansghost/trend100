@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-08 — (Data/Ops) Stale Marketstack batch gap-fill + manual Turbulence cache repair
+**Choice:** `ensureHistoryBatch()` no longer sends caches that are more than **3 trading days** behind through `fetchEodLatestBatch()`. Those symbols use historical `fetchEodSeries` from slightly before `lastCachedDate` through UTC today, merged into the existing file (retention unchanged; never delete a cache because a gap exists). Recent caches keep batched latest-only updates. Pagination walks backward when a page hits the 1000-bar provider limit; truncation is not claimed as a full repair. A manual-only command `pnpm repair:turbulence-shock-cache` merges real Marketstack EOD for the **US_SECTORS / shock 12** from **2023-01-01** (override `TURBULENCE_SHOCK_CACHE_REPAIR_START`) through today. **Fetch/validate is transactional:** all 12 provider responses must succeed in memory before any `data/marketstack/eod` write; a failed symbol leaves caches untouched so Actions `cache-save` cannot persist a mixed universe. Daily Artifacts Deploy `workflow_dispatch` input `repair_turbulence_shock_cache` (default false) runs that command after EOD cache restore and before `artifacts:refresh`. **Scheduled cron never runs it.** Shock windows, min-asset floor/target, union calendar, Frobenius, shockZ, Green Bar, and gates are **unchanged** until a post-repair audit.
+
+**Why:** After prolonged downtime, latest-only batch updates produced caches with a fresh `last_date` and a multi-month internal hole (old history + latest bar). That hole collapsed Turbulence shock `nAssets` to 6 despite a 12-name universe. Future refreshes must gap-fill stale last_dates; the existing Actions cache already looks “fresh” at the tip, so a bounded manual 12-symbol repair is required once. Do not refetch all 160 Trend100 names for this.
+
+---
+
 ### 2026-04 — (Ops) Daily Artifacts Deploy workflow Node 24 and diagnostics (PR41)
 **Choice:** `daily-artifacts-deploy.yml` uses `actions/checkout@v6`, `actions/setup-node@v6` with `node-version: "24"`, `actions/cache@v5` and `actions/cache/restore@v5` / `actions/cache/save@v5`. Workflow-level `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` opts JS actions to Node 24 during GitHub’s Node 20 deprecation phase. The artifacts step prints non-secret diagnostics (node/pnpm versions, whether key env vars are set or non-empty) before `pnpm artifacts:refresh`; a `if: failure()` step adds a short hint. Schedule and EOD cache keys unchanged.
 

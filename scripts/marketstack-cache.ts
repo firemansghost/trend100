@@ -10,6 +10,11 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from '
 import { join } from 'path';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
 import { fetchEodSeries, fetchEodLatestBatch } from '../src/modules/trend100/data/providers/marketstack';
+import {
+  MARKETSTACK_EOD_PAGE_LIMIT,
+  approximateTradingDaysBetween,
+  planCachedSymbolUpdate,
+} from '../src/modules/trend100/data/providers/marketstackCachePlan';
 import { fetchStooqEodSeries, isForceFallback } from './stooq-eod';
 
 const CACHE_DIR = join(process.cwd(), 'data', 'marketstack', 'eod');
@@ -215,15 +220,107 @@ function mergeBars(existing: EodBar[], newBars: EodBar[]): EodBar[] {
   return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 }
 
+export interface CacheMergeStats {
+  oldCount: number;
+  newCount: number;
+  firstDate: string | null;
+  lastDate: string | null;
+  datesAdded: number;
+  datesReplaced: number;
+}
+
+/** Merge fetched bars into on-disk cache. Never deletes the file. */
+export function mergeFetchedBarsIntoCache(symbol: string, fetched: EodBar[]): CacheMergeStats {
+  const existing = loadCachedBars(symbol) ?? [];
+  const existingDates = new Set(existing.map((b) => b.date));
+  let datesAdded = 0;
+  let datesReplaced = 0;
+  for (const bar of fetched) {
+    if (existingDates.has(bar.date)) datesReplaced += 1;
+    else datesAdded += 1;
+  }
+  const merged = mergeBars(existing, fetched);
+  saveCachedBars(symbol, merged);
+  return {
+    oldCount: existing.length,
+    newCount: merged.length,
+    firstDate: merged[0]?.date ?? null,
+    lastDate: merged[merged.length - 1]?.date ?? null,
+    datesAdded,
+    datesReplaced,
+  };
+}
+
 /**
  * Get number of trading days between two dates (approximate)
  */
 function getTradingDaysBetween(startDate: string, endDate: string): number {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  // Approximate: ~5/7 of calendar days are trading days
-  return Math.ceil(days * (5 / 7));
+  return approximateTradingDaysBetween(startDate, endDate);
+}
+
+export interface EodRangeFetchResult {
+  bars: EodBar[];
+  requestCount: number;
+  truncated: boolean;
+}
+
+/**
+ * Fetch EOD bars for [startDate, endDate] with pagination when a page hits the provider limit.
+ * Marketstack returns the newest bars first when truncated; walk backward until the start is covered.
+ */
+export async function fetchEodSeriesRange(
+  symbol: string,
+  startDate: string,
+  endDate: string
+): Promise<EodRangeFetchResult> {
+  const merged = new Map<string, EodBar>();
+  let requestCount = 0;
+  let rangeEnd = endDate;
+  let truncated = false;
+  const maxPages = 24;
+
+  while (rangeEnd >= startDate && requestCount < maxPages) {
+    requestCount += 1;
+    const page = await fetchEodSeries(symbol, {
+      startDate,
+      endDate: rangeEnd,
+      limit: MARKETSTACK_EOD_PAGE_LIMIT,
+    });
+    if (page.length === 0) {
+      break;
+    }
+    for (const bar of page) {
+      merged.set(bar.date, bar);
+    }
+    if (page.length < MARKETSTACK_EOD_PAGE_LIMIT) {
+      truncated = false;
+      break;
+    }
+    const oldest = page[0]!.date;
+    if (oldest <= startDate) {
+      truncated = false;
+      break;
+    }
+    const prev = new Date(`${oldest}T00:00:00Z`);
+    prev.setUTCDate(prev.getUTCDate() - 1);
+    const nextEnd = prev.toISOString().slice(0, 10);
+    if (nextEnd >= rangeEnd) {
+      truncated = true;
+      break;
+    }
+    rangeEnd = nextEnd;
+    if (requestCount === maxPages) {
+      truncated = true;
+    }
+  }
+
+  const bars = Array.from(merged.values()).sort((a, b) => a.date.localeCompare(b.date));
+  if (truncated) {
+    console.warn(
+      `    ⚠️  ${symbol}: historical range ${startDate}–${endDate} may be truncated after ${requestCount} request(s) (page hit ${MARKETSTACK_EOD_PAGE_LIMIT})`
+    );
+  }
+  return { bars, requestCount, truncated };
 }
 
 /**
@@ -377,20 +474,22 @@ export async function ensureHistory(symbol: string): Promise<EnsureHistoryResult
       return { ok: true, symbol, bars: cached };
     }
   } else {
-    // Gap > 3 trading days - fetch recent history and merge
-    console.log(`  🔄 Filling gap for ${symbol} (gap: ${daysSinceLastCache} trading days)...`);
-    const gapStartDate = new Date(lastCachedDate);
-    gapStartDate.setDate(gapStartDate.getDate() - 5); // Fetch a bit before last cached to ensure overlap
-    
+    const plan = planCachedSymbolUpdate({ lastCachedDate, todayUtc: today });
+    console.log(`  🔄 Filling gap for ${symbol} (gap: ${plan.daysSinceLastCache} trading days, ${plan.gapFillStartDate} → ${plan.gapFillEndDate})...`);
     try {
-      const newBars = await fetchEodSeries(symbol, {
-        startDate: gapStartDate.toISOString().split('T')[0]!,
-        limit: 30, // Last ~30 days should cover the gap
-      });
-      
-      const merged = mergeBars(cached, newBars);
+      const fetched = await fetchEodSeriesRange(symbol, plan.gapFillStartDate!, plan.gapFillEndDate!);
+      if (fetched.truncated) {
+        return {
+          ok: false,
+          symbol,
+          reason: `historical gap-fill truncated for ${symbol} (${plan.gapFillStartDate}–${plan.gapFillEndDate})`,
+        };
+      }
+      const merged = mergeBars(cached, fetched.bars);
       saveCachedBars(symbol, merged);
-      console.log(`    ✓ Merged ${newBars.length} new bars, total: ${merged.length}`);
+      console.log(
+        `    ✓ Merged ${fetched.bars.length} fetched bars (${fetched.requestCount} request(s)), total: ${merged.length}`
+      );
       return { ok: true, symbol, bars: merged };
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
@@ -421,9 +520,21 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
   const cachedMap = new Map<string, EodBar[]>();
   const symbolsNeedingBackfill: string[] = [];
   const symbolsNeedingUpdate: string[] = [];
+  const symbolsNeedingGapFill: string[] = [];
   const symbolsNeedingExtension: string[] = [];
   const forceExtend = process.env.MARKETSTACK_FORCE_EXTEND === '1';
-  
+  const todayUtc = new Date().toISOString().split('T')[0]!;
+
+  const queueCachedForwardUpdate = (symbol: string, cached: EodBar[]) => {
+    const lastDate = cached[cached.length - 1]!.date;
+    const plan = planCachedSymbolUpdate({ lastCachedDate: lastDate, todayUtc });
+    if (plan.kind === 'latest') {
+      symbolsNeedingUpdate.push(symbol);
+    } else {
+      symbolsNeedingGapFill.push(symbol);
+    }
+  };
+
   for (const symbol of symbols) {
     const cached = loadCachedBars(symbol);
     if (!cached || cached.length === 0) {
@@ -434,11 +545,7 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
       // Check if cache needs extension (span < CACHE_DAYS)
       // Skip if marked as inception-limited (unless force extend)
       if (isInceptionLimited(symbol, forceExtend)) {
-        // Symbol is inception-limited - skip extension, just update if needed
-        const lastDate = cached[cached.length - 1]!.date;
-        const today = new Date().toISOString().split('T')[0]!;
-        const daysSince = getTradingDaysBetween(lastDate, today);
-        symbolsNeedingUpdate.push(symbol);
+        queueCachedForwardUpdate(symbol, cached);
       } else {
         const earliestCachedDate = cached[0]!.date;
         const latestCachedDate = cached[cached.length - 1]!.date;
@@ -451,17 +558,7 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
           // Cache span is too short - needs extension
           symbolsNeedingExtension.push(symbol);
         } else {
-          // Cache span is sufficient - check if update needed
-          const lastDate = cached[cached.length - 1]!.date;
-          const today = new Date().toISOString().split('T')[0]!;
-          const daysSince = getTradingDaysBetween(lastDate, today);
-          
-          if (daysSince <= 3) {
-            symbolsNeedingUpdate.push(symbol);
-          } else {
-            // Gap too large - will need individual fetch
-            symbolsNeedingUpdate.push(symbol);
-          }
+          queueCachedForwardUpdate(symbol, cached);
         }
       }
     }
@@ -497,7 +594,7 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
       if (knownFloor && extendStartStr < knownFloor) {
         console.log(`      ℹ️  SKIP extend ${symbol}: known floor ${knownFloor}`);
         extendSkippedFloor++;
-        symbolsNeedingUpdate.push(symbol);
+        queueCachedForwardUpdate(symbol, cached);
         continue;
       }
 
@@ -520,8 +617,7 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
           saveEarliestFloor(symbol, earliestCachedDate);
           extendFloorsUpdated++;
           console.log(`      ℹ️  ${symbol} cannot extend earlier than ${earliestCachedDate} (provider limit/inception)`);
-          // Move to update queue since extension is not possible
-          symbolsNeedingUpdate.push(symbol);
+          queueCachedForwardUpdate(symbol, cached);
         } else {
           // Successfully extended
           const merged = mergeBars(olderBars, cached);
@@ -532,6 +628,7 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
           if (extendedCache) {
             cachedMap.set(symbol, extendedCache);
             console.log(`      ✓ Extended: ${olderBars.length} older bars, total: ${extendedCache.length} bars`);
+            queueCachedForwardUpdate(symbol, extendedCache);
           }
         }
       } catch (error) {
@@ -560,6 +657,56 @@ export async function ensureHistoryBatch(symbols: string[]): Promise<Map<string,
     }
   }
   
+  // Historical gap-fill for stale caches (not latest-only batch)
+  if (symbolsNeedingGapFill.length > 0) {
+    console.log(`  📥 Historical gap-fill for ${symbolsNeedingGapFill.length} stale symbol(s) (not included in latest batch)...`);
+    for (const symbol of symbolsNeedingGapFill) {
+      const cached = cachedMap.get(symbol);
+      if (!cached) {
+        const historyResult = await ensureHistory(symbol);
+        if (historyResult.ok && historyResult.bars) {
+          result.set(symbol, historyResult.bars);
+        } else {
+          failures.push(symbol);
+          console.warn(`  ⚠️  Skipping ${symbol}: ${historyResult.reason || 'unavailable'}`);
+        }
+        continue;
+      }
+      const lastDate = cached[cached.length - 1]!.date;
+      const plan = planCachedSymbolUpdate({ lastCachedDate: lastDate, todayUtc });
+      if (plan.kind !== 'stale-gap-fill' || !plan.gapFillStartDate || !plan.gapFillEndDate) {
+        result.set(symbol, cached);
+        continue;
+      }
+      console.log(
+        `    Filling ${symbol} ${plan.gapFillStartDate} → ${plan.gapFillEndDate} (gap ≈ ${plan.daysSinceLastCache} trading days)...`
+      );
+      try {
+        const fetched = await fetchEodSeriesRange(symbol, plan.gapFillStartDate, plan.gapFillEndDate);
+        if (fetched.truncated) {
+          failures.push(symbol);
+          console.warn(
+            `  ⚠️  Skipping ${symbol}: gap-fill truncated; existing cache left unchanged`
+          );
+          result.set(symbol, cached);
+          continue;
+        }
+        const merged = mergeBars(cached, fetched.bars);
+        saveCachedBars(symbol, merged);
+        cachedMap.set(symbol, merged);
+        result.set(symbol, merged);
+        console.log(
+          `      ✓ ${symbol}: fetched ${fetched.bars.length} bars in ${fetched.requestCount} request(s), cache ${cached.length} → ${merged.length}`
+        );
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        failures.push(symbol);
+        console.warn(`  ⚠️  Gap-fill failed for ${symbol}, existing cache left unchanged: ${reason}`);
+        result.set(symbol, cached);
+      }
+    }
+  }
+
   // Batch update symbols with recent cache
   if (symbolsNeedingUpdate.length > 0) {
     console.log(`  📥 Fetching latest for ${symbolsNeedingUpdate.length} symbols...`);

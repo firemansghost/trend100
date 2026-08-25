@@ -158,6 +158,7 @@ function loadCachedBars(symbol: string): EodBar[] | null {
       return null;
     }
     const sanitized = sanitizeCachedEodBars(bars);
+    const sorted = sanitized.bars.sort((a, b) => a.date.localeCompare(b.date));
     if (sanitized.droppedDates.length > 0) {
       const preview =
         sanitized.droppedDates.length <= 8
@@ -166,8 +167,11 @@ function loadCachedBars(symbol: string): EodBar[] | null {
       console.warn(
         `  [cache] ${symbol}: ignored ${sanitized.droppedDates.length} invalid EOD bar(s): ${preview}`
       );
+      // Persist immediately so Actions cache/save archives the clean file even
+      // when Marketstack latest is unchanged. saveCachedBars does not call loadCachedBars.
+      saveCachedBars(symbol, sorted);
     }
-    return sanitized.bars.sort((a, b) => a.date.localeCompare(b.date));
+    return sorted;
   } catch (error) {
     console.warn(`Failed to load cache for ${symbol}:`, error);
     return null;

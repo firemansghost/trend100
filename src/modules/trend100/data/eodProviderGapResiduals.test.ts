@@ -178,3 +178,172 @@ describe('provider residual metadata', () => {
     expect(live.ranges[0]?.start).toBe('2026-05-26');
   });
 });
+
+function reportOnCalendar(args: {
+  symbol: string;
+  referenceDates: string[];
+  missing: string[];
+  windowStart: string;
+  windowEnd: string;
+}): SymbolGapReport {
+  const present = args.referenceDates.filter((d) => !args.missing.includes(d));
+  return auditSymbolGaps({
+    symbol: args.symbol,
+    referenceDates: args.referenceDates,
+    presentDates: present,
+    firstCachedDate: args.referenceDates[0]!,
+    lastCachedDate: args.referenceDates[args.referenceDates.length - 1]!,
+    windowStart: args.windowStart,
+    windowEnd: args.windowEnd,
+  });
+}
+
+describe('provider residual durability vs advancing audit window', () => {
+  it('1: later SPY auditEnd does not expire an unchanged historical residual', () => {
+    const report = reportWithHole('AAA', hole10);
+    expect(
+      classifyReportAgainstResiduals({
+        report,
+        residuals: file,
+        auditStart: '2026-02-18',
+        auditEnd: '2026-08-25',
+      })
+    ).toBe('provider_limited');
+  });
+
+  it('2: later isolated <5-session miss does not invalidate provider evidence', () => {
+    const calendar = [...REF, '2026-09-02', '2026-09-03', '2026-09-04'];
+    const report = reportOnCalendar({
+      symbol: 'AAA',
+      referenceDates: calendar,
+      missing: [...hole10, '2026-09-03'],
+      windowStart: calendar[0]!,
+      windowEnd: calendar[calendar.length - 1]!,
+    });
+    expect(report.longestMissingRun).toBe(10);
+    expect(report.missingDates).toContain('2026-09-03');
+    expect(
+      classifyReportAgainstResiduals({
+        report,
+        residuals: file,
+        auditStart: '2026-02-18',
+        auditEnd: '2026-09-04',
+      })
+    ).toBe('provider_limited');
+  });
+
+  it('3: a new later >=5-session gap is unverified', () => {
+    const later = ['2026-09-08', '2026-09-09', '2026-09-10', '2026-09-11', '2026-09-14'];
+    const calendar = [...REF, ...later];
+    const report = reportOnCalendar({
+      symbol: 'AAA',
+      referenceDates: calendar,
+      missing: [...hole10, ...later],
+      windowStart: calendar[0]!,
+      windowEnd: calendar[calendar.length - 1]!,
+    });
+    expect(report.longestMissingRun).toBe(10);
+    expect(report.missingRanges.some((r) => r.start === '2026-09-08' && r.sessions >= 5)).toBe(true);
+    expect(
+      classifyReportAgainstResiduals({
+        report,
+        residuals: file,
+        auditStart: '2026-02-18',
+        auditEnd: '2026-09-14',
+      })
+    ).toBe('unverified');
+  });
+
+  it('4: earlier auditStart with no extra long gap stays provider limited', () => {
+    const earlier = ['2026-01-05', '2026-01-06', '2026-01-07'];
+    const calendar = [...earlier, ...REF];
+    const report = reportOnCalendar({
+      symbol: 'AAA',
+      referenceDates: calendar,
+      missing: hole10,
+      windowStart: calendar[0]!,
+      windowEnd: calendar[calendar.length - 1]!,
+    });
+    expect(
+      classifyReportAgainstResiduals({
+        report,
+        residuals: file,
+        auditStart: '2026-01-01',
+        auditEnd: '2026-08-24',
+      })
+    ).toBe('provider_limited');
+  });
+
+  it('5: earlier audit window exposing a new >=5-session gap is unverified', () => {
+    const earlierLong = [
+      '2026-01-05',
+      '2026-01-06',
+      '2026-01-07',
+      '2026-01-08',
+      '2026-01-09',
+    ];
+    const calendar = [...earlierLong, ...REF];
+    const report = reportOnCalendar({
+      symbol: 'AAA',
+      referenceDates: calendar,
+      missing: [...earlierLong, ...hole10],
+      windowStart: calendar[0]!,
+      windowEnd: calendar[calendar.length - 1]!,
+    });
+    expect(report.missingRanges.some((r) => r.start === '2026-01-05' && r.sessions >= 5)).toBe(true);
+    expect(
+      classifyReportAgainstResiduals({
+        report,
+        residuals: file,
+        auditStart: '2026-01-01',
+        auditEnd: '2026-08-24',
+      })
+    ).toBe('unverified');
+  });
+
+  it('6: a current long gap must sit inside one recorded range, not the envelope between two', () => {
+    const twoRanges: ProviderGapResidual = {
+      ...residual10,
+      ranges: [
+        { start: '2026-05-26', end: '2026-06-01', sessions: 5 },
+        { start: '2026-06-03', end: '2026-06-08', sessions: 4 },
+      ],
+      postLongestMissingRun: 5,
+      postMissingSessions: 9,
+    };
+    const twoFile = { ...file, residuals: [twoRanges] };
+    const contained = reportWithHole('AAA', [
+      '2026-05-26',
+      '2026-05-27',
+      '2026-05-28',
+      '2026-05-29',
+      '2026-06-01',
+    ]);
+    expect(contained.longestMissingRun).toBe(5);
+    expect(
+      classifyReportAgainstResiduals({
+        report: contained,
+        residuals: twoFile,
+        auditStart: '2026-02-18',
+        auditEnd: '2026-08-25',
+      })
+    ).toBe('provider_limited');
+
+    const spanning = reportWithHole('AAA', [
+      '2026-05-29',
+      '2026-06-01',
+      '2026-06-02',
+      '2026-06-03',
+      '2026-06-04',
+    ]);
+    expect(spanning.longestMissingRun).toBeGreaterThanOrEqual(5);
+    expect(
+      classifyReportAgainstResiduals({
+        report: spanning,
+        residuals: twoFile,
+        auditStart: '2026-02-18',
+        auditEnd: '2026-08-25',
+      })
+    ).toBe('unverified');
+  });
+});

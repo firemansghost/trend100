@@ -111,16 +111,21 @@ export function parseProviderGapResiduals(raw: unknown): ProviderGapResidualsFil
   return file;
 }
 
-export function residualEnvelope(ranges: readonly MissingRange[]): { start: string; end: string } | null {
-  if (ranges.length === 0) return null;
-  const starts = ranges.map((r) => r.start).sort((a, b) => a.localeCompare(b));
-  const ends = ranges.map((r) => r.end).sort((a, b) => a.localeCompare(b));
-  return { start: starts[0]!, end: ends[ends.length - 1]! };
+function recordedRangeCoversCurrent(current: MissingRange, recorded: MissingRange): boolean {
+  return (
+    current.start >= recorded.start &&
+    current.end <= recorded.end &&
+    current.sessions <= recorded.sessions
+  );
 }
 
 /**
- * A live-recorded residual may cover a current long gap only if it is the same
- * symbol and the current hole is the same or strictly narrower (not expanded).
+ * Provider residual evidence applies to recorded historical long-gap ranges.
+ * Isolated <5-session misses and a later-advancing SPY auditEnd do not expire it.
+ * A new/expanded >=5-session range outside any individual recorded range is unverified.
+ *
+ * auditStart/auditEnd/fileAudit* remain on the args object as provenance from
+ * callers; they are not used to expire an otherwise covered residual.
  */
 export function residualExceptionCoversGap(args: {
   report: SymbolGapReport;
@@ -134,19 +139,16 @@ export function residualExceptionCoversGap(args: {
   const min = args.longGapMin ?? DEFAULT_LONG_GAP_MIN_SESSIONS;
   const { report, recorded } = args;
   if (report.symbol !== recorded.symbol) return false;
-  if (report.longestMissingRun < min) return false;
   if (!recorded.observedByLiveRepair) return false;
-  const envelope = residualEnvelope(recorded.ranges);
-  if (!envelope) return false;
-  if (args.auditStart < args.fileAuditStart) return false;
-  if (args.fileAuditEnd && args.auditEnd > args.fileAuditEnd) return false;
-  if (!report.firstMissingDate || !report.lastMissingDate) return false;
-  if (report.firstMissingDate < envelope.start) return false;
-  if (report.lastMissingDate > envelope.end) return false;
-  if (report.missingSessions > recorded.postMissingSessions) return false;
+  if (recorded.ranges.length === 0) return false;
+  const currentLongRanges = report.missingRanges.filter((r) => r.sessions >= min);
+  if (currentLongRanges.length === 0) return false;
   if (report.longestMissingRun > recorded.postLongestMissingRun) return false;
-  for (const range of report.missingRanges.filter((r) => r.sessions >= min)) {
-    if (range.start < envelope.start || range.end > envelope.end) return false;
+  for (const currentRange of currentLongRanges) {
+    const covered = recorded.ranges.some((recordedRange) =>
+      recordedRangeCoversCurrent(currentRange, recordedRange)
+    );
+    if (!covered) return false;
   }
   return true;
 }

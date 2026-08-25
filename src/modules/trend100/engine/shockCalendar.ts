@@ -4,8 +4,8 @@
  * Shock calendar (this module): a date is a shock session only if SPY has a
  * close AND at least minAssetsTarget recent-universe symbols have closes.
  *
- * Shock calculation acceptance remains a separate policy (currently floor-6
- * via minForDate in update-turbulence-shock.ts) until a later audit.
+ * ShockRaw acceptance is a separate check on the 20/60-eligible set, also
+ * gated at minAssetsTarget (see hasEnoughShockAssets).
  */
 
 import { isUsableEodClose } from '../data/providers/eodClose';

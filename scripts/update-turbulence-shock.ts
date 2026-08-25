@@ -8,9 +8,9 @@
  * (finite and > 0) AND at least MIN_ASSETS_TARGET recent-universe symbols have
  * usable closes. Returns use adjacent *qualified* dates.
  *
- * Shock calculation acceptance: still the existing floor-6 minForDate policy
- * TEMPORARILY. MIN_ASSETS_TARGET is NOT fully enforced on shockRaw until a
- * post-calendar audit. Do not treat minAssetsEffective as a hard gate.
+ * ShockRaw: computed only when the eligible correlation universe
+ * (validSymbols, 20/60 windows) has length >= MIN_ASSETS_TARGET (hard 8).
+ * No floor-6 fallback and no dynamic minAssetsEffective threshold.
  *
  * Env:
  * - TURBULENCE_SHOCK_START (optional; default "2019-10-01")
@@ -23,6 +23,7 @@ import { join } from 'path';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
 import { sanitizeCachedEodBars } from '../src/modules/trend100/data/providers/eodClose';
 import { getDeck } from '../src/modules/trend100/data/decks';
+import { hasEnoughShockAssets } from '../src/modules/trend100/engine/shockAssets';
 import {
   buildQualifiedShockCalendar,
   isShockCalendarClose,
@@ -49,7 +50,7 @@ const SHORT_WINDOW = 20;
 const LONG_WINDOW = 60;
 const TRAILING_Z_WINDOW = 252;
 const MIN_ASSETS_FLOOR = 6;
-/** Calendar qualification uses this as the participation floor (SPY + >= this many closes). */
+/** Calendar participation and eligible correlation universe (shockRaw) both require this many names. */
 const MIN_ASSETS_TARGET = 8;
 const RECENT_WINDOW_DAYS = 7;
 const MIN_Z_POINTS = 100;
@@ -180,13 +181,8 @@ function main() {
     const lastBarDate = bars[bars.length - 1]!.date;
     return Math.abs(daysBetween(lastBarDate, maxDate)) <= RECENT_WINDOW_DAYS;
   });
-  const minAssetsEffective = Math.max(
-    MIN_ASSETS_FLOOR,
-    Math.min(MIN_ASSETS_TARGET, recentUniverse.length)
-  );
-
   console.log(`Recent universe (${recentUniverse.length}): ${recentUniverse.join(', ')}`);
-  console.log(`minAssetsEffective: ${minAssetsEffective} (logged only; shockRaw still uses floor-6 minForDate)`);
+  console.log(`MIN_ASSETS_TARGET=${MIN_ASSETS_TARGET} (calendar participation and shockRaw eligible universe)`);
 
   const allDates = new Set<string>();
   for (const bars of barsBySymbol.values()) {
@@ -269,11 +265,8 @@ function main() {
     const excluded = recentUniverse.filter((s) => !validSymbols.includes(s));
     const nCloses = symbolsWithCloseByDate.get(date)?.size ?? 0;
 
-    // ShockRaw acceptance: TEMPORARY floor-6 policy (minForDate tautology for n>=6).
-    // Calendar already required SPY + >= MIN_ASSETS_TARGET closes. Do not treat this
-    // as enforcing MIN_ASSETS_TARGET on the correlation universe yet.
-    const minForDate = Math.max(MIN_ASSETS_FLOOR, Math.min(MIN_ASSETS_TARGET, validSymbols.length));
-    const shockRawNull = validSymbols.length < minForDate;
+    // ShockRaw: hard MIN_ASSETS_TARGET on the 20/60-eligible set (not calendar closes).
+    const shockRawNull = !hasEnoughShockAssets(validSymbols.length, MIN_ASSETS_TARGET);
     eligibilityRows.push({
       date,
       idx,

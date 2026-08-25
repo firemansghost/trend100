@@ -4,6 +4,14 @@
  * Computes a proxy "covariance/correlation shock" metric using US_SECTORS ETF universe.
  * Uses EOD cache data; writes public/turbulence.shock.json for Turbulence Model alignment (PR9).
  *
+ * Shock calendar: a session is included only if SPY has a close AND at least
+ * MIN_ASSETS_TARGET recent-universe symbols have closes. Returns use adjacent
+ * *qualified* dates so sparse union-only prints cannot null out 60-day windows.
+ *
+ * Shock calculation acceptance: still the existing floor-6 minForDate policy
+ * TEMPORARILY. MIN_ASSETS_TARGET is NOT fully enforced on shockRaw until a
+ * post-calendar audit. Do not treat minAssetsEffective as a hard gate.
+ *
  * Env:
  * - TURBULENCE_SHOCK_START (optional; default "2019-10-01")
  */
@@ -14,6 +22,11 @@ import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
 import { getDeck } from '../src/modules/trend100/data/decks';
+import {
+  buildQualifiedShockCalendar,
+  logReturnsOnQualifiedDates,
+  SHOCK_CALENDAR_SPY_SYMBOL,
+} from '../src/modules/trend100/engine/shockCalendar';
 
 const EOD_CACHE_DIR = join(process.cwd(), 'data', 'marketstack', 'eod');
 const SHOCK_UNIVERSE_FALLBACK = [
@@ -24,6 +37,7 @@ const SHORT_WINDOW = 20;
 const LONG_WINDOW = 60;
 const TRAILING_Z_WINDOW = 252;
 const MIN_ASSETS_FLOOR = 6;
+/** Calendar qualification uses this as the participation floor (SPY + >= this many closes). */
 const MIN_ASSETS_TARGET = 8;
 const RECENT_WINDOW_DAYS = 7;
 const MIN_Z_POINTS = 100;
@@ -159,7 +173,7 @@ function main() {
   );
 
   console.log(`Recent universe (${recentUniverse.length}): ${recentUniverse.join(', ')}`);
-  console.log(`minAssetsEffective: ${minAssetsEffective}`);
+  console.log(`minAssetsEffective: ${minAssetsEffective} (logged only; shockRaw still uses floor-6 minForDate)`);
 
   const allDates = new Set<string>();
   for (const bars of barsBySymbol.values()) {
@@ -167,43 +181,51 @@ function main() {
       if (b.date >= start) allDates.add(b.date);
     }
   }
-  const dates = [...allDates].sort();
+  const unionDates = [...allDates].sort();
 
-  const closeByDate = new Map<string, Map<string, number>>();
+  const symbolsWithCloseByDate = new Map<string, Set<string>>();
   for (const sym of recentUniverse) {
     const bars = barsBySymbol.get(sym)!;
     for (const b of bars) {
       if (b.date < start) continue;
-      let m = closeByDate.get(b.date);
-      if (!m) {
-        m = new Map();
-        closeByDate.set(b.date, m);
+      let present = symbolsWithCloseByDate.get(b.date);
+      if (!present) {
+        present = new Set();
+        symbolsWithCloseByDate.set(b.date, present);
       }
-      m.set(sym, b.close);
+      present.add(sym);
     }
   }
 
-  const dateIndex = new Map<string, number>();
-  dates.forEach((d, i) => dateIndex.set(d, i));
+  const calendar = buildQualifiedShockCalendar({
+    unionDates,
+    symbolsWithCloseByDate,
+    recentUniverse,
+    minAssetsTarget: MIN_ASSETS_TARGET,
+    spySymbol: SHOCK_CALENDAR_SPY_SYMBOL,
+  });
+  const dates = calendar.qualifiedDates;
+  const discardedSince2023 = calendar.discarded.filter((d) => d.date >= '2023-01-01');
+
+  console.log(`Shock calendar: union=${calendar.unionDates.length} qualified=${dates.length} discarded=${calendar.discarded.length}`);
+  console.log(`Latest qualified date: ${dates[dates.length - 1] ?? 'n/a'}`);
+  if (discardedSince2023.length > 0) {
+    const preview = discardedSince2023.length > 24 ? discardedSince2023.slice(-24) : discardedSince2023;
+    console.log(
+      `Discarded union/low-participation dates since 2023: ${discardedSince2023.length} (showing ${preview.length})`
+    );
+    for (const d of preview) {
+      console.log(
+        `  ${d.date} nCloses=${d.symbolCount} spyClose=${d.spyHadClose ? 'yes' : 'no'}`
+      );
+    }
+  }
 
   const returnsBySymbol = new Map<string, (number | null)[]>();
   for (const sym of recentUniverse) {
     const bars = barsBySymbol.get(sym)!;
-    const arr: (number | null)[] = new Array(dates.length).fill(null);
     const closeMap = new Map(bars.map((b) => [b.date, b.close]));
-    for (let i = 0; i < dates.length; i++) {
-      const d = dates[i]!;
-      const prevIdx = dateIndex.get(d) ?? 0;
-      if (prevIdx === 0) continue;
-      const prevDate = dates[prevIdx - 1];
-      if (!prevDate) continue;
-      const close = closeMap.get(d);
-      const prevClose = closeMap.get(prevDate);
-      if (close != null && prevClose != null && prevClose > 0) {
-        arr[i] = Math.log(close / prevClose);
-      }
-    }
-    returnsBySymbol.set(sym, arr);
+    returnsBySymbol.set(sym, logReturnsOnQualifiedDates(dates, closeMap));
   }
 
   const points: ShockPoint[] = [];
@@ -231,6 +253,9 @@ function main() {
       }
     }
 
+    // ShockRaw acceptance: TEMPORARY floor-6 policy (minForDate tautology for n>=6).
+    // Calendar already required SPY + >= MIN_ASSETS_TARGET closes. Do not treat this
+    // as enforcing MIN_ASSETS_TARGET on the correlation universe yet.
     const minForDate = Math.max(MIN_ASSETS_FLOOR, Math.min(MIN_ASSETS_TARGET, validSymbols.length));
     if (validSymbols.length < minForDate) {
       points.push({
@@ -311,6 +336,12 @@ function main() {
   console.log(`   shockZ: ${nonNullZ} non-null (${pctNullZ.toFixed(1)}% null)`);
   if (minRaw != null && maxRaw != null) {
     console.log(`   shockRaw range: ${minRaw.toFixed(4)} to ${maxRaw.toFixed(4)}`);
+  }
+  const lastRow = trimmedPoints[trimmedPoints.length - 1];
+  if (lastRow) {
+    console.log(
+      `   Latest shock row: date=${lastRow.date} nAssets=${lastRow.nAssets} nPairs=${lastRow.nPairs} shockRaw=${lastRow.shockRaw ?? 'null'} shockZ=${lastRow.shockZ ?? 'null'}`
+    );
   }
 }
 

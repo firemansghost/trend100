@@ -179,10 +179,86 @@ export function existingDatesPreserved(
   return existingDates.every((d) => merged.has(d));
 }
 
-export function fetchedCoversMissingSessions(
+export function fetchedOverlapsMissingSessions(
   fetchedDates: readonly string[],
   missingDates: readonly string[]
 ): boolean {
   const got = new Set(fetchedDates);
-  return missingDates.every((d) => got.has(d));
+  return missingDates.some((d) => got.has(d));
+}
+
+export type StagedPostMergeVerdict = {
+  resolvable: boolean;
+  reason: string;
+  post: SymbolGapReport;
+};
+
+/**
+ * Simulate merging fetched usable dates into existing cache and re-audit.
+ * Resolvable iff post longestMissingRun < longGapMin and the fetch meaningfully
+ * improves coverage. Isolated remaining misses (e.g. 2026-06-04) are OK.
+ */
+export function evaluateStagedPostMerge(args: {
+  symbol: string;
+  referenceDates: readonly string[];
+  windowStart: string;
+  windowEnd: string;
+  existingDates: readonly string[];
+  fetchedBars: readonly UsableBar[];
+  truncated: boolean;
+  firstCachedDate: string | null;
+  lastCachedDate: string | null;
+  pre: SymbolGapReport;
+  longGapMin?: number;
+}): StagedPostMergeVerdict {
+  const longGapMin = args.longGapMin ?? DEFAULT_LONG_GAP_MIN_SESSIONS;
+  const fail = (reason: string, post: SymbolGapReport): StagedPostMergeVerdict => ({
+    resolvable: false,
+    reason,
+    post,
+  });
+
+  const placeholderPost = args.pre;
+  if (args.truncated) return fail('fetch truncated', placeholderPost);
+
+  const fetchedDates = usableBarDates(args.fetchedBars);
+  if (fetchedDates.length === 0) return fail('empty fetch after sanitize', placeholderPost);
+
+  const mergedDates = [...new Set([...args.existingDates, ...fetchedDates])].sort((a, b) =>
+    a.localeCompare(b)
+  );
+  if (!existingDatesPreserved(args.existingDates, mergedDates)) {
+    return fail('merge would drop neighboring history', placeholderPost);
+  }
+  if (!fetchedOverlapsMissingSessions(fetchedDates, args.pre.missingDates)) {
+    return fail('fetched data does not overlap the original long-gap window', placeholderPost);
+  }
+
+  const post = auditSymbolGaps({
+    symbol: args.symbol,
+    referenceDates: args.referenceDates,
+    presentDates: mergedDates,
+    firstCachedDate: args.firstCachedDate ?? mergedDates[0] ?? null,
+    lastCachedDate: mergedDates[mergedDates.length - 1] ?? args.lastCachedDate,
+    windowStart: args.windowStart,
+    windowEnd: args.windowEnd,
+  });
+
+  const longGapEliminated = post.longestMissingRun < longGapMin;
+  if (!longGapEliminated) {
+    return fail(
+      `simulated longestMissingRun=${post.longestMissingRun} still >= ${longGapMin}`,
+      post
+    );
+  }
+  const missingImproved = post.missingSessions < args.pre.missingSessions;
+  if (!missingImproved && post.longestMissingRun >= args.pre.longestMissingRun) {
+    return fail('fetch does not improve original long gap', post);
+  }
+
+  return {
+    resolvable: true,
+    reason: `longestMissingRun ${args.pre.longestMissingRun} -> ${post.longestMissingRun}`,
+    post,
+  };
 }

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   auditSymbolGaps,
   existingDatesPreserved,
-  fetchedCoversMissingSessions,
+  evaluateStagedPostMerge,
   fetchWindowForMissingRanges,
   isLongGapCandidate,
   selectLongGapCandidates,
@@ -147,15 +147,192 @@ describe('repair window helpers', () => {
     ).toEqual({ start: '2026-02-22', end: '2026-03-17' });
   });
 
-  it('requires fetched dates to cover every missing session', () => {
-    expect(fetchedCoversMissingSessions(['2026-02-24', '2026-02-25'], ['2026-02-24', '2026-02-25'])).toBe(
-      true
-    );
-    expect(fetchedCoversMissingSessions(['2026-02-24'], ['2026-02-24', '2026-02-25'])).toBe(false);
-  });
-
   it('requires existing dates to survive a merge', () => {
     expect(existingDatesPreserved(['a', 'b'], ['a', 'b', 'c'])).toBe(true);
     expect(existingDatesPreserved(['a', 'b'], ['a', 'c'])).toBe(false);
+  });
+});
+
+const REF10 = [
+  '2026-02-18',
+  '2026-02-19',
+  '2026-02-20',
+  '2026-02-21',
+  '2026-02-24',
+  '2026-02-25',
+  '2026-02-26',
+  '2026-02-27',
+  '2026-02-28',
+  '2026-03-03',
+];
+
+function preOnlyStart(symbol = 'AAA') {
+  const existing = [REF10[0]!];
+  return {
+    existing,
+    pre: auditSymbolGaps({
+      symbol,
+      referenceDates: REF10,
+      presentDates: existing,
+      firstCachedDate: existing[0]!,
+      lastCachedDate: existing[0]!,
+      windowStart: REF10[0]!,
+      windowEnd: REF10[9]!,
+    }),
+  };
+}
+
+describe('evaluateStagedPostMerge', () => {
+  it('accepts a fill that leaves one isolated missing session', () => {
+    const { existing, pre } = preOnlyStart();
+    expect(pre.longestMissingRun).toBeGreaterThanOrEqual(5);
+    const isolated = REF10[4]!;
+    const fetched = REF10.filter((d) => d !== isolated).map((date) => ({
+      date,
+      close: 10,
+    }));
+    const v = evaluateStagedPostMerge({
+      symbol: 'AAA',
+      referenceDates: REF10,
+      windowStart: REF10[0]!,
+      windowEnd: REF10[9]!,
+      existingDates: existing,
+      fetchedBars: fetched,
+      truncated: false,
+      firstCachedDate: existing[0]!,
+      lastCachedDate: existing[0]!,
+      pre,
+    });
+    expect(v.resolvable).toBe(true);
+    expect(v.post.longestMissingRun).toBe(1);
+  });
+
+  it('accepts remaining four consecutive missing sessions', () => {
+    const { existing, pre } = preOnlyStart();
+    const fetched = REF10.slice(0, 6).map((date) => ({ date, close: 10 }));
+    const v = evaluateStagedPostMerge({
+      symbol: 'AAA',
+      referenceDates: REF10,
+      windowStart: REF10[0]!,
+      windowEnd: REF10[9]!,
+      existingDates: existing,
+      fetchedBars: fetched,
+      truncated: false,
+      firstCachedDate: existing[0]!,
+      lastCachedDate: existing[0]!,
+      pre,
+    });
+    expect(v.post.longestMissingRun).toBe(4);
+    expect(v.resolvable).toBe(true);
+  });
+
+  it('rejects remaining five consecutive missing sessions', () => {
+    const { existing, pre } = preOnlyStart();
+    const fetched = REF10.slice(0, 5).map((date) => ({ date, close: 10 }));
+    const v = evaluateStagedPostMerge({
+      symbol: 'AAA',
+      referenceDates: REF10,
+      windowStart: REF10[0]!,
+      windowEnd: REF10[9]!,
+      existingDates: existing,
+      fetchedBars: fetched,
+      truncated: false,
+      firstCachedDate: existing[0]!,
+      lastCachedDate: existing[0]!,
+      pre,
+    });
+    expect(v.post.longestMissingRun).toBe(5);
+    expect(v.resolvable).toBe(false);
+  });
+
+  it('rejects a fetch that does not improve the original long gap', () => {
+    const { existing, pre } = preOnlyStart();
+    const v = evaluateStagedPostMerge({
+      symbol: 'AAA',
+      referenceDates: REF10,
+      windowStart: REF10[0]!,
+      windowEnd: REF10[9]!,
+      existingDates: existing,
+      fetchedBars: [{ date: existing[0]!, close: 10 }],
+      truncated: false,
+      firstCachedDate: existing[0]!,
+      lastCachedDate: existing[0]!,
+      pre,
+    });
+    expect(v.resolvable).toBe(false);
+  });
+
+  it('does not count invalid zero closes as coverage', () => {
+    const { existing, pre } = preOnlyStart();
+    const fetched = REF10.map((date, i) => ({
+      date,
+      close: i === 4 ? 0 : 10,
+    }));
+    const v = evaluateStagedPostMerge({
+      symbol: 'AAA',
+      referenceDates: REF10,
+      windowStart: REF10[0]!,
+      windowEnd: REF10[9]!,
+      existingDates: existing,
+      fetchedBars: fetched,
+      truncated: false,
+      firstCachedDate: existing[0]!,
+      lastCachedDate: existing[0]!,
+      pre,
+    });
+    expect(v.post.missingDates).toContain(REF10[4]);
+    expect(v.resolvable).toBe(true);
+    expect(v.post.longestMissingRun).toBe(1);
+  });
+
+  it('preserves existing valid dates in the simulated merge', () => {
+    const existing = [REF10[0]!, REF10[9]!];
+    const pre = auditSymbolGaps({
+      symbol: 'AAA',
+      referenceDates: REF10,
+      presentDates: existing,
+      firstCachedDate: existing[0]!,
+      lastCachedDate: existing[1]!,
+      windowStart: REF10[0]!,
+      windowEnd: REF10[9]!,
+    });
+    const fetched = REF10.slice(1, 9).map((date) => ({ date, close: 10 }));
+    const v = evaluateStagedPostMerge({
+      symbol: 'AAA',
+      referenceDates: REF10,
+      windowStart: REF10[0]!,
+      windowEnd: REF10[9]!,
+      existingDates: existing,
+      fetchedBars: fetched,
+      truncated: false,
+      firstCachedDate: existing[0]!,
+      lastCachedDate: existing[1]!,
+      pre,
+    });
+    expect(v.resolvable).toBe(true);
+    expect(v.post.presentSessions).toBe(REF10.length);
+  });
+
+  it('accepts a remaining isolated June-4-like miss after merge', () => {
+    const { existing, pre } = preOnlyStart('GLD');
+    const june4Like = REF10[4]!;
+    const fetched = REF10.filter((d) => d !== june4Like).map((date) => ({
+      date,
+      close: 180,
+    }));
+    const v = evaluateStagedPostMerge({
+      symbol: 'GLD',
+      referenceDates: REF10,
+      windowStart: REF10[0]!,
+      windowEnd: REF10[9]!,
+      existingDates: existing,
+      fetchedBars: fetched,
+      truncated: false,
+      firstCachedDate: existing[0]!,
+      lastCachedDate: existing[0]!,
+      pre,
+    });
+    expect(v.resolvable).toBe(true);
+    expect(v.post.missingDates).toEqual([june4Like]);
   });
 });

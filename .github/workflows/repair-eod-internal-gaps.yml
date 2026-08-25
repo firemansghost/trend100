@@ -1,4 +1,5 @@
 # Manual-only. Does not deploy. Does not rebuild health-history.
+# Partial EOD repair may save LKG even when the job later fails completeness.
 name: Repair EOD Internal Gaps
 
 on:
@@ -8,6 +9,16 @@ on:
         description: 'When false: audit only, zero provider calls. When true: fetch and repair bounded internal gaps for audited long-gap candidates.'
         type: boolean
         default: false
+      confirm_repair:
+        description: 'Required when repair=true. Enter REPAIR exactly.'
+        type: string
+        required: false
+        default: ''
+      max_ticker_units:
+        description: 'Hard provider-call cap. Repair refuses to fetch if candidate count exceeds this value.'
+        type: string
+        required: false
+        default: '0'
       start_date:
         description: 'Audit/repair window start (SPY session calendar)'
         required: false
@@ -83,11 +94,36 @@ jobs:
           START_DATE: ${{ github.event.inputs.start_date || '2026-02-18' }}
         run: pnpm exec tsx scripts/audit-marketstack-eod-gaps.ts -- --start "${START_DATE}"
 
+      - name: Confirm repair quota (no Marketstack)
+        if: github.event.inputs.repair == 'true'
+        env:
+          CONFIRM_REPAIR: ${{ github.event.inputs.confirm_repair }}
+          MAX_TICKER_UNITS: ${{ github.event.inputs.max_ticker_units }}
+        run: |
+          set -euo pipefail
+          if [ "${CONFIRM_REPAIR}" != "REPAIR" ]; then
+            echo "repair=true requires confirm_repair=REPAIR exactly."
+            echo "Refusing before any Marketstack call."
+            exit 1
+          fi
+          if ! [[ "${MAX_TICKER_UNITS}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "repair=true requires max_ticker_units to be a positive integer (got '${MAX_TICKER_UNITS}')."
+            echo "Refusing before any Marketstack call."
+            exit 1
+          fi
+          echo "confirm_repair=REPAIR"
+          echo "max_ticker_units=${MAX_TICKER_UNITS}"
+          echo "Candidate count vs cap is enforced again in the repair script before fetch."
+
       - name: Repair long internal gaps (Marketstack only)
+        id: repair
         if: github.event.inputs.repair == 'true'
         env:
           MARKETSTACK_API_KEY: ${{ secrets.MARKETSTACK_API_KEY }}
           START_DATE: ${{ github.event.inputs.start_date || '2026-02-18' }}
+          CONFIRM_REPAIR: ${{ github.event.inputs.confirm_repair }}
+          MAX_TICKER_UNITS: ${{ github.event.inputs.max_ticker_units }}
+          EOD_GAP_REPAIR_RESULT_JSON: /tmp/eod-gap-repair-result.json
         run: |
           set -euo pipefail
           if [ -z "${MARKETSTACK_API_KEY:-}" ]; then
@@ -95,11 +131,22 @@ jobs:
             exit 1
           fi
           echo "MARKETSTACK_API_KEY: set (value not printed)"
-          pnpm exec tsx scripts/repair-marketstack-eod-gaps.ts -- --start "${START_DATE}"
+          pnpm exec tsx scripts/repair-marketstack-eod-gaps.ts -- --start "${START_DATE}" --confirm-repair "${CONFIRM_REPAIR}" --max-ticker-units "${MAX_TICKER_UNITS}" --result-json "${EOD_GAP_REPAIR_RESULT_JSON}"
 
       - name: Save Marketstack EOD cache
-        if: success() && github.event.inputs.repair == 'true'
+        if: success() && github.event.inputs.repair == 'true' && steps.repair.outputs.merged == 'true'
         uses: actions/cache/save@v5
         with:
           path: data/marketstack/eod
           key: ${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}
+
+      - name: Completeness gate (long gaps remaining)
+        if: github.event.inputs.repair == 'true' && steps.repair.outcome == 'success'
+        env:
+          START_DATE: ${{ github.event.inputs.start_date || '2026-02-18' }}
+          MARKETSTACK_OFFLINE: '1'
+        run: |
+          set -euo pipefail
+          echo "A red completeness gate can still follow a successful EOD LKG save of validated partial repair."
+          echo "Health-history integrity repair remains blocked until symbolsWithLongGap=0."
+          pnpm exec tsx scripts/audit-marketstack-eod-gaps.ts -- --start "${START_DATE}" --fail-on-long-gap

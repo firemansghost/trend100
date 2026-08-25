@@ -74,7 +74,8 @@ function main() {
     const valid = pts.filter((p) => p.regimeLabel && p.regimeLabel !== 'UNKNOWN');
     const unknown = pts.filter((p) => p.regimeLabel === 'UNKNOWN');
     const firstValid = valid[0]?.date ?? null;
-    const suspicious = unknown.filter((p) => isPolicyImpossibleStaleUnknown(p)).length;
+    const suspiciousRows = unknown.filter((p) => isPolicyImpossibleStaleUnknown(p));
+    const suspicious = suspiciousRows.length;
     suspiciousTotal += suspicious;
     const gap = longestGapAfter(
       pts.map((p) => p.date),
@@ -93,6 +94,14 @@ function main() {
         `longestGapAfter_${GAP_AFTER}=${gap ? `${gap.days}d (${gap.from} -> ${gap.to})` : 'n/a'}`,
       ].join(' ')
     );
+    if (suspiciousRows.length > 0) {
+      console.log(`${key} suspicious:`);
+      for (const p of suspiciousRows) {
+        console.log(
+          `  ${p.date} known=${p.knownCount ?? 'n/a'} eligible=${p.eligibleCount ?? 'n/a'} total=${p.totalTickers ?? 'n/a'}`
+        );
+      }
+    }
   }
   console.log(`suspiciousStaleUnknown_total=${suspiciousTotal}`);
   if (shouldFailIntegrityReport(suspiciousTotal, failOnSuspicious)) {

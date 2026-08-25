@@ -9,3 +9,8 @@ export type { TrendInputs, TrendStatus as EngineTrendStatus } from './classifyTr
 export { computeHealthScore } from './healthScore';
 export type { HealthScoreInput, HealthScoreOutput } from './healthScore';
 export { calcSMA, calcEMA, resampleDailyToWeekly } from './movingAverages';
+export {
+  buildTurbulenceGatePoints,
+  computeSpxDmaByDate,
+} from './turbulenceGates';
+export type { TurbulenceGatePoint } from './turbulenceGates';

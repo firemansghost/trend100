@@ -20,15 +20,10 @@ import './load-env';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { fetchEodSeries, type EodBar } from '../src/modules/trend100/data/providers/marketstack';
-
-interface TurbulenceGatePoint {
-  date: string;
-  spx: number | null;
-  spx50dma: number | null;
-  spxAbove50dma: boolean | null;
-  vix: number | null;
-  vixBelow25: boolean | null;
-}
+import {
+  buildTurbulenceGatePoints,
+  computeSpxDmaByDate,
+} from '../src/modules/trend100/engine/turbulenceGates';
 
 const GATES_OUT_PATH = join(process.cwd(), 'public', 'turbulence.gates.json');
 /** Min rows for existing file to count as structurally usable fallback. */
@@ -144,27 +139,6 @@ async function fetchIndexClosesChunked(
   return byDate;
 }
 
-function computeSpx50dma(
-  dates: string[],
-  spxByDate: Map<string, number>
-): Map<string, number> {
-  const result = new Map<string, number>();
-  const sortedDates = [...dates].sort();
-  const validSpx: { date: string; value: number }[] = [];
-
-  for (const date of sortedDates) {
-    const spx = spxByDate.get(date);
-    if (spx !== undefined) validSpx.push({ date, value: spx });
-
-    if (validSpx.length >= 50) {
-      const window = validSpx.slice(-50);
-      const avg = window.reduce((s, p) => s + p.value, 0) / 50;
-      result.set(date, avg);
-    }
-  }
-  return result;
-}
-
 function getFallbackMaxStalenessDays(): number {
   const raw = process.env.TURBULENCE_GATES_FALLBACK_MAX_STALENESS_DAYS;
   const n = raw != null && raw !== '' ? parseInt(raw, 10) : 60;
@@ -240,26 +214,39 @@ async function main() {
         (spxOnly || vixOnly ? `; omitted SPX-only=${spxOnly} VIX-only=${vixOnly}` : '')
     );
 
-    const spx50dmaByDate = computeSpx50dma(commonDates, spxMap);
+    const spxDates = [...spxMap.keys()].sort();
+    const fullDma = computeSpxDmaByDate(spxMap);
+    const commonOnlySpx = new Map<string, number>();
+    for (const d of commonDates) {
+      const v = spxMap.get(d);
+      if (v !== undefined) commonOnlySpx.set(d, v);
+    }
+    const buggyDma = computeSpxDmaByDate(commonOnlySpx);
+    let dmaChanged = 0;
+    let dmaMaxAbs = 0;
+    const booleanFlipDates: string[] = [];
+    for (const date of commonDates) {
+      const full = fullDma.get(date);
+      const buggy = buggyDma.get(date);
+      if (full === buggy) continue;
+      dmaChanged += 1;
+      if (full != null && buggy != null) {
+        dmaMaxAbs = Math.max(dmaMaxAbs, Math.abs(full - buggy));
+      }
+      const spx = spxMap.get(date);
+      const fullAbove = spx != null && full != null ? spx > full : null;
+      const buggyAbove = spx != null && buggy != null ? spx > buggy : null;
+      if (fullAbove !== buggyAbove) booleanFlipDates.push(date);
+    }
+    console.log(
+      `   SPX dates used for 50-DMA: ${spxDates.length} (full series, not VIX-aligned)`
+    );
+    console.log(
+      `   50DMA vs common-date-only window: changedRows=${dmaChanged} maxAbsDiff=${dmaMaxAbs} booleanFlips=${booleanFlipDates.length}` +
+        (booleanFlipDates.length ? ` dates=${booleanFlipDates.join(',')}` : '')
+    );
 
-    const points: TurbulenceGatePoint[] = commonDates.map((date) => {
-      const spx = spxMap.get(date) ?? null;
-      const spx50dma = spx50dmaByDate.get(date) ?? null;
-      const vix = vixMap.get(date) ?? null;
-
-      const spxAbove50dma =
-        spx !== null && spx50dma !== null ? spx > spx50dma : null;
-      const vixBelow25 = vix !== null ? vix < 25 : null;
-
-      return {
-        date,
-        spx,
-        spx50dma,
-        spxAbove50dma,
-        vix,
-        vixBelow25,
-      };
-    });
+    const points = buildTurbulenceGatePoints(spxMap, vixMap);
 
     writeFileSync(GATES_OUT_PATH, JSON.stringify(points, null, 2), 'utf-8');
 

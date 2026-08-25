@@ -1450,7 +1450,7 @@
   {
     "date": "2026-03-17",
     "spx": 6716.09,
-    "spx50dma": 6881.54818,
+    "spx50dma": 6878.366376,
     "spxAbove50dma": false,
     "vix": 22.37,
     "vixBelow25": true
@@ -1458,7 +1458,7 @@
   {
     "date": "2026-03-18",
     "spx": 6624.7,
-    "spx50dma": 6876.872776,
+    "spx50dma": 6872.819380000001,
     "spxAbove50dma": false,
     "vix": 25.09,
     "vixBelow25": false
@@ -1466,7 +1466,7 @@
   {
     "date": "2026-03-19",
     "spx": 6606.49,
-    "spx50dma": 6870.96158,
+    "spx50dma": 6866.052784,
     "spxAbove50dma": false,
     "vix": 24.06,
     "vixBelow25": true
@@ -1474,7 +1474,7 @@
   {
     "date": "2026-03-20",
     "spx": 6506.48,
-    "spx50dma": 6862.194784,
+    "spx50dma": 6857.763780000001,
     "spxAbove50dma": false,
     "vix": 26.78,
     "vixBelow25": false
@@ -1482,7 +1482,7 @@
   {
     "date": "2026-03-23",
     "spx": 6581,
-    "spx50dma": 6855.396180000002,
+    "spx50dma": 6850.954580000001,
     "spxAbove50dma": false,
     "vix": 26.15,
     "vixBelow25": false
@@ -1490,7 +1490,7 @@
   {
     "date": "2026-03-24",
     "spx": 6556.3701,
-    "spx50dma": 6848.094382000001,
+    "spx50dma": 6842.756386000001,
     "spxAbove50dma": false,
     "vix": 26.95,
     "vixBelow25": false
@@ -1498,7 +1498,7 @@
   {
     "date": "2026-03-25",
     "spx": 6591.8999,
-    "spx50dma": 6840.6067840000005,
+    "spx50dma": 6835.048984000001,
     "spxAbove50dma": false,
     "vix": 25.33,
     "vixBelow25": false
@@ -1506,7 +1506,7 @@
   {
     "date": "2026-03-26",
     "spx": 6477.1602,
-    "spx50dma": 6830.604588,
+    "spx50dma": 6825.317384,
     "spxAbove50dma": false,
     "vix": 27.44,
     "vixBelow25": false
@@ -1514,7 +1514,7 @@
   {
     "date": "2026-03-27",
     "spx": 6368.8501,
-    "spx50dma": 6818.706786,
+    "spx50dma": 6814.162384,
     "spxAbove50dma": false,
     "vix": 31.05,
     "vixBelow25": false
@@ -1522,7 +1522,7 @@
   {
     "date": "2026-03-30",
     "spx": 6343.7202,
-    "spx50dma": 6807.049188,
+    "spx50dma": 6802.147384,
     "spxAbove50dma": false,
     "vix": 30.61,
     "vixBelow25": false
@@ -1530,7 +1530,7 @@
   {
     "date": "2026-03-31",
     "spx": 6528.52,
-    "spx50dma": 6798.730184000001,
+    "spx50dma": 6793.917587999999,
     "spxAbove50dma": false,
     "vix": 25.25,
     "vixBelow25": false
@@ -1538,7 +1538,7 @@
   {
     "date": "2026-04-01",
     "spx": 6575.3198,
-    "spx50dma": 6791.436384,
+    "spx50dma": 6789.4867859999995,
     "spxAbove50dma": false,
     "vix": 24.54,
     "vixBelow25": true
@@ -1546,7 +1546,7 @@
   {
     "date": "2026-04-02",
     "spx": 6582.6899,
-    "spx50dma": 6787.1529839999985,
+    "spx50dma": 6783.628181999999,
     "spxAbove50dma": false,
     "vix": 23.87,
     "vixBelow25": true
@@ -1554,7 +1554,7 @@
   {
     "date": "2026-04-06",
     "spx": 6611.8301,
-    "spx50dma": 6781.877183999999,
+    "spx50dma": 6777.597782,
     "spxAbove50dma": false,
     "vix": 24.17,
     "vixBelow25": true
@@ -1562,7 +1562,7 @@
   {
     "date": "2026-04-07",
     "spx": 6616.8501,
-    "spx50dma": 6775.947183999999,
+    "spx50dma": 6771.6225859999995,
     "spxAbove50dma": false,
     "vix": 25.78,
     "vixBelow25": false
@@ -1570,7 +1570,7 @@
   {
     "date": "2026-04-08",
     "spx": 6782.8101,
-    "spx50dma": 6773.291188,
+    "spx50dma": 6768.274188000001,
     "spxAbove50dma": true,
     "vix": 21.04,
     "vixBelow25": true
@@ -1578,7 +1578,7 @@
   {
     "date": "2026-04-09",
     "spx": 6824.6602,
-    "spx50dma": 6770.779791999999,
+    "spx50dma": 6765.19539,
     "spxAbove50dma": true,
     "vix": 19.49,
     "vixBelow25": true
@@ -1586,7 +1586,7 @@
   {
     "date": "2026-04-10",
     "spx": 6816.8901,
-    "spx50dma": 6767.545592,
+    "spx50dma": 6761.972596,
     "spxAbove50dma": true,
     "vix": 19.23,
     "vixBelow25": true
@@ -1594,7 +1594,7 @@
   {
     "date": "2026-04-13",
     "spx": 6886.2402,
-    "spx50dma": 6765.7098,
+    "spx50dma": 6760.317204,
     "spxAbove50dma": true,
     "vix": 19.12,
     "vixBelow25": true
@@ -1602,7 +1602,7 @@
   {
     "date": "2026-04-14",
     "spx": 6967.3799,
-    "spx50dma": 6765.677202,
+    "spx50dma": 6760.884206,
     "spxAbove50dma": true,
     "vix": 18.36,
     "vixBelow25": true
@@ -1610,7 +1610,7 @@
   {
     "date": "2026-04-15",
     "spx": 7022.9502,
-    "spx50dma": 6767.355610000001,
+    "spx50dma": 6761.8144120000015,
     "spxAbove50dma": true,
     "vix": 18.17,
     "vixBelow25": true
@@ -1618,7 +1618,7 @@
   {
     "date": "2026-04-16",
     "spx": 7041.2798,
-    "spx50dma": 6768.652408000002,
+    "spx50dma": 6764.283806000001,
     "spxAbove50dma": true,
     "vix": 17.94,
     "vixBelow25": true
@@ -1626,7 +1626,7 @@
   {
     "date": "2026-04-17",
     "spx": 7126.0601,
-    "spx50dma": 6772.817408000002,
+    "spx50dma": 6769.150604000002,
     "spxAbove50dma": true,
     "vix": 17.48,
     "vixBelow25": true
@@ -1634,7 +1634,7 @@
   {
     "date": "2026-04-20",
     "spx": 7109.1401,
-    "spx50dma": 6777.345806000002,
+    "spx50dma": 6775.3654080000015,
     "spxAbove50dma": true,
     "vix": 18.87,
     "vixBelow25": true
@@ -1642,7 +1642,7 @@
   {
     "date": "2026-04-21",
     "spx": 7064.0098,
-    "spx50dma": 6782.658004000002,
+    "spx50dma": 6777.999608000001,
     "spxAbove50dma": true,
     "vix": 19.5,
     "vixBelow25": true
@@ -1650,7 +1650,7 @@
   {
     "date": "2026-04-22",
     "spx": 7137.8999,
-    "spx50dma": 6786.770006000002,
+    "spx50dma": 6781.461210000003,
     "spxAbove50dma": true,
     "vix": 18.92,
     "vixBelow25": true
@@ -1658,7 +1658,7 @@
   {
     "date": "2026-04-23",
     "spx": 7108.3999,
-    "spx50dma": 6789.641608000003,
+    "spx50dma": 6784.7930060000035,
     "spxAbove50dma": true,
     "vix": 19.31,
     "vixBelow25": true
@@ -1666,7 +1666,7 @@
   {
     "date": "2026-04-24",
     "spx": 7165.0801,
-    "spx50dma": 6794.107008000004,
+    "spx50dma": 6789.265204000003,
     "spxAbove50dma": true,
     "vix": 18.71,
     "vixBelow25": true
@@ -1674,7 +1674,7 @@
   {
     "date": "2026-04-28",
     "spx": 7138.7998,
-    "spx50dma": 6798.053600000002,
+    "spx50dma": 6795.386004000003,
     "spxAbove50dma": true,
     "vix": 17.83,
     "vixBelow25": true
@@ -1682,7 +1682,7 @@
   {
     "date": "2026-04-29",
     "spx": 7135.9502,
-    "spx50dma": 6804.117408000003,
+    "spx50dma": 6801.381610000003,
     "spxAbove50dma": true,
     "vix": 18.81,
     "vixBelow25": true
@@ -1690,7 +1690,7 @@
   {
     "date": "2026-04-30",
     "spx": 7209.0098,
-    "spx50dma": 6811.574206000003,
+    "spx50dma": 6808.697402000003,
     "spxAbove50dma": true,
     "vix": 16.89,
     "vixBelow25": true
@@ -1698,7 +1698,7 @@
   {
     "date": "2026-05-01",
     "spx": 7230.1201,
-    "spx50dma": 6819.312204000003,
+    "spx50dma": 6815.673602000003,
     "spxAbove50dma": true,
     "vix": 16.99,
     "vixBelow25": true
@@ -1706,7 +1706,7 @@
   {
     "date": "2026-05-04",
     "spx": 7200.75,
-    "spx50dma": 6825.7010020000025,
+    "spx50dma": 6822.450800000002,
     "spxAbove50dma": true,
     "vix": 18.29,
     "vixBelow25": true
@@ -1714,7 +1714,7 @@
   {
     "date": "2026-05-05",
     "spx": 7259.2202,
-    "spx50dma": 6833.647604000001,
+    "spx50dma": 6829.445008000001,
     "spxAbove50dma": true,
     "vix": 17.38,
     "vixBelow25": true
@@ -1722,7 +1722,7 @@
   {
     "date": "2026-05-06",
     "spx": 7365.1201,
-    "spx50dma": 6842.7598100000005,
+    "spx50dma": 6839.992410000001,
     "spxAbove50dma": true,
     "vix": 17.39,
     "vixBelow25": true
@@ -1730,7 +1730,7 @@
   {
     "date": "2026-05-07",
     "spx": 7337.1099,
-    "spx50dma": 6852.747008,
+    "spx50dma": 6848.933212,
     "spxAbove50dma": true,
     "vix": 17.08,
     "vixBelow25": true
@@ -1738,7 +1738,7 @@
   {
     "date": "2026-05-08",
     "spx": 7398.9302,
-    "spx50dma": 6862.924216,
+    "spx50dma": 6857.989218,
     "spxAbove50dma": true,
     "vix": 17.19,
     "vixBelow25": true
@@ -1746,7 +1746,7 @@
   {
     "date": "2026-05-11",
     "spx": 7412.84,
-    "spx50dma": 6872.258417999999,
+    "spx50dma": 6868.0688199999995,
     "spxAbove50dma": true,
     "vix": 18.38,
     "vixBelow25": true
@@ -1754,7 +1754,7 @@
   {
     "date": "2026-05-12",
     "spx": 7400.96,
-    "spx50dma": 6882.100419999999,
+    "spx50dma": 6878.510421999999,
     "spxAbove50dma": true,
     "vix": 17.99,
     "vixBelow25": true
@@ -1762,7 +1762,7 @@
   {
     "date": "2026-05-13",
     "spx": 7444.25,
-    "spx50dma": 6893.407821999999,
+    "spx50dma": 6889.763019999999,
     "spxAbove50dma": true,
     "vix": 17.87,
     "vixBelow25": true
@@ -1770,7 +1770,7 @@
   {
     "date": "2026-05-14",
     "spx": 7501.24,
-    "spx50dma": 6905.800219999999,
+    "spx50dma": 6903.455221999999,
     "spxAbove50dma": true,
     "vix": 17.26,
     "vixBelow25": true
@@ -1778,7 +1778,7 @@
   {
     "date": "2026-05-15",
     "spx": 7408.5,
-    "spx50dma": 6917.637621999998,
+    "spx50dma": 6914.235221999999,
     "spxAbove50dma": true,
     "vix": 18.43,
     "vixBelow25": true
@@ -1786,7 +1786,7 @@
   {
     "date": "2026-05-18",
     "spx": 7403.05,
-    "spx50dma": 6928.308621999999,
+    "spx50dma": 6925.682021999999,
     "spxAbove50dma": true,
     "vix": 17.82,
     "vixBelow25": true
@@ -1794,7 +1794,7 @@
   {
     "date": "2026-05-19",
     "spx": 7353.61,
-    "spx50dma": 6938.766621999999,
+    "spx50dma": 6937.953821999999,
     "spxAbove50dma": true,
     "vix": 18.06,
     "vixBelow25": true
@@ -1802,7 +1802,7 @@
   {
     "date": "2026-05-20",
     "spx": 7432.97,
-    "spx50dma": 6952.625621999998,
+    "spx50dma": 6950.693417999998,
     "spxAbove50dma": true,
     "vix": 17.44,
     "vixBelow25": true
@@ -1810,7 +1810,7 @@
   {
     "date": "2026-05-21",
     "spx": 7445.72,
-    "spx50dma": 6965.620217999997,
+    "spx50dma": 6963.978217999998,
     "spxAbove50dma": true,
     "vix": 16.76,
     "vixBelow25": true
@@ -1818,7 +1818,7 @@
   {
     "date": "2026-05-22",
     "spx": 7473.47,
-    "spx50dma": 6979.460017999997,
+    "spx50dma": 6977.931621999998,
     "spxAbove50dma": true,
     "vix": 16.7,
     "vixBelow25": true
@@ -1826,7 +1826,7 @@
   {
     "date": "2026-06-10",
     "spx": 7266.99,
-    "spx50dma": 6989.283821999998,
+    "spx50dma": 6989.819019999998,
     "spxAbove50dma": true,
     "vix": 22.22,
     "vixBelow25": true
@@ -1834,7 +1834,7 @@
   {
     "date": "2026-06-11",
     "spx": 7394.3,
-    "spx50dma": 7003.717419999997,
+    "spx50dma": 7005.0612219999975,
     "spxAbove50dma": true,
     "vix": 19.44,
     "vixBelow25": true

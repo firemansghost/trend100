@@ -93,7 +93,7 @@ Cold-start CI copies [`ci/bootstrap/turbulence.gates.json`](../ci/bootstrap/turb
 - **SPX:** `GSPC.INDX` (override: `TURBULENCE_MARKETSTACK_SPX_SYMBOL`)
 - **VIX:** `VIX.INDX` (override: `TURBULENCE_MARKETSTACK_VIX_SYMBOL`)
 - Reuses existing `MARKETSTACK_API_KEY`. Never print the key.
-- Gate rows use **common trading dates** only (both series have a valid close). Semantics unchanged: `spxAbove50dma = SPX > 50-DMA`, `vixBelow25 = VIX < 25`.
+- Gate rows use **common trading dates** only (both series have a valid close). **SPX 50-DMA uses the full SPX trading-date series** (VIX gaps do not drop SPX sessions from the window). Semantics unchanged: `spxAbove50dma = SPX > 50-DMA`, `vixBelow25 = VIX < 25`.
 - Generated `public/turbulence.gates.json` is **CI/local output — never commit it**.
 
 ```bash

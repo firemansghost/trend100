@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-08 — (Ops) Health-history CLI accepts pnpm `--` separator
+**Choice:** `parseHealthHistoryCli()` skips a standalone `--` the same way `parseVerifyArtifactsCli()` does. Real flags (`--start`, `--end`, `--deck`, `--variants-only`, `--backfill-days`) stay strict; unknown flags still throw.
+
+**Why:** Backfill Health History run **32877318875** invoked `pnpm update:health-history -- --start …`. The parser treated `--` as unknown, so Pass A/B never ran, LKG was not saved, and no provider quota was used. Repair did not occur.
+
+---
+
 ### 2026-08 — (Ops/Data) Health-history last-known-good cache and offline integrity repair
 **Choice:** `public/health-history*.json` are generated artifacts and need **cross-run continuity**, like Marketstack EOD and Turbulence gates. Production workflows (`vercel-prebuilt-prod.yml`, `daily-artifacts-deploy.yml`) restore/save an Actions cache key family `${{ runner.os }}-health-history-lkg-v1-`. Restore happens **before** snapshot/history generation (overlaying tracked repo copies). Save happens **only after** successful artifact generation/verification (`if: success()`, never `if: always()`). A failed run must not replace LKG. Cache miss leaves tracked files in place; optional HTTPS prefetch from `https://trend100.vercel.app/` overwrites a file only when the response is a non-empty JSON array.
 

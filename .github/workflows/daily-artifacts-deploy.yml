@@ -2,10 +2,10 @@ name: Daily Artifacts Deploy
 
 on:
   schedule:
-    # Mon–Fri 22:15 UTC (after US market close)
-    - cron: "15 22 * * 1-5"
-    # Mon–Fri 01:15 UTC (top-off to catch lagging EOD inputs)
-    - cron: "15 1 * * 1-5"
+    # One run after each Mon–Fri US session. Cron weekdays are UTC:
+    # Tue 01:15 = Monday session, … Sat 01:15 = Friday session.
+    # Do not change 2-6 without revisiting UTC day rollover.
+    - cron: "15 1 * * 2-6"
   workflow_dispatch:
 
 # Opt JavaScript actions to Node 24 during GitHub’s Node 20 deprecation phase; aligns with setup-node 24 below.

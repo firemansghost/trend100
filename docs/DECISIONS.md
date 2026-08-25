@@ -229,6 +229,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-08 — (Ops) One Daily Artifacts Deploy per US session
+**Choice:** `daily-artifacts-deploy.yml` schedule is a single cron `15 1 * * 2-6` (01:15 UTC Tuesday–Saturday). Monday–Friday US sessions map to those UTC weekdays because 01:15 is after midnight UTC. The 22:15 UTC Mon–Fri primary run is removed. `workflow_dispatch` remains. Push-to-main Vercel Prebuilt Prod is unchanged. No decks removed. Marketstack quota is **per ticker** (a batch of N symbols counts as N requests); two full weekday runs were doubling ~160 deck symbols plus ~14 gates index calls (~174 units/run).
+
+**Why:** Two scheduled artifact refreshes per weekday consumed unnecessary Marketstack quota (~7,300 calls/month from the schedule alone). The later 01:15 UTC slot was already the top-off intended to catch delayed EOD publication, so it is the single remaining scheduled run.
+
+---
+
 ### 2026-04 — (Data/Ops) vercel-prebuilt-prod: Node 24 parity + safe turbulence prefetch
 **Choice:** `vercel-prebuilt-prod.yml` matches the daily workflow baseline: `actions/checkout@v6`, `actions/setup-node@v6` with Node **24**, `actions/cache` and `actions/cache/{restore,save}` **v5**, and workflow-level `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`. Turbulence prep is shared with daily via `ci/gha-turbulence-gates-prep.sh` (see prior decision: cache → bootstrap → safe prefetch). Failed curl or invalid live JSON leaves restored or seeded `public/turbulence.gates.json` unchanged.
 

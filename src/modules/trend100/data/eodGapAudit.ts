@@ -31,7 +31,13 @@ export type GapAuditSummary = {
   symbolsWithLongGap: number;
   maxLongestMissingRun: number;
   projectedRepairSymbols: string[];
+  symbolsWithProviderLimitedLongGap: number;
+  symbolsWithUnverifiedLongGap: number;
+  providerLimitedSymbols: string[];
+  unverifiedLongGapSymbols: string[];
 };
+
+export type RepairClassification = 'RESOLVED' | 'PROVIDER_LIMITED' | 'UNRESOLVED';
 
 export function usableBarDates(bars: readonly UsableBar[]): string[] {
   const dates = new Set<string>();
@@ -144,9 +150,18 @@ export function selectLongGapCandidates(
 
 export function summarizeGapReports(
   reports: readonly SymbolGapReport[],
-  minSessions = DEFAULT_LONG_GAP_MIN_SESSIONS
+  minSessions = DEFAULT_LONG_GAP_MIN_SESSIONS,
+  residualLookup?: (report: SymbolGapReport) => 'provider_limited' | 'unverified' | 'none'
 ): GapAuditSummary {
   const projectedRepairSymbols = selectLongGapCandidates(reports, minSessions);
+  const providerLimitedSymbols: string[] = [];
+  const unverifiedLongGapSymbols: string[] = [];
+  for (const symbol of projectedRepairSymbols) {
+    const report = reports.find((r) => r.symbol === symbol)!;
+    const kind = residualLookup ? residualLookup(report) : 'unverified';
+    if (kind === 'provider_limited') providerLimitedSymbols.push(symbol);
+    else unverifiedLongGapSymbols.push(symbol);
+  }
   return {
     symbolsAudited: reports.length,
     symbolsComplete: reports.filter((r) => r.missingSessions === 0).length,
@@ -154,6 +169,10 @@ export function summarizeGapReports(
     symbolsWithLongGap: projectedRepairSymbols.length,
     maxLongestMissingRun: reports.reduce((m, r) => Math.max(m, r.longestMissingRun), 0),
     projectedRepairSymbols,
+    symbolsWithProviderLimitedLongGap: providerLimitedSymbols.length,
+    symbolsWithUnverifiedLongGap: unverifiedLongGapSymbols.length,
+    providerLimitedSymbols,
+    unverifiedLongGapSymbols,
   };
 }
 
@@ -188,15 +207,32 @@ export function fetchedOverlapsMissingSessions(
 }
 
 export type StagedPostMergeVerdict = {
+  classification: RepairClassification;
   resolvable: boolean;
+  mergeable: boolean;
   reason: string;
   post: SymbolGapReport;
 };
 
+function verdict(
+  classification: RepairClassification,
+  reason: string,
+  post: SymbolGapReport
+): StagedPostMergeVerdict {
+  return {
+    classification,
+    resolvable: classification === 'RESOLVED',
+    mergeable: classification === 'RESOLVED' || classification === 'PROVIDER_LIMITED',
+    reason,
+    post,
+  };
+}
+
 /**
  * Simulate merging fetched usable dates into existing cache and re-audit.
- * Resolvable iff post longestMissingRun < longGapMin and the fetch meaningfully
- * improves coverage. Isolated remaining misses (e.g. 2026-06-04) are OK.
+ * RESOLVED: post longestMissingRun < longGapMin.
+ * PROVIDER_LIMITED: valid fetch that shrinks the hole but leaves longestMissingRun >= 5.
+ * UNRESOLVED: empty/truncated/invalid/no overlap/no improvement.
  */
 export function evaluateStagedPostMerge(args: {
   symbol: string;
@@ -212,11 +248,7 @@ export function evaluateStagedPostMerge(args: {
   longGapMin?: number;
 }): StagedPostMergeVerdict {
   const longGapMin = args.longGapMin ?? DEFAULT_LONG_GAP_MIN_SESSIONS;
-  const fail = (reason: string, post: SymbolGapReport): StagedPostMergeVerdict => ({
-    resolvable: false,
-    reason,
-    post,
-  });
+  const fail = (reason: string, post: SymbolGapReport) => verdict('UNRESOLVED', reason, post);
 
   const placeholderPost = args.pre;
   if (args.truncated) return fail('fetch truncated', placeholderPost);
@@ -244,21 +276,24 @@ export function evaluateStagedPostMerge(args: {
     windowEnd: args.windowEnd,
   });
 
-  const longGapEliminated = post.longestMissingRun < longGapMin;
-  if (!longGapEliminated) {
-    return fail(
-      `simulated longestMissingRun=${post.longestMissingRun} still >= ${longGapMin}`,
+  const missingImproved = post.missingSessions < args.pre.missingSessions;
+  const longestImproved = post.longestMissingRun < args.pre.longestMissingRun;
+  const reason = `longestMissingRun ${args.pre.longestMissingRun} -> ${post.longestMissingRun}`;
+
+  if (post.longestMissingRun < longGapMin) {
+    if (!missingImproved && !longestImproved) {
+      return fail('fetch does not improve original long gap', post);
+    }
+    return verdict('RESOLVED', reason, post);
+  }
+
+  if (missingImproved && longestImproved) {
+    return verdict(
+      'PROVIDER_LIMITED',
+      `provider-limited residual ${reason} missing ${args.pre.missingSessions} -> ${post.missingSessions}`,
       post
     );
   }
-  const missingImproved = post.missingSessions < args.pre.missingSessions;
-  if (!missingImproved && post.longestMissingRun >= args.pre.longestMissingRun) {
-    return fail('fetch does not improve original long gap', post);
-  }
 
-  return {
-    resolvable: true,
-    reason: `longestMissingRun ${args.pre.longestMissingRun} -> ${post.longestMissingRun}`,
-    post,
-  };
+  return fail('fetch does not improve original long gap', post);
 }

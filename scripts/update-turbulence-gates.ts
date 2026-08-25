@@ -22,7 +22,6 @@ import { join } from 'path';
 import { fetchEodSeries, type EodBar } from '../src/modules/trend100/data/providers/marketstack';
 import {
   buildTurbulenceGatePoints,
-  computeSpxDmaByDate,
 } from '../src/modules/trend100/engine/turbulenceGates';
 
 const GATES_OUT_PATH = join(process.cwd(), 'public', 'turbulence.gates.json');
@@ -212,38 +211,6 @@ async function main() {
     console.log(
       `   Common dates: ${commonDates.length} (${commonDates[0]} to ${commonDates[commonDates.length - 1]})` +
         (spxOnly || vixOnly ? `; omitted SPX-only=${spxOnly} VIX-only=${vixOnly}` : '')
-    );
-
-    const spxDates = [...spxMap.keys()].sort();
-    const fullDma = computeSpxDmaByDate(spxMap);
-    const commonOnlySpx = new Map<string, number>();
-    for (const d of commonDates) {
-      const v = spxMap.get(d);
-      if (v !== undefined) commonOnlySpx.set(d, v);
-    }
-    const buggyDma = computeSpxDmaByDate(commonOnlySpx);
-    let dmaChanged = 0;
-    let dmaMaxAbs = 0;
-    const booleanFlipDates: string[] = [];
-    for (const date of commonDates) {
-      const full = fullDma.get(date);
-      const buggy = buggyDma.get(date);
-      if (full === buggy) continue;
-      dmaChanged += 1;
-      if (full != null && buggy != null) {
-        dmaMaxAbs = Math.max(dmaMaxAbs, Math.abs(full - buggy));
-      }
-      const spx = spxMap.get(date);
-      const fullAbove = spx != null && full != null ? spx > full : null;
-      const buggyAbove = spx != null && buggy != null ? spx > buggy : null;
-      if (fullAbove !== buggyAbove) booleanFlipDates.push(date);
-    }
-    console.log(
-      `   SPX dates used for 50-DMA: ${spxDates.length} (full series, not VIX-aligned)`
-    );
-    console.log(
-      `   50DMA vs common-date-only window: changedRows=${dmaChanged} maxAbsDiff=${dmaMaxAbs} booleanFlips=${booleanFlipDates.length}` +
-        (booleanFlipDates.length ? ` dates=${booleanFlipDates.join(',')}` : '')
     );
 
     const points = buildTurbulenceGatePoints(spxMap, vixMap);

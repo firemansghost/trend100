@@ -27,6 +27,7 @@ import { getLatestSnapshot } from '../src/modules/trend100/data/getLatestSnapsho
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
 import { toSectionKey } from '../src/modules/trend100/data/sectionKey';
 import { parseHealthHistoryCli, resolveBackfillDeckIds } from '../src/modules/trend100/data/healthHistoryCli';
+import { resolveHealthBackfillDates } from '../src/modules/trend100/data/healthBackfillDates';
 import { mergeAndTrimTimeSeries } from './timeSeriesUtils';
 import { buildTickerMetaIndex, enrichUniverseItemMeta } from '../src/modules/trend100/data/tickerMeta';
 import { getMinKnownPctForDeck, getKnownDenominatorMode, getMinEligibleCountForDeck } from '../src/modules/trend100/data/deckConfig';
@@ -633,9 +634,17 @@ function backfillDeckHistory(
       console.log(`  [${deckId}] section=${variant.sectionLabel} key=${variantKey} tickers=${universe.length}`);
     }
 
-    // Get trading days in range for this variant
-    const tradingDays = getTradingDaysInRange(startDate, endDate, deckId, universe);
-    console.log(`  [${label}] Found ${tradingDays.length} trading days with EOD data`);
+    const existingHistory = loadHistory(deckId, variantKey);
+    const eodDates = getTradingDaysInRange(startDate, endDate, deckId, universe);
+    const tradingDays = resolveHealthBackfillDates({
+      eodDates,
+      existingHistoryDates: existingHistory.map((p) => p.date),
+      startDate,
+      endDate,
+    });
+    console.log(
+      `  [${label}] Found ${eodDates.length} variant EOD dates, ${tradingDays.length} repair dates (union with existing in-range history)`
+    );
 
     if (tradingDays.length === 0) {
       console.warn(`  ⚠️  [${label}] No trading days found in range - check EOD cache files`);
@@ -704,7 +713,6 @@ function backfillDeckHistory(
 
     console.log(`  [${label}] Computed ${computed} valid points, ${unknown} UNKNOWN (insufficient history)`);
 
-    const existingHistory = loadHistory(deckId, variantKey);
     const mergedHistory = mergeAndTrimTimeSeries(
       existingHistory,
       newPoints,

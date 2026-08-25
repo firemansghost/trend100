@@ -13,6 +13,7 @@ import type { TrendHealthHistoryPoint, TrendDeckId } from '../src/modules/trend1
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
 import { getMinKnownPctForDeck } from '../src/modules/trend100/data/deckConfig';
 import { toSectionKey } from '../src/modules/trend100/data/sectionKey';
+import { parseVerifyArtifactsCli } from '../src/modules/trend100/data/verifyArtifactsCli';
 import { isWeekend, hasFullHealthSchema } from './healthHistorySanitize';
 
 const PUBLIC_DIR = join(process.cwd(), 'public');
@@ -903,7 +904,11 @@ function printSnapshotPlumbingStats(): boolean {
  * Main function
  */
 function main() {
+  const { healthHistoryOnly } = parseVerifyArtifactsCli(process.argv.slice(2));
   console.log('📊 Artifact Verification Report\n');
+  if (healthHistoryOnly) {
+    console.log('Mode: health-history-only (Turbulence/PLUMBING production artifacts skipped)\n');
+  }
   
   const hhRetentionDays = getHealthHistoryRetentionDays();
   console.log(
@@ -960,6 +965,11 @@ function main() {
   if (validationFailed) {
     console.error('\n❌ Validation failed: weekend or partial-schema points found in health history');
     process.exit(1);
+  }
+
+  if (healthHistoryOnly) {
+    console.log('\n✅ Health-history verification passed (health-history-only mode).');
+    return;
   }
 
   console.log('\nTurbulence Gates:');

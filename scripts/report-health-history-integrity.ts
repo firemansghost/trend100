@@ -5,6 +5,10 @@
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { isPolicyImpossibleStaleUnknown } from '../src/modules/trend100/engine/healthHistoryStaleUnknown';
+import {
+  parseIntegrityReportCli,
+  shouldFailIntegrityReport,
+} from '../src/modules/trend100/engine/healthHistoryIntegrityReport';
 
 const MACRO_SECTIONS = [
   'fx',
@@ -56,8 +60,10 @@ function longestGapAfter(dates: string[], after: string): { days: number; from: 
 }
 
 function main() {
+  const { failOnSuspicious } = parseIntegrityReportCli(process.argv.slice(2));
   const publicDir = join(process.cwd(), 'public');
   console.log('=== MACRO subsection health-history integrity ===');
+  let suspiciousTotal = 0;
   for (const key of MACRO_SECTIONS) {
     const file = join(publicDir, `health-history.MACRO.${key}.json`);
     const pts = load(file);
@@ -69,6 +75,7 @@ function main() {
     const unknown = pts.filter((p) => p.regimeLabel === 'UNKNOWN');
     const firstValid = valid[0]?.date ?? null;
     const suspicious = unknown.filter((p) => isPolicyImpossibleStaleUnknown(p)).length;
+    suspiciousTotal += suspicious;
     const gap = longestGapAfter(
       pts.map((p) => p.date),
       GAP_AFTER
@@ -86,6 +93,13 @@ function main() {
         `longestGapAfter_${GAP_AFTER}=${gap ? `${gap.days}d (${gap.from} -> ${gap.to})` : 'n/a'}`,
       ].join(' ')
     );
+  }
+  console.log(`suspiciousStaleUnknown_total=${suspiciousTotal}`);
+  if (shouldFailIntegrityReport(suspiciousTotal, failOnSuspicious)) {
+    console.error(
+      `❌ Repair validation failed: ${suspiciousTotal} policy-impossible stale UNKNOWN row(s) remain. Health-history LKG will not be saved.`
+    );
+    process.exit(1);
   }
 }
 

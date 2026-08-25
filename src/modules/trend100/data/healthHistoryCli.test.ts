@@ -82,4 +82,47 @@ describe('parseHealthHistoryCli', () => {
     expect(args.deckIds).toBeUndefined();
     expect(resolveBackfillDeckIds(args)).toEqual(getAllDeckIds());
   });
+
+  it('ignores a standalone -- separator (pnpm script -- args)', () => {
+    const without = parseHealthHistoryCli(['--start', '2026-02-18', '--end', '2026-08-25']);
+    const withSep = parseHealthHistoryCli([
+      '--',
+      '--start',
+      '2026-02-18',
+      '--end',
+      '2026-08-25',
+    ]);
+    expect(withSep).toEqual(without);
+  });
+
+  it('ignores -- with --deck MACRO --variants-only', () => {
+    const without = parseHealthHistoryCli([
+      '--start',
+      '2019-10-01',
+      '--end',
+      '2026-08-25',
+      '--deck',
+      'MACRO',
+      '--variants-only',
+    ]);
+    const withSep = parseHealthHistoryCli([
+      '--',
+      '--start',
+      '2019-10-01',
+      '--end',
+      '2026-08-25',
+      '--deck',
+      'MACRO',
+      '--variants-only',
+    ]);
+    expect(withSep).toEqual(without);
+    expect(withSep.deckIds).toEqual(['MACRO']);
+    expect(withSep.variantsOnly).toBe(true);
+  });
+
+  it('still rejects a real unknown argument', () => {
+    expect(() =>
+      parseHealthHistoryCli(['--', '--start', '2026-02-18', '--end', '2026-08-25', '--nope'])
+    ).toThrow(/Unknown argument: --nope/);
+  });
 });

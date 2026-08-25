@@ -38,6 +38,10 @@ export function parseHealthHistoryCli(argv: string[]): HealthHistoryCliArgs {
   let i = 0;
   while (i < argv.length) {
     const arg = argv[i]!;
+    if (arg === '--') {
+      i += 1;
+      continue;
+    }
     if (arg === '--backfill-days') {
       const { value, next } = takeValue(argv, arg, i);
       const days = parseInt(value, 10);

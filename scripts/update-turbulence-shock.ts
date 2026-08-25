@@ -4,9 +4,9 @@
  * Computes a proxy "covariance/correlation shock" metric using US_SECTORS ETF universe.
  * Uses EOD cache data; writes public/turbulence.shock.json for Turbulence Model alignment (PR9).
  *
- * Shock calendar: a session is included only if SPY has a close AND at least
- * MIN_ASSETS_TARGET recent-universe symbols have closes. Returns use adjacent
- * *qualified* dates so sparse union-only prints cannot null out 60-day windows.
+ * Shock calendar: a session is included only if SPY has a **usable** close
+ * (finite and > 0) AND at least MIN_ASSETS_TARGET recent-universe symbols have
+ * usable closes. Returns use adjacent *qualified* dates.
  *
  * Shock calculation acceptance: still the existing floor-6 minForDate policy
  * TEMPORARILY. MIN_ASSETS_TARGET is NOT fully enforced on shockRaw until a
@@ -21,9 +21,11 @@ import './load-env';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
+import { sanitizeCachedEodBars } from '../src/modules/trend100/data/providers/eodClose';
 import { getDeck } from '../src/modules/trend100/data/decks';
 import {
   buildQualifiedShockCalendar,
+  isShockCalendarClose,
   logReturnsOnQualifiedDates,
   SHOCK_CALENDAR_SPY_SYMBOL,
 } from '../src/modules/trend100/engine/shockCalendar';
@@ -68,7 +70,8 @@ function loadEodCache(symbol: string): EodBar[] | null {
     const content = readFileSync(filePath, 'utf-8');
     const bars = JSON.parse(content) as EodBar[];
     if (!Array.isArray(bars)) return null;
-    return bars.sort((a, b) => a.date.localeCompare(b.date));
+    const sanitized = sanitizeCachedEodBars(bars);
+    return sanitized.bars.sort((a, b) => a.date.localeCompare(b.date));
   } catch {
     return null;
   }
@@ -106,7 +109,7 @@ function computeCorrelationMatrix(returnsMatrix: number[][]): number[][] {
       for (let k = 0; k < m; k++) {
         const vi = ri[k];
         const vj = rj[k];
-        if (vi != null && !Number.isNaN(vi) && vj != null && !Number.isNaN(vj)) {
+        if (Number.isFinite(vi) && Number.isFinite(vj)) {
           sumRi += vi;
           sumRj += vj;
           sumRi2 += vi * vi;
@@ -198,6 +201,7 @@ function main() {
     const bars = barsBySymbol.get(sym)!;
     for (const b of bars) {
       if (b.date < start) continue;
+      if (!isShockCalendarClose(b.close)) continue;
       let present = symbolsWithCloseByDate.get(b.date);
       if (!present) {
         present = new Set();

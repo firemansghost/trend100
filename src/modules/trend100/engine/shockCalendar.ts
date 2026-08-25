@@ -8,6 +8,8 @@
  * via minForDate in update-turbulence-shock.ts) until a later audit.
  */
 
+import { isUsableEodClose } from '../data/providers/eodClose';
+
 export const SHOCK_CALENDAR_SPY_SYMBOL = 'SPY';
 
 export interface ShockDateParticipation {
@@ -58,8 +60,15 @@ export function buildQualifiedShockCalendar(args: {
 }
 
 /**
+ * A close participates in the shock calendar only if it is finite and > 0.
+ */
+export function isShockCalendarClose(close: unknown): close is number {
+  return isUsableEodClose(close);
+}
+
+/**
  * Log returns vs the previous *qualified* shock date, not vs a discarded union date.
- * return[i] is null unless the symbol has closes on both dates[i] and dates[i-1].
+ * Both closes must be finite and > 0, and ln(current/previous) must be finite.
  */
 export function logReturnsOnQualifiedDates(
   qualifiedDates: readonly string[],
@@ -71,9 +80,10 @@ export function logReturnsOnQualifiedDates(
     const prev = qualifiedDates[i - 1]!;
     const close = closeByDate.get(d);
     const prevClose = closeByDate.get(prev);
-    if (close != null && prevClose != null && prevClose > 0) {
-      arr[i] = Math.log(close / prevClose);
-    }
+    if (!isUsableEodClose(close) || !isUsableEodClose(prevClose)) continue;
+    const ret = Math.log(close / prevClose);
+    if (!Number.isFinite(ret)) continue;
+    arr[i] = ret;
   }
   return arr;
 }

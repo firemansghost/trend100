@@ -7,6 +7,11 @@ on:
     # Do not change 2-6 without revisiting UTC day rollover.
     - cron: "15 1 * * 2-6"
   workflow_dispatch:
+    inputs:
+      repair_turbulence_shock_cache:
+        description: Merge bounded Marketstack EOD history for the 12 US_SECTORS / Turbulence shock symbols (default 2023-01-01 through today). Manual only; not used on schedule.
+        type: boolean
+        default: false
 
 # Opt JavaScript actions to Node 24 during GitHub’s Node 20 deprecation phase; aligns with setup-node 24 below.
 env:
@@ -62,6 +67,15 @@ jobs:
         run: |
           echo "EOD cache file count: $(ls -1 data/marketstack/eod 2>/dev/null | wc -l || true)"
           du -sh data/marketstack/eod 2>/dev/null || true
+
+      - name: Repair Turbulence shock EOD cache (manual)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.repair_turbulence_shock_cache == 'true'
+        env:
+          MARKETSTACK_API_KEY: ${{ secrets.MARKETSTACK_API_KEY }}
+          MARKETSTACK_CACHE_DAYS: 2300
+        run: |
+          echo "Manual Turbulence shock cache repair requested (workflow_dispatch only)."
+          pnpm -s repair:turbulence-shock-cache
 
       - name: Ensure public dir for turbulence gates
         run: mkdir -p public

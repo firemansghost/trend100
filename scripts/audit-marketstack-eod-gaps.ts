@@ -14,9 +14,18 @@ function parseStart(argv: string[]): string {
 }
 
 function main() {
-  const start = parseStart(process.argv.slice(2).filter((a) => a !== '--'));
+  const argv = process.argv.slice(2).filter((a) => a !== '--');
+  const start = parseStart(argv);
+  const failOnLongGap = argv.includes('--fail-on-long-gap');
   const result = runInternalGapAudit({ start });
   printInternalGapAudit(result);
+  if (failOnLongGap && result.summary.symbolsWithLongGap > 0) {
+    console.error(
+      `Completeness gate: symbolsWithLongGap=${result.summary.symbolsWithLongGap} ` +
+        `(${result.summary.projectedRepairSymbols.join(', ')})`
+    );
+    process.exit(1);
+  }
 }
 
 main();

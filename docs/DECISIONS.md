@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-08 — (Data/Ops) Marketstack EOD internal-gap audit and bounded repair
+**Choice:** Last-date freshness does not prove internal continuity. A provider-free audit compares each deck provider-symbol against **usable SPY session dates** in a window (default **2026-02-18** → latest SPY bar). Invalid ≤0/non-finite closes are not “present.” A **long gap** is ≥**5 consecutive** SPY sessions missing after the symbol’s first cached date (limited-start / inception is reported, not fabricated). Manual workflow **Repair EOD Internal Gaps** restores production `marketstack-eod-v2`, fails closed on cache miss, checks SPY freshness, then audits with **zero** Marketstack/Stooq. `repair=true` fetches **only** long-gap candidates via `fetchEodSeriesRange` (one bounded range per symbol with overlap), stages in memory, and merges with `mergeFetchedBarsIntoCache` only if every candidate validates (non-empty, no invalid closes, covers missing sessions, not truncated, neighbors preserved). Post-merge audit must show **zero** remaining long-gap candidates or the job fails without treating coverage as fake. EOD cache is saved only on repair success. No Vercel deploy and no health-history rebuild in this workflow. Do **not** use Extend EOD Cache for this (it does not restore production EOD LKG).
+
+**Why:** Backfill Health History **32879333727** restored a current SPY tip (`2026-08-24`) and 160 EOD files, but Pass A found only ~20 trading days for US_FACTORS / GLOBAL / FIXED_INCOME / most MACRO subsections / METALS_MINING versus ~126–128 for LEADERSHIP / US_SECTORS / MACRO.energy / PLUMBING. MACRO subsection longest gap after 2026-02-18 was **160d (2026-02-18 → 2026-07-28)** except Energy (~4d). Pass B cleared most stale UNKNOWN policy rows but **27** suspicious Uranium/Crypto/Dollar rows remained, so LKG was correctly not saved. Same internal-hole class as the earlier Turbulence sector caches. Health-history `--fail-on-suspicious` stays strict; retry health-history repair only after this EOD repair passes.
+
+---
+
 ### 2026-08 — (Ops) Health-history CLI accepts pnpm `--` separator
 **Choice:** `parseHealthHistoryCli()` skips a standalone `--` the same way `parseVerifyArtifactsCli()` does. Real flags (`--start`, `--end`, `--deck`, `--variants-only`, `--backfill-days`) stay strict; unknown flags still throw.
 

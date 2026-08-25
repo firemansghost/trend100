@@ -20,6 +20,8 @@
     "verify:history-retention": "tsx scripts/verify-history-retention.ts",
     "check:turbulence-bootstrap": "tsx scripts/check-turbulence-bootstrap-seed.ts",
     "repair:turbulence-shock-cache": "tsx scripts/repair-turbulence-shock-cache.ts",
+    "audit:eod-gaps": "tsx scripts/audit-marketstack-eod-gaps.ts",
+    "repair:eod-gaps": "tsx scripts/repair-marketstack-eod-gaps.ts",
     "analyze:plateaus": "tsx scripts/analyze-health-plateaus.ts",
     "analyze:coverage": "tsx scripts/analyze-known-coverage.ts",
     "test": "vitest run",

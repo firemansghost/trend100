@@ -1,0 +1,22 @@
+/**
+ * Provider-free internal-gap audit of data/marketstack/eod.
+ * Usage: pnpm exec tsx scripts/audit-marketstack-eod-gaps.ts [--start 2026-02-18]
+ */
+import './load-env';
+
+import { DEFAULT_EOD_GAP_AUDIT_START } from '../src/modules/trend100/data/eodGapAudit';
+import { printInternalGapAudit, runInternalGapAudit } from './eodInternalGapAuditLib';
+
+function parseStart(argv: string[]): string {
+  const i = argv.indexOf('--start');
+  if (i >= 0 && argv[i + 1]) return argv[i + 1]!;
+  return DEFAULT_EOD_GAP_AUDIT_START;
+}
+
+function main() {
+  const start = parseStart(process.argv.slice(2).filter((a) => a !== '--'));
+  const result = runInternalGapAudit({ start });
+  printInternalGapAudit(result);
+}
+
+main();

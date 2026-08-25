@@ -125,8 +125,8 @@ function main(): void {
   console.log('status:', status);
 
   const refreshHint =
-    'Refresh ci/bootstrap/turbulence.gates.json in a separate ops PR when Stooq is reachable ' +
-    '(regenerate synthetic series; do not run artifacts:refresh in this check).';
+    'Refresh ci/bootstrap/turbulence.gates.json from real Marketstack GSPC.INDX + VIX.INDX gates ' +
+    '(pnpm -s update:turbulence-gates; never synthesize market data; do not run artifacts:refresh in this check).';
 
   if (status === 'expired') {
     console.error('');

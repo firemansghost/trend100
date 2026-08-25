@@ -27,6 +27,16 @@ import {
   logReturnsOnQualifiedDates,
   SHOCK_CALENDAR_SPY_SYMBOL,
 } from '../src/modules/trend100/engine/shockCalendar';
+import {
+  duplicateBarDates,
+  incompleteQualifiedDates,
+  longWindowCloseDateRange,
+  missingOrInvalidCloses,
+  nullReturnSlotsInLongWindow,
+  shouldLogEligibilityRow,
+  windowCountsForSymbol,
+  type EligibilityRow,
+} from '../src/modules/trend100/engine/shockEligibilityDiag';
 
 const EOD_CACHE_DIR = join(process.cwd(), 'data', 'marketstack', 'eod');
 const SHOCK_UNIVERSE_FALLBACK = [
@@ -222,14 +232,17 @@ function main() {
   }
 
   const returnsBySymbol = new Map<string, (number | null)[]>();
+  const closeMapsBySymbol = new Map<string, Map<string, number>>();
   for (const sym of recentUniverse) {
     const bars = barsBySymbol.get(sym)!;
     const closeMap = new Map(bars.map((b) => [b.date, b.close]));
+    closeMapsBySymbol.set(sym, closeMap);
     returnsBySymbol.set(sym, logReturnsOnQualifiedDates(dates, closeMap));
   }
 
   const points: ShockPoint[] = [];
   const shockRawSeries: (number | null)[] = [];
+  const eligibilityRows: EligibilityRow[] = [];
 
   for (let idx = LONG_WINDOW; idx < dates.length; idx++) {
     const date = dates[idx]!;
@@ -237,27 +250,37 @@ function main() {
     const longStart = idx - LONG_WINDOW + 1;
 
     const validSymbols: string[] = [];
+    let shortEligibleCount = 0;
+    let longEligibleCount = 0;
     for (const sym of recentUniverse) {
       const rets = returnsBySymbol.get(sym);
       if (!rets) continue;
-      let shortCount = 0;
-      let longCount = 0;
-      for (let k = shortStart; k <= idx; k++) {
-        if (rets[k] != null && !Number.isNaN(rets[k]!)) shortCount++;
-      }
-      for (let k = longStart; k <= idx; k++) {
-        if (rets[k] != null && !Number.isNaN(rets[k]!)) longCount++;
-      }
-      if (shortCount >= SHORT_WINDOW && longCount >= LONG_WINDOW) {
+      const counts = windowCountsForSymbol(rets, idx, SHORT_WINDOW, LONG_WINDOW);
+      if (counts.shortCount >= SHORT_WINDOW) shortEligibleCount += 1;
+      if (counts.longCount >= LONG_WINDOW) longEligibleCount += 1;
+      if (counts.eligible) {
         validSymbols.push(sym);
       }
     }
+    const excluded = recentUniverse.filter((s) => !validSymbols.includes(s));
+    const nCloses = symbolsWithCloseByDate.get(date)?.size ?? 0;
 
     // ShockRaw acceptance: TEMPORARY floor-6 policy (minForDate tautology for n>=6).
     // Calendar already required SPY + >= MIN_ASSETS_TARGET closes. Do not treat this
     // as enforcing MIN_ASSETS_TARGET on the correlation universe yet.
     const minForDate = Math.max(MIN_ASSETS_FLOOR, Math.min(MIN_ASSETS_TARGET, validSymbols.length));
-    if (validSymbols.length < minForDate) {
+    const shockRawNull = validSymbols.length < minForDate;
+    eligibilityRows.push({
+      date,
+      idx,
+      nCloses,
+      shortEligibleCount,
+      longEligibleCount,
+      validSymbolsCount: validSymbols.length,
+      excluded,
+      shockRawNull,
+    });
+    if (shockRawNull) {
       points.push({
         date,
         nAssets: validSymbols.length,
@@ -307,6 +330,107 @@ function main() {
       }
     }
   }
+
+  // --- Temporary trailing-null diagnostics (no model change) ---
+  const lastIdx = dates.length - 1;
+  const lastDate = dates[lastIdx];
+  const last80Qualified = dates.slice(-80);
+  const last61 = dates.slice(-61);
+  const last65 = dates.slice(-65);
+  const last80Rows = eligibilityRows.slice(-80);
+
+  console.log('\n=== Shock eligibility diagnostics (no model change) ===');
+  console.log(
+    `Qualified dates=${dates.length} last=${lastDate ?? 'n/a'} eligibilityRows=${eligibilityRows.length}`
+  );
+  console.log(
+    `60 returns require 61 closes: last61=${last61[0] ?? 'n/a'}..${last61[last61.length - 1] ?? 'n/a'} (n=${last61.length}) last65 n=${last65.length}`
+  );
+
+  console.log('\nCache at shock execution (per symbol):');
+  for (const sym of recentUniverse) {
+    const bars = barsBySymbol.get(sym) ?? [];
+    const closeMap = closeMapsBySymbol.get(sym) ?? new Map();
+    const dups = duplicateBarDates(bars.map((b) => b.date));
+    const last80Bad = missingOrInvalidCloses(last80Qualified, closeMap);
+    const last61Cov = missingOrInvalidCloses(last61, closeMap);
+    const last61Present = last61.filter((d) => closeMap.has(d)).length;
+    console.log(
+      `  ${sym}: bars=${bars.length} first=${bars[0]?.date ?? 'n/a'} last=${bars[bars.length - 1]?.date ?? 'n/a'} last61Closes=${last61Present}/${last61.length}`
+    );
+    if (dups.length) console.log(`    duplicateDates=${dups.join(',')}`);
+    if (last61Cov.missing.length) {
+      console.log(`    missingCloses last61 (${last61Cov.missing.length}): ${last61Cov.missing.join(',')}`);
+    }
+    if (last61Cov.invalid.length) {
+      console.log(
+        `    invalidCloses last61: ${last61Cov.invalid.map((x) => `${x.date}=${x.close}`).join(',')}`
+      );
+    }
+    if (last80Bad.invalid.length) {
+      console.log(
+        `    invalidCloses last80: ${last80Bad.invalid.map((x) => `${x.date}=${x.close}`).join(',')}`
+      );
+    }
+    const rets = returnsBySymbol.get(sym) ?? [];
+    const canForm60 =
+      lastIdx >= LONG_WINDOW &&
+      windowCountsForSymbol(rets, lastIdx, SHORT_WINDOW, LONG_WINDOW).longCount >= LONG_WINDOW;
+    console.log(`    canForm60LogReturnsAtLast=${canForm60 ? 'yes' : 'no'}`);
+  }
+
+  const incompleteSince2026 = incompleteQualifiedDates(
+    dates,
+    symbolsWithCloseByDate,
+    recentUniverse,
+    '2026-01-01'
+  );
+  const last61Set = new Set(last61);
+  const incompleteInLast61 = incompleteSince2026.filter((r) => last61Set.has(r.date));
+  console.log(
+    `\nQualified-incomplete dates since 2026-01-01 (nCloses<${recentUniverse.length}): ${incompleteSince2026.length}`
+  );
+  const incompletePreview =
+    incompleteSince2026.length > 40 ? incompleteSince2026.slice(-40) : incompleteSince2026;
+  for (const r of incompletePreview) {
+    const inWin = last61Set.has(r.date) ? ' IN_LAST_61' : '';
+    console.log(`  ${r.date} nCloses=${r.nCloses} missing=${r.missingSymbols.join(',')}${inWin}`);
+  }
+  console.log(`Incomplete dates inside final 61 qualified: ${incompleteInLast61.length}`);
+
+  console.log('\nEligibility (last 80 qualified shock dates; printing <8 valid, null shockRaw, latest 10):');
+  for (const row of last80Rows) {
+    if (!shouldLogEligibilityRow(row, last80Rows, MIN_ASSETS_TARGET)) continue;
+    console.log(
+      `  ${row.date} nCloses=${row.nCloses} shortElig=${row.shortEligibleCount} longElig=${row.longEligibleCount} valid=${row.validSymbolsCount} shockRawNull=${row.shockRawNull} excluded=${row.excluded.join(',') || 'none'}`
+    );
+  }
+
+  if (lastDate != null && lastIdx >= LONG_WINDOW) {
+    console.log(`\nPer-symbol windows at latest qualified ${lastDate} (idx=${lastIdx}):`);
+    const closeRange = longWindowCloseDateRange(dates, lastIdx, LONG_WINDOW);
+    console.log(
+      `  longWindow return dates ${closeRange.returnDates[0]}..${closeRange.returnDates[closeRange.returnDates.length - 1]} (n=${closeRange.returnDates.length}); close dates n=${closeRange.closeDates.length} priorClose=${closeRange.priorCloseDate}`
+    );
+    for (const sym of recentUniverse) {
+      const rets = returnsBySymbol.get(sym) ?? [];
+      const closeMap = closeMapsBySymbol.get(sym) ?? new Map();
+      const counts = windowCountsForSymbol(rets, lastIdx, SHORT_WINDOW, LONG_WINDOW);
+      console.log(
+        `  ${sym}: short=${counts.shortCount}/${SHORT_WINDOW} long=${counts.longCount}/${LONG_WINDOW} eligible=${counts.eligible ? 'yes' : 'no'}`
+      );
+      if (counts.longCount < LONG_WINDOW) {
+        const slots = nullReturnSlotsInLongWindow(dates, rets, closeMap, lastIdx, LONG_WINDOW);
+        console.log(`    nullReturnsInLongWindow=${slots.length}`);
+        for (const s of slots) {
+          console.log(
+            `    null @ ${s.currentDate} prev=${s.previousDate} curClose=${s.currentClosePresent ? s.currentClose : 'MISSING'} prevClose=${s.previousClosePresent ? s.previousClose : 'MISSING'}`
+          );
+        }
+      }
+    }
+  }
+  console.log('=== end shock eligibility diagnostics ===\n');
 
   const lastComputedIdx = [...points].reverse().findIndex((p) => p.shockRaw != null);
   const trimmedPoints =

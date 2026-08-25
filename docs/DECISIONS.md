@@ -5,6 +5,15 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-08 — (Ops/Data) Health-history last-known-good cache and offline integrity repair
+**Choice:** `public/health-history*.json` are generated artifacts and need **cross-run continuity**, like Marketstack EOD and Turbulence gates. Production workflows (`vercel-prebuilt-prod.yml`, `daily-artifacts-deploy.yml`) restore/save an Actions cache key family `${{ runner.os }}-health-history-lkg-v1-`. Restore happens **before** snapshot/history generation (overlaying tracked repo copies). Save happens **only after** successful artifact generation/verification (`if: success()`, never `if: always()`). A failed run must not replace LKG. Cache miss leaves tracked files in place; optional HTTPS prefetch from `https://trend100.vercel.app/` overwrites a file only when the response is a non-empty JSON array.
+
+**Why:** Production previously **did not** persist health-history between runs. Each deploy started from git-tracked histories, **upserted only the current `asOfDate`**, deployed, and discarded the rest. That produced (1) a dense repo-era tail through ~**2026-02-17** then a jump to the latest deploy date, and (2) MACRO section UNKNOWN rows from the first section backfill under **uncapped `minEligible=10`** (fixed 2026-02-15 in `584bac0`) that daily upsert never recomputed. Commit `92557e9` regenerated MACRO sections after that fix, but without an LKG cache the repair was not durable.
+
+**Repair path:** Manual **Backfill Health History** restores the **same** production EOD cache (`marketstack-eod-v2`) and health-history LKG, runs **offline** (`MARKETSTACK_OFFLINE=1`, no API keys, no Stooq). Input `repair_health_history_integrity` runs Pass A (`2026-02-18`→UTC today, all decks) then Pass B (`2019-10-01`→today, `--deck MACRO --variants-only`). Current algorithm (including section `min(10, universe.length)` and lookback) decides UNKNOWN vs valid; warmup/inception stays UNKNOWN. The backfill job **does not deploy**. The next normal Prebuilt/Daily run restores the repaired LKG, refreshes current EOD, verifies, deploys, and saves the next LKG.
+
+---
+
 ### 2026-08 — (Data) Enforce Turbulence shockRaw minimum 8 eligible assets
 **Choice:** `MIN_ASSETS_TARGET` (8) now gates **both** shock calendar participation (SPY usable close + ≥8 recent-universe usable closes) **and** shockRaw (eligible 20/60 correlation universe `validSymbols.length >= 8`). 5/6/7 eligible names yield `shockRaw=null`. There is **no** floor-6 fallback and **no** `minAssetsEffective` dynamic threshold. `MIN_ASSETS_FLOOR` (6) remains only for deck/cache availability sanity. Requiring all 12 names was rejected as unnecessarily brittle.
 

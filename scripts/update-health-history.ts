@@ -7,6 +7,8 @@
  * 
  * Backfill mode:
  * - Use --backfill-days <N> or --start YYYY-MM-DD --end YYYY-MM-DD
+ * - Optional --deck <DECK_ID> (repeatable) and --variants-only (requires --deck;
+ *   never rewrites base health-history.<DECK>.json)
  * - Computes health history from local EOD cache (offline)
  * - Requires MARKETSTACK_OFFLINE=1 to prevent accidental API calls
  */
@@ -24,6 +26,7 @@ import type {
 import { getLatestSnapshot } from '../src/modules/trend100/data/getLatestSnapshot';
 import { getAllDeckIds, getDeck } from '../src/modules/trend100/data/decks';
 import { toSectionKey } from '../src/modules/trend100/data/sectionKey';
+import { parseHealthHistoryCli, resolveBackfillDeckIds } from '../src/modules/trend100/data/healthHistoryCli';
 import { mergeAndTrimTimeSeries } from './timeSeriesUtils';
 import { buildTickerMetaIndex, enrichUniverseItemMeta } from '../src/modules/trend100/data/tickerMeta';
 import { getMinKnownPctForDeck, getKnownDenominatorMode, getMinEligibleCountForDeck } from '../src/modules/trend100/data/deckConfig';
@@ -581,7 +584,8 @@ function getUniverseForSectionByKey(deckId: TrendDeckId, sectionKey: HistoryVari
 function backfillDeckHistory(
   deckId: TrendDeckId,
   startDate: string,
-  endDate: string
+  endDate: string,
+  variantsOnly = false
 ): TrendHealthHistoryPoint[] {
   console.log(`\nBackfilling health history for ${deckId} (${startDate} to ${endDate})...`);
 
@@ -611,11 +615,17 @@ function backfillDeckHistory(
       : sectionVariants.length > 0
         ? [{ universe: deck.universe }, ...sectionVariants.map(({ sectionLabel, sectionKey }) => ({ variantKey: sectionKey, universe: getUniverseForSectionByKey(deckId, sectionKey), sectionLabel }))]
         : [{ universe: deck.universe }];
+  const selectedVariants = variantsOnly ? variants.filter((v) => Boolean(v.variantKey)) : variants;
+  if (variantsOnly && selectedVariants.length === 0) {
+    throw new Error(
+      `--variants-only: ${deckId} has no group/section variants; refusing to rewrite health-history.${deckId}.json`
+    );
+  }
 
   const retentionDays = getHealthHistoryRetentionDays();
   let mergedAll: TrendHealthHistoryPoint[] = [];
 
-  for (const variant of variants) {
+  for (const variant of selectedVariants) {
     const variantKey = variant.variantKey;
     const universe = variant.universe;
     const label = variantKey ? `${deckId}.${variantKey}` : deckId;
@@ -805,43 +815,8 @@ function updateDeckHistory(deckId: TrendDeckId): void {
 /**
  * Parse CLI arguments
  */
-function parseArgs(): {
-  mode: 'incremental' | 'backfill';
-  backfillDays?: number;
-  startDate?: string;
-  endDate?: string;
-} {
-  const args = process.argv.slice(2);
-  
-  // Check for backfill mode
-  const backfillDaysIndex = args.indexOf('--backfill-days');
-  if (backfillDaysIndex >= 0 && backfillDaysIndex < args.length - 1) {
-    const days = parseInt(args[backfillDaysIndex + 1]!, 10);
-    if (isNaN(days) || days <= 0) {
-      throw new Error('--backfill-days must be a positive number');
-    }
-    return { mode: 'backfill', backfillDays: days };
-  }
-
-  const startIndex = args.indexOf('--start');
-  const endIndex = args.indexOf('--end');
-  if (startIndex >= 0 && endIndex >= 0) {
-    const startDate = args[startIndex + 1];
-    const endDate = args[endIndex + 1];
-    if (!startDate || !endDate) {
-      throw new Error('--start and --end require date values (YYYY-MM-DD)');
-    }
-    // Validate date format
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
-      throw new Error('Dates must be in YYYY-MM-DD format');
-    }
-    if (startDate > endDate) {
-      throw new Error('Start date must be before end date');
-    }
-    return { mode: 'backfill', startDate, endDate };
-  }
-
-  return { mode: 'incremental' };
+function parseArgs(): ReturnType<typeof parseHealthHistoryCli> {
+  return parseHealthHistoryCli(process.argv.slice(2));
 }
 
 function main() {
@@ -869,6 +844,12 @@ function main() {
     }
 
     console.log(`Date range: ${startDate} to ${endDate}\n`);
+    if (args.deckIds) {
+      console.log(`Decks: ${args.deckIds.join(', ')}`);
+    }
+    if (args.variantsOnly) {
+      console.log('Variants only: yes (base health-history.<DECK>.json will not be rewritten)\n');
+    }
 
     // Check offline mode (default to offline for backfill)
     if (process.env.MARKETSTACK_OFFLINE !== '1' && process.env.MARKETSTACK_OFFLINE !== '0') {
@@ -877,13 +858,13 @@ function main() {
       console.log('ℹ️  MARKETSTACK_OFFLINE not set, defaulting to 1 (offline) for backfill\n');
     }
 
-    const deckIds = getAllDeckIds();
+    const deckIds = resolveBackfillDeckIds(args);
 
     for (const deckId of deckIds) {
-      backfillDeckHistory(deckId, startDate, endDate);
+      backfillDeckHistory(deckId, startDate, endDate, args.variantsOnly);
     }
 
-    console.log('\n✅ Health history backfill complete for all decks');
+    console.log('\n✅ Health history backfill complete');
   } else {
     // Incremental mode (default)
     console.log('Updating health history for all decks...');

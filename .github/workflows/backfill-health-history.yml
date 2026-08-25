@@ -1,14 +1,20 @@
-# Manual-only utility workflow. Does not commit artifacts. Production deploy happens via vercel-prebuilt-prod.yml / daily-artifacts-deploy.yml.
+# Manual-only utility workflow. Does not commit artifacts and does not deploy.
+# Production deploy happens via vercel-prebuilt-prod.yml / daily-artifacts-deploy.yml
+# after they restore the health-history LKG saved here.
 name: Backfill Health History
 
 on:
   workflow_dispatch:
     inputs:
       backfill_days:
-        description: 'Number of days to backfill (default: 365)'
+        description: 'Number of days to backfill when repair_health_history_integrity is false (default: 365)'
         required: false
         default: '365'
         type: string
+      repair_health_history_integrity:
+        description: 'Offline two-pass repair (recent gap all decks, then MACRO section variants 2019-10-01→today). Uses restored Actions EOD. Zero Marketstack/Stooq. Does not deploy.'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -50,13 +56,91 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Backfill health history (offline from EOD cache)
+      - name: Restore Marketstack EOD cache
+        uses: actions/cache/restore@v5
+        with:
+          path: data/marketstack/eod
+          key: ${{ runner.os }}-marketstack-eod-v2-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-marketstack-eod-v2-
+
+      - name: EOD cache diagnostics (after restore)
+        run: |
+          echo "EOD cache file count: $(ls -1 data/marketstack/eod 2>/dev/null | wc -l || true)"
+          du -sh data/marketstack/eod 2>/dev/null || true
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const dir = 'data/marketstack/eod';
+          function last(sym) {
+            const f = path.join(dir, `${sym}.json`);
+            if (!fs.existsSync(f)) return 'MISSING';
+            try {
+              const a = JSON.parse(fs.readFileSync(f, 'utf8'));
+              if (!Array.isArray(a) || a.length === 0) return 'EMPTY';
+              return a[a.length - 1].date;
+            } catch {
+              return 'PARSE_ERROR';
+            }
+          }
+          for (const s of ['SPY', 'FXE', 'GLD', 'DBA', 'BNO', 'SRUUF', 'FBTC', 'FETH']) {
+            console.log(`EOD last date ${s}: ${last(s)}`);
+          }
+          NODE
+
+      - name: Ensure public dir
+        run: mkdir -p public
+
+      - name: Restore health-history last-known-good cache
+        id: health-history-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: public/health-history*.json
+          key: ${{ runner.os }}-health-history-lkg-v1-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-health-history-lkg-v1-
+
+      - name: Health-history LKG diagnostics and cache-miss prefetch
+        env:
+          CACHE_RESTORE_EXACT_HIT: ${{ steps.health-history-cache.outputs.cache-hit }}
+          CACHE_MATCHED_KEY: ${{ steps.health-history-cache.outputs.cache-matched-key }}
+        run: bash ci/gha-health-history-lkg-prep.sh
+
+      - name: Offline health-history backfill or integrity repair
         env:
           BACKFILL_DAYS: ${{ github.event.inputs.backfill_days || '365' }}
+          REPAIR_INTEGRITY: ${{ github.event.inputs.repair_health_history_integrity }}
           MARKETSTACK_OFFLINE: '1'
           MARKETSTACK_CACHE_DAYS: 2300
-          TREND100_STRICT_WARMUP: 1
-          HEALTH_HISTORY_RETENTION_DAYS: 0
+          TREND100_STRICT_WARMUP: '0'
+          HEALTH_HISTORY_RETENTION_DAYS: '0'
         run: |
-          pnpm update:health-history -- --backfill-days $BACKFILL_DAYS
+          set -euo pipefail
+          if [ -n "${MARKETSTACK_API_KEY:-}" ]; then
+            echo "Refusing to run: MARKETSTACK_API_KEY must be unset in Backfill Health History."
+            exit 1
+          fi
+          echo "MARKETSTACK_OFFLINE=${MARKETSTACK_OFFLINE}"
+          echo "TREND100_STRICT_WARMUP=${TREND100_STRICT_WARMUP}"
+          TODAY=$(date -u '+%Y-%m-%d')
+          if [ "${REPAIR_INTEGRITY}" = "true" ]; then
+            echo "=== PASS A: fill sparse tail 2026-02-18 → ${TODAY} (all decks, base + variants) ==="
+            pnpm update:health-history -- --start 2026-02-18 --end "${TODAY}"
+            echo "=== PASS B: MACRO section variants 2019-10-01 → ${TODAY} (not base MACRO) ==="
+            pnpm update:health-history -- --start 2019-10-01 --end "${TODAY}" --deck MACRO --variants-only
+          else
+            echo "=== Standard offline backfill (${BACKFILL_DAYS} days, all decks) ==="
+            pnpm update:health-history -- --backfill-days "${BACKFILL_DAYS}"
+          fi
+          pnpm exec tsx scripts/report-health-history-integrity.ts
           pnpm verify:artifacts
+
+      - name: Health-history sample after backfill
+        run: bash ci/gha-health-history-sample.sh
+
+      - name: Save health-history last-known-good cache
+        if: success()
+        uses: actions/cache/save@v5
+        with:
+          path: public/health-history*.json
+          key: ${{ runner.os }}-health-history-lkg-v1-${{ github.run_id }}

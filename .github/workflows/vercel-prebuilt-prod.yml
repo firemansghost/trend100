@@ -56,8 +56,23 @@ jobs:
           echo "EOD cache file count: $(ls -1 data/marketstack/eod 2>/dev/null | wc -l || true)"
           du -sh data/marketstack/eod 2>/dev/null || true
 
-      - name: Ensure public dir for turbulence gates
+      - name: Ensure public dir
         run: mkdir -p public
+
+      - name: Restore health-history last-known-good cache
+        id: health-history-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: public/health-history*.json
+          key: ${{ runner.os }}-health-history-lkg-v1-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-health-history-lkg-v1-
+
+      - name: Health-history LKG diagnostics and cache-miss prefetch
+        env:
+          CACHE_RESTORE_EXACT_HIT: ${{ steps.health-history-cache.outputs.cache-hit }}
+          CACHE_MATCHED_KEY: ${{ steps.health-history-cache.outputs.cache-matched-key }}
+        run: bash ci/gha-health-history-lkg-prep.sh
 
       - name: Restore turbulence gates last-known-good cache
         id: turbulence-gates-cache
@@ -97,6 +112,16 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: pnpm -s artifacts:refresh
+
+      - name: Health-history sample after generation
+        run: bash ci/gha-health-history-sample.sh
+
+      - name: Save health-history last-known-good cache
+        if: success()
+        uses: actions/cache/save@v5
+        with:
+          path: public/health-history*.json
+          key: ${{ runner.os }}-health-history-lkg-v1-${{ github.run_id }}
 
       - name: EOD cache diagnostics (after artifacts)
         run: |

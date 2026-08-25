@@ -5,6 +5,8 @@
  * Server-side use only - never expose API keys to browser.
  */
 
+import { eodBarFromProviderRow } from './eodClose';
+
 export interface EodBar {
   date: string; // YYYY-MM-DD
   close: number;
@@ -138,21 +140,15 @@ export async function fetchEodSeries(
 
         // Transform to our format
         const bars: EodBar[] = data.data
-          .map((bar: any) => {
-            const close = bar.adjusted_close !== null && bar.adjusted_close !== undefined
-              ? bar.adjusted_close
-              : bar.close;
-
-            return {
-              date: bar.date.split('T')[0]!, // Extract YYYY-MM-DD from ISO string
-              close: parseFloat(close),
-              adjusted_close: bar.adjusted_close
-                ? parseFloat(bar.adjusted_close)
-                : undefined,
-            };
-          })
-          .filter((bar: EodBar) => !isNaN(bar.close))
-          .sort((a: EodBar, b: EodBar) => a.date.localeCompare(b.date)); // Ascending
+          .map((bar: { date?: string; adjusted_close?: unknown; close?: unknown }) =>
+            eodBarFromProviderRow({
+              date: typeof bar.date === 'string' ? bar.date.split('T')[0] : bar.date,
+              adjusted_close: bar.adjusted_close,
+              close: bar.close,
+            })
+          )
+          .filter((bar: EodBar | null): bar is EodBar => bar != null)
+          .sort((a: EodBar, b: EodBar) => a.date.localeCompare(b.date));
 
         return bars;
       } catch (error) {
@@ -291,17 +287,12 @@ export async function fetchEodLatestBatch(
           const originalSymbol = reverseMap.get(normalizedSymbol);
           if (!originalSymbol) continue;
 
-          const close = bar.adjusted_close !== null && bar.adjusted_close !== undefined
-            ? bar.adjusted_close
-            : bar.close;
-
-          result.set(originalSymbol, {
-            date: bar.date.split('T')[0]!,
-            close: parseFloat(close),
-            adjusted_close: bar.adjusted_close
-              ? parseFloat(bar.adjusted_close)
-              : undefined,
+          const parsed = eodBarFromProviderRow({
+            date: typeof bar.date === 'string' ? bar.date.split('T')[0] : bar.date,
+            adjusted_close: bar.adjusted_close,
+            close: bar.close,
           });
+          result.set(originalSymbol, parsed);
         }
 
         // Mark symbols not found as null (by original symbol)

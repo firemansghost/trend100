@@ -3,6 +3,8 @@
  * Does not change calendar, floor, windows, or shockRaw semantics.
  */
 
+import { isUsableEodClose } from '../data/providers/eodClose';
+
 export interface WindowCounts {
   shortCount: number;
   longCount: number;
@@ -17,7 +19,7 @@ export function countNonNullReturns(
   let n = 0;
   for (let k = fromIdx; k <= toIdx; k++) {
     const v = rets[k];
-    if (v != null && !Number.isNaN(v)) n += 1;
+    if (Number.isFinite(v)) n += 1;
   }
   return n;
 }
@@ -79,7 +81,7 @@ export function nullReturnSlotsInLongWindow(
   for (let k = longStart; k <= idx; k++) {
     if (k <= 0) continue;
     const v = rets[k];
-    if (v != null && !Number.isNaN(v)) continue;
+    if (v != null && Number.isFinite(v)) continue;
     const currentDate = qualifiedDates[k]!;
     const previousDate = qualifiedDates[k - 1]!;
     const currentClose = closeByDate.get(currentDate);
@@ -88,8 +90,8 @@ export function nullReturnSlotsInLongWindow(
       returnIdx: k,
       currentDate,
       previousDate,
-      currentClosePresent: currentClose != null && Number.isFinite(currentClose),
-      previousClosePresent: previousClose != null && Number.isFinite(previousClose),
+      currentClosePresent: isUsableEodClose(currentClose),
+      previousClosePresent: isUsableEodClose(previousClose),
       currentClose: currentClose ?? null,
       previousClose: previousClose ?? null,
     });

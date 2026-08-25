@@ -5,6 +5,13 @@ Use one of: **Architecture / Product / Data / UI / Naming / Ops**
 
 ---
 
+### 2026-08 — (Data) Reject non-positive Marketstack EOD closes
+**Choice:** A usable EOD price is **finite and > 0**. Prefer a positive finite `adjusted_close`; if that is missing or invalid, fall back to a positive finite raw `close`. If neither is usable, omit the bar. `fetchEodSeries` drops unusable bars; `fetchEodLatestBatch` treats an unusable latest row as unavailable (`null`). Cache load ignores non-positive/non-finite `close` values (concise `[cache] SYMBOL: ignored N invalid EOD bar(s): dates`); cache save never persists them. Shock calendar participation and `logReturnsOnQualifiedDates` independently require the same positive-finite closes, and `Math.log` must be finite (no ±Infinity in returns). Correlation/eligibility counts use `Number.isFinite`. **Model thresholds unchanged** (floor 6, target 8 calendar, windows 20/60/252, Green Bar, gates, verify staleness).
+
+**Why:** PR #83 diagnostics on Vercel Prebuilt Prod run **32865444485** showed all 12 names had 61/61 final qualified dates and 0 incomplete dates in that window, but ten sector ETFs had **cached close = 0** on **2026-06-04** (SPY and XLB did not). Returns on 2026-06-05 used previous close 0, so those ten had long=59/60, only 2 names stayed eligible, and shock trimmed 52 trailing nulls (last computed 2026-06-04, nAssets=10, shockRaw=0 — not a trustworthy reading; log(0/prev) is −Infinity). The adapter previously accepted zero adjusted/raw closes. Next normal cache save purges invalid rows; do **not** re-run the 2023→current 12-symbol repair. Restoring a real June-4 print, if desired, is a separate bounded refetch.
+
+---
+
 ### 2026-08 — (Data) Turbulence shock qualified trading calendar
 **Choice:** Shock sessions are no longer the raw union of US_SECTORS cache dates. A date is a shock calendar day only if **SPY has a close** and **at least `MIN_ASSETS_TARGET` (8)** recent-universe symbols have closes. Returns are log ratios vs the **previous qualified date**, so discarded sparse/provider-only dates are not return-adjacent. **ShockRaw acceptance is unchanged** (effective floor 6 via existing `minForDate`). Do not treat this PR as enforcing target 8 on the correlation universe.
 

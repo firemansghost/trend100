@@ -10,6 +10,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from '
 import { join } from 'path';
 import type { EodBar } from '../src/modules/trend100/data/providers/marketstack';
 import { fetchEodSeries, fetchEodLatestBatch } from '../src/modules/trend100/data/providers/marketstack';
+import { isUsableEodClose, sanitizeCachedEodBars } from '../src/modules/trend100/data/providers/eodClose';
 import {
   MARKETSTACK_EOD_PAGE_LIMIT,
   approximateTradingDaysBetween,
@@ -156,8 +157,17 @@ function loadCachedBars(symbol: string): EodBar[] | null {
     if (!Array.isArray(bars)) {
       return null;
     }
-    // Ensure sorted ascending by date
-    return bars.sort((a, b) => a.date.localeCompare(b.date));
+    const sanitized = sanitizeCachedEodBars(bars);
+    if (sanitized.droppedDates.length > 0) {
+      const preview =
+        sanitized.droppedDates.length <= 8
+          ? sanitized.droppedDates.join(',')
+          : `${sanitized.droppedDates.slice(0, 8).join(',')} +${sanitized.droppedDates.length - 8} more`;
+      console.warn(
+        `  [cache] ${symbol}: ignored ${sanitized.droppedDates.length} invalid EOD bar(s): ${preview}`
+      );
+    }
+    return sanitized.bars.sort((a, b) => a.date.localeCompare(b.date));
   } catch (error) {
     console.warn(`Failed to load cache for ${symbol}:`, error);
     return null;
@@ -170,7 +180,8 @@ function loadCachedBars(symbol: string): EodBar[] | null {
 function saveCachedBars(symbol: string, bars: EodBar[]): void {
   const filePath = getCacheFilePath(symbol);
   // Ensure sorted ascending
-  const sorted = [...bars].sort((a, b) => a.date.localeCompare(b.date));
+  const usable = bars.filter((bar) => isUsableEodClose(bar.close));
+  const sorted = [...usable].sort((a, b) => a.date.localeCompare(b.date));
   
   // Apply retention: keep last MARKETSTACK_CACHE_DAYS (default 2300 for lookback buffer)
   // This is longer than MARKETSTACK_HISTORY_DAYS (365) to provide lookback for indicators
@@ -213,6 +224,7 @@ function mergeBars(existing: EodBar[], newBars: EodBar[]): EodBar[] {
   
   // Add/update with new bars
   for (const bar of newBars) {
+    if (!isUsableEodClose(bar.close)) continue;
     dateMap.set(bar.date, bar);
   }
   

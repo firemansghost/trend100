@@ -25,6 +25,14 @@ describe('longWindowCloseDateRange', () => {
 });
 
 describe('windowCountsForSymbol', () => {
+  it('does not count Infinity toward long-window completeness', () => {
+    const rets: (number | null)[] = Array.from({ length: 65 }, (_, i) => (i === 0 ? null : 0.01));
+    rets[50] = Number.POSITIVE_INFINITY;
+    const c = windowCountsForSymbol(rets, 64, 20, 60);
+    expect(c.longCount).toBe(59);
+    expect(c.eligible).toBe(false);
+  });
+
   it('marks a symbol ineligible when one return in the long window is null', () => {
     const rets: (number | null)[] = Array.from({ length: 65 }, (_, i) => (i === 0 ? null : 0.01));
     rets[40] = null;

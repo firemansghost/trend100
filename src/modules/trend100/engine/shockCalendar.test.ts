@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildQualifiedShockCalendar,
+  isShockCalendarClose,
   logReturnsOnQualifiedDates,
 } from './shockCalendar';
 
@@ -92,9 +93,100 @@ describe('buildQualifiedShockCalendar', () => {
     expect(cal.qualifiedDates).toEqual([]);
     expect(cal.discarded[0]?.spyHadClose).toBe(false);
   });
+
+  it('does not count zero-price ETFs as participants; next session returns skip that date', () => {
+    const zeroNames = UNIVERSE.filter((s) => s !== 'SPY' && s !== 'XLB');
+    const participantsByDate = new Map<string, Set<string>>();
+    const closes = (n: number) => {
+      const m = new Map<string, number>();
+      for (const s of UNIVERSE) m.set(s, n);
+      return m;
+    };
+    const june3 = closes(100);
+    const june4 = new Map<string, number>([
+      ['SPY', 100],
+      ['XLB', 50],
+      ...zeroNames.map((s) => [s, 0] as const),
+    ]);
+    const june5 = closes(110);
+
+    for (const [date, cmap] of [
+      ['2026-06-03', june3],
+      ['2026-06-04', june4],
+      ['2026-06-05', june5],
+    ] as const) {
+      const present = new Set<string>();
+      for (const [sym, px] of cmap) {
+        if (isShockCalendarClose(px)) present.add(sym);
+      }
+      participantsByDate.set(date, present);
+    }
+
+    expect(participantsByDate.get('2026-06-04')?.size).toBe(2);
+    const cal = buildQualifiedShockCalendar({
+      unionDates: ['2026-06-03', '2026-06-04', '2026-06-05'],
+      symbolsWithCloseByDate: participantsByDate,
+      recentUniverse: UNIVERSE,
+      minAssetsTarget: 8,
+    });
+    expect(cal.qualifiedDates).toEqual(['2026-06-03', '2026-06-05']);
+    expect(cal.discarded.map((d) => d.date)).toEqual(['2026-06-04']);
+
+    const spyRets = logReturnsOnQualifiedDates(cal.qualifiedDates, new Map([
+      ['2026-06-03', 100],
+      ['2026-06-04', 100],
+      ['2026-06-05', 110],
+    ]));
+    expect(spyRets[1]).toBeCloseTo(Math.log(110 / 100));
+  });
 });
 
 describe('logReturnsOnQualifiedDates', () => {
+  it('returns a finite log return for two positive closes', () => {
+    const rets = logReturnsOnQualifiedDates(
+      ['2026-06-03', '2026-06-05'],
+      new Map([
+        ['2026-06-03', 100],
+        ['2026-06-05', 101],
+      ])
+    );
+    expect(rets[1]).toBeCloseTo(Math.log(101 / 100));
+    expect(Number.isFinite(rets[1]!)).toBe(true);
+  });
+
+  it('returns null when current close is 0', () => {
+    const rets = logReturnsOnQualifiedDates(
+      ['2026-06-03', '2026-06-04'],
+      new Map([
+        ['2026-06-03', 100],
+        ['2026-06-04', 0],
+      ])
+    );
+    expect(rets[1]).toBeNull();
+  });
+
+  it('returns null when previous close is 0', () => {
+    const rets = logReturnsOnQualifiedDates(
+      ['2026-06-04', '2026-06-05'],
+      new Map([
+        ['2026-06-04', 0],
+        ['2026-06-05', 101],
+      ])
+    );
+    expect(rets[1]).toBeNull();
+  });
+
+  it('returns null when a close is Infinity', () => {
+    const rets = logReturnsOnQualifiedDates(
+      ['2026-06-03', '2026-06-05'],
+      new Map([
+        ['2026-06-03', 100],
+        ['2026-06-05', Number.POSITIVE_INFINITY],
+      ])
+    );
+    expect(rets[1]).toBeNull();
+  });
+
   it('does not break subsequent returns when a discarded extra date sits between qualified dates', () => {
     const qualified = ['2026-08-21', '2026-08-24'];
     const spyCloses = new Map([
